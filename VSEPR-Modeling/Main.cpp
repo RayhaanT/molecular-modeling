@@ -9,6 +9,8 @@
 #include "include/OpenGLHeaders/Camera.h"
 #include "include/OpenGLHeaders/Texture.h"
 #include "include/OpenGLHeaders/Shader.h"
+#include "VSEPR.h"
+
 ///VBOs Vertex Buffer Objects contain vertex data that is sent to memory in the GPU, vertex attrib calls config bound VBO
 ///VAOs Vertex Array Objects when bound, any vertex attribute calls and attribute configs are stored in VAO
 ///Having multiple VAOs allow storage of multiple VBO configs, before drawing, binding VAO with right config applies to draw
@@ -68,6 +70,8 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 
 int main()
 {
+	VSEPRMain();
+
 	//Initialize GLFW
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);

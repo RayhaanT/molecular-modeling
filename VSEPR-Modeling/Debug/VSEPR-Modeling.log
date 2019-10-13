@@ -1,20 +1,4 @@
-﻿  Main.cpp
-d:\libraries\libraries\github\vsepr-modeling\vsepr-modeling\include\glad\glad.h(378): warning C4005: 'GL_ALL_ATTRIB_BITS': macro redefinition
-  c:\program files (x86)\windows kits\10\include\10.0.17763.0\um\gl\gl.h(107): note: see previous definition of 'GL_ALL_ATTRIB_BITS'
-d:\libraries\libraries\github\vsepr-modeling\vsepr-modeling\include\glad\glad.h(466): warning C4005: 'GL_LOGIC_OP': macro redefinition
-  c:\program files (x86)\windows kits\10\include\10.0.17763.0\um\gl\gl.h(1152): note: see previous definition of 'GL_LOGIC_OP'
-d:\libraries\libraries\github\vsepr-modeling\vsepr-modeling\include\glad\glad.h(550): warning C4005: 'GL_TEXTURE_COMPONENTS': macro redefinition
-  c:\program files (x86)\windows kits\10\include\10.0.17763.0\um\gl\gl.h(1153): note: see previous definition of 'GL_TEXTURE_COMPONENTS'
-d:\libraries\libraries\github\vsepr-modeling\vsepr-modeling\include\glad\glad.h(644): warning C4005: 'GL_CLIENT_ALL_ATTRIB_BITS': macro redefinition
-  c:\program files (x86)\windows kits\10\include\10.0.17763.0\um\gl\gl.h(973): note: see previous definition of 'GL_CLIENT_ALL_ATTRIB_BITS'
-d:\libraries\libraries\github\vsepr-modeling\vsepr-modeling\main.cpp(56): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-d:\libraries\libraries\github\vsepr-modeling\vsepr-modeling\main.cpp(57): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-d:\libraries\libraries\github\vsepr-modeling\vsepr-modeling\main.cpp(61): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-d:\libraries\libraries\github\vsepr-modeling\vsepr-modeling\main.cpp(62): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-d:\libraries\libraries\github\vsepr-modeling\vsepr-modeling\main.cpp(63): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-d:\libraries\libraries\github\vsepr-modeling\vsepr-modeling\main.cpp(64): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-d:\libraries\libraries\github\vsepr-modeling\vsepr-modeling\main.cpp(78): warning C4244: 'argument': conversion from 'const float' to 'int', possible loss of data
-d:\libraries\libraries\github\vsepr-modeling\vsepr-modeling\main.cpp(89): warning C4244: 'argument': conversion from 'const float' to 'GLsizei', possible loss of data
-d:\libraries\libraries\github\vsepr-modeling\vsepr-modeling\main.cpp(202): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+﻿  VSEPR.cpp
+d:\libraries\libraries\github\vsepr-modeling\vsepr-modeling\vsepr.cpp(51): warning C4018: '<': signed/unsigned mismatch
   VSEPR-Modeling.vcxproj -> D:\Libraries\Libraries\GitHub\VSEPR-Modeling\Debug\VSEPR-Modeling.exe
   VSEPR-Modeling.vcxproj -> D:\Libraries\Libraries\GitHub\VSEPR-Modeling\Debug\VSEPR-Modeling.pdb (Partial PDB)
