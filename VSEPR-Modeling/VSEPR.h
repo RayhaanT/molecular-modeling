@@ -11,6 +11,9 @@ struct Element{
 	std::string name;
 	bool exception = false;
 
+	Element() {
+
+	}
 
 	Element(int _atomicNumber, int _valenceNumber, int _periodNumber, std::string _name) {
 		atomicNumber = _atomicNumber;
@@ -24,6 +27,18 @@ struct Element{
 		valenceNumber = _valenceNumber;
 		periodNumber = _periodNumber;
 		name = _name;
+	}
+};
+
+struct BondedElement {
+	Element base;
+	int lonePairs;
+	int bondedPairs;
+
+	BondedElement(int _lonePairs, int _bondedPairs, Element _base) {
+		base = _base;
+		lonePairs = _lonePairs;
+		bondedPairs = _bondedPairs;
 	}
 };
 

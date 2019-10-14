@@ -6,10 +6,9 @@
             "type": "shell",
             "command": "g++",
             "args": [
-                "-g",
-                "-o",
-                "Main",
-                "VSEPR-Modeling/Main.cpp"
+                "-IVSEPR-Modeling/include/KHR",
+                "VSEPR-Modeling/Main.cpp",
+                "--verbose"
             ],
             "group": {
                 "kind": "build",

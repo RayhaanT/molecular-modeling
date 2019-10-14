@@ -8,8 +8,8 @@ extern Element perTable[] = {
 Element(1, 1, 1, "Hydrogen"),
 Element(2, 2, 1, "Helium"),
 Element(3, 1, 2, "Lithium"),
-Element(4, 2, 2, "Beryllium"),
-Element(5, 3, 2, "Boron"),
+Element(4, 2, 2, "Beryllium", true),
+Element(5, 3, 2, "Boron", true),
 Element(6, 4, 2, "Carbon"),
 Element(7, 5, 2, "Nitrogen"),
 Element(8, 6, 2, "Oxygen"),
@@ -27,12 +27,12 @@ Element(19, 1, 4, "Potassium"),
 Element(20, 2, 4, "Calcium")
 };
 
-std::string elements[] = { "H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca"};
+std::string elements[] = { "H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca" };
 
 using namespace std;
 
 int searchElements(string symbol) {
-	for (int i = 0; i < sizeof(elements)/sizeof(*elements); i++) {
+	for (int i = 0; i < sizeof(elements) / sizeof(*elements); i++) {
 		if (elements[i] == symbol) {
 			return i;
 		}
@@ -58,11 +58,9 @@ vector<Element> readFormula(string formula) {
 			}
 			symbol = "";
 		}
-
 		else if (islower(formula[i])) {
 			symbol += formula[i];
 		}
-
 		else {
 			int index = searchElements(symbol);
 			if (index != -1) {
@@ -79,15 +77,73 @@ vector<Element> readFormula(string formula) {
 	return comp;
 }
 
+int checkStability(BondedElement b) {
+	if (b.base.name == "Hydrogen" || b.base.name == "Helium") {
+		return 2 - ((b.bondedPairs * 2) + (b.lonePairs * 2));
+	}
+	if (b.base.exception == true) {
+		return 0;
+	}
+	return 8 - ((b.bondedPairs * 2) + (b.lonePairs * 2));
+}
+
+vector<BondedElement> constructLewisStructure(vector<Element> formula) {
+	int eTotal = 0;
+	for each (Element e in formula) {
+		eTotal += e.valenceNumber;
+	}
+	int bondingPairs = eTotal / 2;
+
+	vector<BondedElement> lewisStructure;
+	lewisStructure.push_back(BondedElement(0, 0, formula[0]));
+	for (int i = 1; i < formula.size(); i++) {
+		lewisStructure[0].bondedPairs++;
+		lewisStructure.push_back(BondedElement(0, 1, formula[i]));
+		bondingPairs--;
+	}
+
+	for (int i = 1; i < lewisStructure.size(); i++) {
+		int missingElectrons = checkStability(lewisStructure[i]);
+		if (missingElectrons > 0) {
+			for (int x = 0; x < missingElectrons / 2; x++) {
+				lewisStructure[i].lonePairs++;
+				bondingPairs--;
+			}
+		}
+	}
+	int missingElectrons = checkStability(lewisStructure[0]);
+	if (missingElectrons > 0) {
+		for (int x = 0; x < missingElectrons / 2; x++) {
+			lewisStructure[0].lonePairs++;
+			bondingPairs--;
+		}
+	}
+	if (bondingPairs != 0) {
+		for (int i = 1; i < lewisStructure.size(); i++) {
+			lewisStructure[i].lonePairs--;
+			lewisStructure[i].bondedPairs++;
+			lewisStructure[0].lonePairs--;
+			lewisStructure[0].bondedPairs++;
+			bondingPairs++;
+			if (bondingPairs == 0) {
+				break;
+			}
+		}
+	}
+
+	return lewisStructure;
+}
+
 vector<Element> VSEPRMain() {
 	string inFormula;
 
 	while (1) {
 		cin >> inFormula;
 		vector<Element> comp = readFormula(inFormula);
-		for each (Element e in comp) 
+		vector<BondedElement> structure = constructLewisStructure(comp);
+		for each (BondedElement e in structure) 
 		{
-			cout << e.name << endl;
+			cout << e.base.name << " " << e.bondedPairs << " " << e.lonePairs << " " << checkStability(e) << endl;
 		}
 	}
 
