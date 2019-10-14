@@ -18,7 +18,7 @@ enum Camera_Movement {
 const float YAW = 0.0f;
 const float PITCH = 0.0f;
 const float SPEED = 2.5f;
-const float SENSITIVTY = 0.1f;
+const float SENSITIVTY = 0.08f;
 const float ZOOM = 45.0f;
 
 //Processes input and calculates euler values and view matrix
@@ -68,7 +68,7 @@ public:
 	void ProcessKeyboard(GLFWwindow *window, float deltaTime, bool restrictY)
 	{
 
-		float camspeed = 10 * deltaTime;
+		float camspeed = 7 * deltaTime;
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE))
 		{
 			glfwSetWindowShouldClose(window, true);

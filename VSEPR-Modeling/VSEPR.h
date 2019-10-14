@@ -42,4 +42,4 @@ struct BondedElement {
 	}
 };
 
-std::vector<Element> VSEPRMain();
+std::vector<BondedElement> VSEPRMain();

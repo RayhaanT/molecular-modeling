@@ -40,7 +40,33 @@ int searchElements(string symbol) {
 	return -1;
 }
 
-vector<Element> readFormula(string formula) {
+vector<Element> readFormula(string formulaFull) {
+	string formula;
+	int charge = 0;
+	char sign = ' ';
+	bool space = false;
+	for(int i = 0; i < formulaFull.length(); i++) {
+		if(formulaFull[i] == ' ') {
+			space = true;
+		}
+		else {
+			if (!space) {
+				formula += formulaFull[i];
+			}
+			if (space) {
+				if (isdigit(formulaFull[i]) && formulaFull[i] != '-' && formulaFull[i] != '+') {
+					charge = formulaFull[i] - '0';
+				}
+				else {
+					sign = formulaFull[i];
+				}
+			}
+		} 
+	}
+	if(sign == '-') {
+		charge = -charge;
+	}
+
 	if (formula.length() < 1)
 		return vector<Element>();
 
@@ -73,6 +99,9 @@ vector<Element> readFormula(string formula) {
 	if (index != -1) {
 		comp.push_back(perTable[index]);
 	}
+	if(charge != 0) {
+		comp.push_back(Element(-1, -charge, -1, ""));
+	}
 
 	return comp;
 }
@@ -97,9 +126,11 @@ vector<BondedElement> constructLewisStructure(vector<Element> formula) {
 	vector<BondedElement> lewisStructure;
 	lewisStructure.push_back(BondedElement(0, 0, formula[0]));
 	for (int i = 1; i < formula.size(); i++) {
-		lewisStructure[0].bondedPairs++;
-		lewisStructure.push_back(BondedElement(0, 1, formula[i]));
-		bondingPairs--;
+		if(formula[i].name != "") {
+			lewisStructure[0].bondedPairs++;
+			lewisStructure.push_back(BondedElement(0, 1, formula[i]));
+			bondingPairs--;
+		}
 	}
 
 	for (int i = 1; i < lewisStructure.size(); i++) {
@@ -120,6 +151,9 @@ vector<BondedElement> constructLewisStructure(vector<Element> formula) {
 	}
 	if (bondingPairs != 0) {
 		for (int i = 1; i < lewisStructure.size(); i++) {
+			if(lewisStructure[i].lonePairs < 1 || lewisStructure[0].lonePairs < 1) {
+				continue;
+			}
 			lewisStructure[i].lonePairs--;
 			lewisStructure[i].bondedPairs++;
 			lewisStructure[0].lonePairs--;
@@ -131,21 +165,33 @@ vector<BondedElement> constructLewisStructure(vector<Element> formula) {
 		}
 	}
 
+	if ((checkStability(lewisStructure[0]) != 0 && lewisStructure[0].base.periodNumber < 3) || bondingPairs != 0) {
+		return vector<BondedElement>();
+	}
 	return lewisStructure;
 }
 
-vector<Element> VSEPRMain() {
+vector<BondedElement> VSEPRMain() {
 	string inFormula;
 
 	while (1) {
-		cin >> inFormula;
+		getline(cin, inFormula);
 		vector<Element> comp = readFormula(inFormula);
-		vector<BondedElement> structure = constructLewisStructure(comp);
-		for (int i = 0; i < structure.size(); i++) 
+		for (int i = 0; i < comp.size(); i++)
 		{
-			cout << structure[i].base.name << " " << structure[i].bondedPairs << " " << structure[i].lonePairs << " " << checkStability(structure[i]) << endl;
+			cout << comp[i].name << " " << comp[i].valenceNumber << endl;
 		}
-	}
+		vector<BondedElement> structure = constructLewisStructure(comp);
+		if (structure.size() < 1) {
+			cout << "Lewis structure not possible" << endl;
+		}
 
-	return vector<Element>();
+		else{
+			for (int i = 0; i < structure.size(); i++) {
+				cout << structure[i].base.name << " " << structure[i].bondedPairs << " " << structure[i].lonePairs << " " << checkStability(structure[i]) << endl;
+			}
+		}
+		}
+
+	return vector<BondedElement>();
 }
