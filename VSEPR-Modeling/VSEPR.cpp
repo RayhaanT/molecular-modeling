@@ -89,8 +89,8 @@ int checkStability(BondedElement b) {
 
 vector<BondedElement> constructLewisStructure(vector<Element> formula) {
 	int eTotal = 0;
-	for each (Element e in formula) {
-		eTotal += e.valenceNumber;
+	for(int i = 0; i < formula.size(); i++) {
+		eTotal += formula[i].valenceNumber;
 	}
 	int bondingPairs = eTotal / 2;
 
@@ -141,9 +141,9 @@ vector<Element> VSEPRMain() {
 		cin >> inFormula;
 		vector<Element> comp = readFormula(inFormula);
 		vector<BondedElement> structure = constructLewisStructure(comp);
-		for each (BondedElement e in structure) 
+		for (int i = 0; i < structure.size(); i++) 
 		{
-			cout << e.base.name << " " << e.bondedPairs << " " << e.lonePairs << " " << checkStability(e) << endl;
+			cout << structure[i].base.name << " " << structure[i].bondedPairs << " " << structure[i].lonePairs << " " << checkStability(structure[i]) << endl;
 		}
 	}
 
