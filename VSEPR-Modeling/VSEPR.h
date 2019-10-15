@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef VSEPR_H
+#define VSEPR_H
+
 #include <string>
 #include <map>
 #include <vector>
@@ -42,4 +45,7 @@ struct BondedElement {
 	}
 };
 
+extern std::vector<BondedElement> VSEPRModel;
 std::vector<BondedElement> VSEPRMain();
+
+#endif

@@ -10,6 +10,9 @@
 #include "include/OpenGLHeaders/Texture.h"
 #include "include/OpenGLHeaders/Shader.h"
 #include "VSEPR.h"
+#include "Sphere.h"
+#include <vector>
+#include <thread>
 
 ///VBOs Vertex Buffer Objects contain vertex data that is sent to memory in the GPU, vertex attrib calls config bound VBO
 ///VAOs Vertex Array Objects when bound, any vertex attribute calls and attribute configs are stored in VAO
@@ -70,7 +73,7 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 
 int main()
 {
-	VSEPRMain();
+	std::thread VSEPRthread(VSEPRMain);
 
 	//Initialize GLFW
 	glfwInit();
@@ -144,20 +147,34 @@ int main()
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
+	Sphere sphere(1.0f, 36, 18);
+
+	unsigned int sphereVBO;
+	glGenBuffers(1, &sphereVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+	glBufferData(GL_ARRAY_BUFFER, sphere.getInterleavedVertexSize(), sphere.getInterleavedVertices(), GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sphere.getInterleavedStride(), (void *)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sphere.getInterleavedStride(), (void *)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sphere.getInterleavedStride(), (void *)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
 	//Create a Vertex Buffer Object
 	unsigned int VBO;
-	glGenBuffers(1, &VBO);
+	/*glGenBuffers(1, &VBO);
 	//Bind the VBO to the object type and copy its data to the state
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	//Configure vertex data so readable by vertex shader
+
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(2);*/
 
 	//Create light cube VAO
 	unsigned int lightVAO;
@@ -171,7 +188,7 @@ int main()
 	glm::vec3 lightColour = glm::vec3(1.0f, 1.0f, 1.0f);
 
 	unsigned int lightingShader = 0;
-	Shader("Shaders/VeShMap.vs", "Shaders/FrShMap.fs", lightingShader);
+	Shader("Shaders/VeShPhong.vs", "Shaders/FrShPhong.fs", lightingShader);
 	glUseProgram(lightingShader);
 	setVec3(lightingShader, "objectColor", objectColour);
 	setVec3(lightingShader, "lightColor", lightColour);
@@ -198,7 +215,6 @@ int main()
 	//Set mouse input callback function
 	void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 	glfwSetCursorPosCallback(window, mouse_callback);
-
 	//Render Loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -216,6 +232,8 @@ int main()
 
 		glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, diffMap);
 		glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, specMap);
+		float lineColor[] = {0.2f, 0.2f, 0.2f, 1};
+		sphere.drawLines(lineColor);
 
 		glm::mat4 model;
 		//model = glm::rotate(model, (float)(glfwGetTime()) * 2, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -233,7 +251,7 @@ int main()
 
 		//Draw cube
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glDrawArrays(GL_TRIANGLES, 0, ARRAY_SIZE(vertices));
+		//glDrawArrays(GL_TRIANGLES, 0, ARRAY_SIZE(vertices));
 
 		glUseProgram(lampProgram);
 		glBindVertexArray(lightVAO);
@@ -246,8 +264,8 @@ int main()
 		setMat4(lampProgram, "view", view);
 		setMat4(lampProgram, "projection", projection);
 
-		glDrawArrays(GL_TRIANGLES, 0, ARRAY_SIZE(vertices));
-
+		//glDrawArrays(GL_TRIANGLES, 0, ARRAY_SIZE(vertices));
+		sphere.draw();
 		//Swap buffer and poll IO events
 		glfwSwapBuffers(window);
 		glfwPollEvents();

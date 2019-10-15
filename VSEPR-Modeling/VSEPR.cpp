@@ -31,6 +31,8 @@ std::string elements[] = { "H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne",
 
 using namespace std;
 
+vector<BondedElement> VSEPRModel;
+
 int searchElements(string symbol) {
 	for (int i = 0; i < sizeof(elements) / sizeof(*elements); i++) {
 		if (elements[i] == symbol) {
@@ -182,16 +184,18 @@ vector<BondedElement> VSEPRMain() {
 			cout << comp[i].name << " " << comp[i].valenceNumber << endl;
 		}
 		vector<BondedElement> structure = constructLewisStructure(comp);
+
 		if (structure.size() < 1) {
 			cout << "Lewis structure not possible" << endl;
 		}
 
 		else{
+			VSEPRModel = structure;
 			for (int i = 0; i < structure.size(); i++) {
 				cout << structure[i].base.name << " " << structure[i].bondedPairs << " " << structure[i].lonePairs << " " << checkStability(structure[i]) << endl;
 			}
 		}
-		}
+	}
 
 	return vector<BondedElement>();
 }
