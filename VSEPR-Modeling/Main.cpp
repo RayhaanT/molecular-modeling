@@ -142,6 +142,8 @@ int main()
 		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 	};
+
+	
 	//Create a Vertex Array Object
 	unsigned int VAO;
 	glGenVertexArrays(1, &VAO);
@@ -156,18 +158,19 @@ int main()
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sphere.getInterleavedStride(), (void *)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sphere.getInterleavedStride(), (void *)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sphere.getInterleavedStride(), (void *)(sizeof(float)*3));
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sphere.getInterleavedStride(), (void *)(6 * sizeof(float)));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sphere.getInterleavedStride(), (void *)(sizeof(float)*6));
 	glEnableVertexAttribArray(2);
+
 	//Create a Vertex Buffer Object
 	unsigned int VBO;
-	/*glGenBuffers(1, &VBO);
+	glGenBuffers(1, &VBO);
 	//Bind the VBO to the object type and copy its data to the state
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	//Configure vertex data so readable by vertex shader
+	/*//Configure vertex data so readable by vertex shader
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -188,7 +191,7 @@ int main()
 	glm::vec3 lightColour = glm::vec3(1.0f, 1.0f, 1.0f);
 
 	unsigned int lightingShader = 0;
-	Shader("Shaders/VeShPhong.vs", "Shaders/FrShPhong.fs", lightingShader);
+	Shader("Shaders/VeShMap.vs", "Shaders/FrShMap.fs", lightingShader);
 	glUseProgram(lightingShader);
 	setVec3(lightingShader, "objectColor", objectColour);
 	setVec3(lightingShader, "lightColor", lightColour);
@@ -233,39 +236,40 @@ int main()
 		glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, diffMap);
 		glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, specMap);
 		float lineColor[] = {0.2f, 0.2f, 0.2f, 1};
-		sphere.drawLines(lineColor);
 
 		glm::mat4 model;
-		//model = glm::rotate(model, (float)(glfwGetTime()) * 2, glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::rotate(model, (float)(glfwGetTime()) * 2, glm::vec3(1.0f, 0.0f, 0.0f));
 		glm::mat4 view;
 		view = camera.GetViewMatrix();
 		glm::mat4 projection;
 		projection = glm::perspective(glm::radians(fov), W / H, 0.1f, 100.0f);
 
+		glm::vec3 lightVec3 = glm::vec3(1.8 * sin((float)(glfwGetTime())), 0.0f, 1.8 * cos((float)(glfwGetTime())));
+
 		//Pass our matrices to the shader through a uniform
 		setMat4(lightingShader, "model", model);
 		setMat4(lightingShader, "view", view);
 		setMat4(lightingShader, "projection", projection);
-		setVec3(lightingShader, "lightPos", glm::vec3(glm::vec3(sin((float)(glfwGetTime())), 0.0f, cos((float)(glfwGetTime())))));
+		setVec3(lightingShader, "lightPos", lightVec3);
 		//setVec3(lightingShader, "lightPos", lightPos);
 
 		//Draw cube
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		sphere.draw();
 		//glDrawArrays(GL_TRIANGLES, 0, ARRAY_SIZE(vertices));
 
 		glUseProgram(lampProgram);
 		glBindVertexArray(lightVAO);
 
-		model = glm::mat4();
-		//model = glm::translate(model, lightPos);
-		model = glm::scale(model, glm::vec3(0.2f));
+		glm::mat4 lightModel;
+		lightModel = glm::translate(lightModel, lightVec3);
+		lightModel = glm::scale(lightModel, glm::vec3(0.2f));
 
-		setMat4(lampProgram, "model", model);
+		setMat4(lampProgram, "model", lightModel);
 		setMat4(lampProgram, "view", view);
 		setMat4(lampProgram, "projection", projection);
+		glDrawArrays(GL_TRIANGLES, 0, ARRAY_SIZE(vertices));
 
-		//glDrawArrays(GL_TRIANGLES, 0, ARRAY_SIZE(vertices));
-		sphere.draw();
 		//Swap buffer and poll IO events
 		glfwSwapBuffers(window);
 		glfwPollEvents();

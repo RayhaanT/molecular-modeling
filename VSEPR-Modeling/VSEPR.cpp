@@ -28,6 +28,7 @@ Element(20, 2, 4, "Calcium")
 };
 
 std::string elements[] = { "H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca" };
+int bondingPairs;
 
 using namespace std;
 
@@ -118,12 +119,32 @@ int checkStability(BondedElement b) {
 	return 8 - ((b.bondedPairs * 2) + (b.lonePairs * 2));
 }
 
+vector<BondedElement> rebond(vector<BondedElement> structure) {
+	for (int i = 1; i < structure.size(); i++)
+	{
+		if (structure[i].lonePairs < 1 || structure[0].lonePairs < 1)
+		{
+			continue;
+		}
+		structure[i].lonePairs--;
+		structure[i].bondedPairs++;
+		structure[0].lonePairs--;
+		structure[0].bondedPairs++;
+		bondingPairs++;
+		if (bondingPairs == 0)
+		{
+			break;
+		}
+	}
+	return structure;
+}
+
 vector<BondedElement> constructLewisStructure(vector<Element> formula) {
 	int eTotal = 0;
 	for(int i = 0; i < formula.size(); i++) {
 		eTotal += formula[i].valenceNumber;
 	}
-	int bondingPairs = eTotal / 2;
+	bondingPairs = eTotal / 2;
 
 	vector<BondedElement> lewisStructure;
 	lewisStructure.push_back(BondedElement(0, 0, formula[0]));
@@ -151,19 +172,10 @@ vector<BondedElement> constructLewisStructure(vector<Element> formula) {
 			bondingPairs--;
 		}
 	}
-	if (bondingPairs != 0) {
-		for (int i = 1; i < lewisStructure.size(); i++) {
-			if(lewisStructure[i].lonePairs < 1 || lewisStructure[0].lonePairs < 1) {
-				continue;
-			}
-			lewisStructure[i].lonePairs--;
-			lewisStructure[i].bondedPairs++;
-			lewisStructure[0].lonePairs--;
-			lewisStructure[0].bondedPairs++;
-			bondingPairs++;
-			if (bondingPairs == 0) {
-				break;
-			}
+	if (bondingPairs < 0) {
+		lewisStructure = rebond(lewisStructure);
+		if(bondingPairs < 0) {
+			lewisStructure = rebond(lewisStructure);
 		}
 	}
 
