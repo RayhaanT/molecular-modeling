@@ -217,7 +217,7 @@ vector<BondedElement> VSEPRMain() {
 		else{
 			VSEPRModel = structure;
 			for (int i = 0; i < structure.size(); i++) {
-				cout << structure[i].base.name << " " << structure[i].bondedPairs << " " << structure[i].lonePairs << " " << checkStability(structure[i]) << endl;
+				cout << structure[i].base.name << " " << structure[i].bondedPairs << " " << structure[i].lonePairs << " " << structure[i].base.valenceNumber - (structure[i].lonePairs*2) - structure[i].bondedPairs << endl;
 			}
 		}
 	}

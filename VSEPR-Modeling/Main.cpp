@@ -195,7 +195,7 @@ int main()
 	glm::vec3 lightColour = glm::vec3(1.0f, 1.0f, 1.0f);
 
 	unsigned int lightingShader = 0;
-	Shader("Shaders/VeShPhong.vs", "Shaders/FrShPhong.fs", lightingShader);
+	Shader("Shaders/VeShMap.vs", "Shaders/FrShMap.fs", lightingShader);
 	glUseProgram(lightingShader);
 	setVec3(lightingShader, "objectColor", objectColour);
 	setVec3(lightingShader, "lightColor", lightColour);
@@ -268,7 +268,14 @@ int main()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		sphere.draw();
 		if(VSEPRModel.size() > 0) {
-			int configIndex = VSEPRModel.size() - 2 + VSEPRModel[0].lonePairs;
+
+			int configIndex;
+			if(VSEPRModel.size() > 2) {
+				configIndex = VSEPRModel.size() - 2 + VSEPRModel[0].lonePairs;
+			}
+			else {
+				configIndex = VSEPRModel.size() - 2;
+			}
 			for (int i = 1; i < VSEPRModel.size() + VSEPRModel[0].lonePairs; i++) {
 				model = glm::translate(model, configurations[configIndex][i - 1] * bondDistance);
 				setMat4(lightingShader, "model", model);
