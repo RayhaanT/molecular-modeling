@@ -4,7 +4,9 @@
 #include "VSEPR.h"
 #include <string>
 
-extern Element perTable[] = {
+extern std::vector<std::vector<glm::vec3>> configurations;
+
+Element perTable[] = {
 Element(1, 1, 1, "Hydrogen"),
 Element(2, 2, 1, "Helium"),
 Element(3, 1, 2, "Lithium"),
@@ -32,7 +34,7 @@ int bondingPairs;
 
 using namespace std;
 
-vector<BondedElement> VSEPRModel;
+extern vector<BondedElement> VSEPRModel;
 
 int searchElements(string symbol) {
 	for (int i = 0; i < sizeof(elements) / sizeof(*elements); i++) {
@@ -187,10 +189,21 @@ vector<BondedElement> constructLewisStructure(vector<Element> formula) {
 
 vector<BondedElement> VSEPRMain() {
 	string inFormula;
+	configurations = {
+		std::vector<glm::vec3>{glm::vec3(1, 0, 0)},
+		std::vector<glm::vec3>{glm::vec3(1, 0, 0), glm::vec3(-1, 0, 0)},
+		std::vector<glm::vec3>{glm::vec3(0.866, -0.5, 0), glm::vec3(-0.866, -0.5, 0), glm::vec3(0, 1, 0)},
+		std::vector<glm::vec3>{glm::vec3(-0.866, -0.5, 0.5), glm::vec3(0.866, -0.5, 0.5), glm::vec3(0, -0.5, -0.866), glm::vec3(0, 1, 0)},
+		std::vector<glm::vec3>{glm::vec3(0, 1, 0), glm::vec3(0, -1, 0), glm::vec3(0, 0, -1), glm::vec3(-0.866, 0, 0.5), glm::vec3(0.866, 0, 0.5)},
+		std::vector<glm::vec3>{glm::vec3(0, 1, 0), glm::vec3(0, -1, 0), glm::vec3(0, 0, -1), glm::vec3(1, 0, 0), glm::vec3(0, 0, 1), glm::vec3(-1, 0, 0)},
+	};
 
 	while (1) {
 		getline(cin, inFormula);
 		vector<Element> comp = readFormula(inFormula);
+		if(inFormula == "H2O") {
+			comp = readFormula("OH2");
+		}
 		for (int i = 0; i < comp.size(); i++)
 		{
 			cout << comp[i].name << " " << comp[i].valenceNumber << endl;

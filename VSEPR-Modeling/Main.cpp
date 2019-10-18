@@ -39,9 +39,13 @@ const float H = 600;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 bool restrictY = true;
+const float bondDistance = 4;
 
+std::vector<BondedElement> VSEPRModel;
+std::vector<std::vector<glm::vec3>> configurations;
 //Define offset variables
-float lastX = W / 2; float lastY = H / 2;
+float lastX = W / 2;
+float lastY = H / 2;
 float yaw = -90; float pitch = 0;
 bool firstMouse = true;
 float fov = 45.0f;
@@ -191,7 +195,7 @@ int main()
 	glm::vec3 lightColour = glm::vec3(1.0f, 1.0f, 1.0f);
 
 	unsigned int lightingShader = 0;
-	Shader("Shaders/VeShMap.vs", "Shaders/FrShMap.fs", lightingShader);
+	Shader("Shaders/VeShPhong.vs", "Shaders/FrShPhong.fs", lightingShader);
 	glUseProgram(lightingShader);
 	setVec3(lightingShader, "objectColor", objectColour);
 	setVec3(lightingShader, "lightColor", lightColour);
@@ -218,6 +222,13 @@ int main()
 	//Set mouse input callback function
 	void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 	glfwSetCursorPosCallback(window, mouse_callback);
+
+	/*for(int i = 0; i < configurations.size(); i++) {
+		for(int x = 0; x < configurations[i].size(); x++) {
+			std::cout << "X: " << configurations[i][x].x << "Y: " << configurations[i][x].y << "Z: " << configurations[i][x].z << std::endl;
+		}
+	}*/
+
 	//Render Loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -238,7 +249,7 @@ int main()
 		float lineColor[] = {0.2f, 0.2f, 0.2f, 1};
 
 		glm::mat4 model;
-		model = glm::rotate(model, (float)(glfwGetTime()) * 2, glm::vec3(1.0f, 0.0f, 0.0f));
+		//model = glm::rotate(model, (float)(glfwGetTime()) * 2, glm::vec3(1.0f, 0.0f, 0.0f));
 		glm::mat4 view;
 		view = camera.GetViewMatrix();
 		glm::mat4 projection;
@@ -256,6 +267,20 @@ int main()
 		//Draw cube
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		sphere.draw();
+		if(VSEPRModel.size() > 0) {
+			int configIndex = VSEPRModel.size() - 2 + VSEPRModel[0].lonePairs;
+			for (int i = 1; i < VSEPRModel.size() + VSEPRModel[0].lonePairs; i++) {
+				model = glm::translate(model, configurations[configIndex][i - 1] * bondDistance);
+				setMat4(lightingShader, "model", model);
+				if(i < VSEPRModel.size()) {
+					sphere.draw();
+				}
+				else if(VSEPRModel.size() > 2) {
+					sphere.drawLines(lineColor);
+				}
+				model = glm::mat4();
+			}
+		}
 		//glDrawArrays(GL_TRIANGLES, 0, ARRAY_SIZE(vertices));
 
 		glUseProgram(lampProgram);
