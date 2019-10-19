@@ -111,6 +111,10 @@ vector<Element> readFormula(string formulaFull) {
 	return comp;
 }
 
+int getFormalCharge(BondedElement b) {
+	return b.base.valenceNumber - b.bondedPairs - (b.lonePairs*2);
+}
+
 int checkStability(BondedElement b) {
 	if (b.base.name == "Hydrogen" || b.base.name == "Helium") {
 		return 2 - ((b.bondedPairs * 2) + (b.lonePairs * 2));
@@ -187,15 +191,44 @@ vector<BondedElement> constructLewisStructure(vector<Element> formula) {
 	return lewisStructure;
 }
 
+int getTotalFormalCharge(vector<BondedElement> structure) {
+	int totalCharge = 0;
+	for (int i = 0; i < structure.size(); i++) {
+		totalCharge += abs(getFormalCharge(structure[i]));
+	}
+	return totalCharge;
+}
+
+vector<BondedElement> optimizeFormalCharge(vector<BondedElement> structure) {
+	vector<BondedElement> returnVector = structure;
+	int totalCharge = getTotalFormalCharge(structure);
+	for(int x = 0; x < 1; x++) {
+		for(int i = structure.size() - 1; i > 1; i--) {
+			if(structure[0].base.periodNumber >= 3 && structure[i].lonePairs > 0) {
+				structure[0].bondedPairs++;
+				structure[i].bondedPairs++;
+				structure[i].lonePairs--;
+				int newTotal = getTotalFormalCharge(structure);
+				if(newTotal < totalCharge) {
+					totalCharge = newTotal;
+					returnVector = structure;
+				}
+			}
+		}
+	}
+
+	return returnVector;
+}
+
 vector<BondedElement> VSEPRMain() {
 	string inFormula;
 	configurations = {
 		std::vector<glm::vec3>{glm::vec3(1, 0, 0)},
 		std::vector<glm::vec3>{glm::vec3(1, 0, 0), glm::vec3(-1, 0, 0)},
-		std::vector<glm::vec3>{glm::vec3(0.866, -0.5, 0), glm::vec3(-0.866, -0.5, 0), glm::vec3(0, 1, 0)},
-		std::vector<glm::vec3>{glm::vec3(-0.866, -0.5, 0.5), glm::vec3(0.866, -0.5, 0.5), glm::vec3(0, -0.5, -0.866), glm::vec3(0, 1, 0)},
-		std::vector<glm::vec3>{glm::vec3(0, 1, 0), glm::vec3(0, -1, 0), glm::vec3(0, 0, -1), glm::vec3(-0.866, 0, 0.5), glm::vec3(0.866, 0, 0.5)},
-		std::vector<glm::vec3>{glm::vec3(0, 1, 0), glm::vec3(0, -1, 0), glm::vec3(0, 0, -1), glm::vec3(1, 0, 0), glm::vec3(0, 0, 1), glm::vec3(-1, 0, 0)},
+		std::vector<glm::vec3>{glm::vec3(COS_30, -SIN_30, 0), glm::vec3(-COS_30, -SIN_30, 0), glm::vec3(0, 1, 0)},
+		std::vector<glm::vec3>{glm::vec3(-COS_30, -SIN_30, SIN_30), glm::vec3(COS_30, -SIN_30, SIN_30), glm::vec3(0, -SIN_30, -COS_30), glm::vec3(0, 1, 0)},
+		std::vector<glm::vec3>{glm::vec3(0, 1, 0), glm::vec3(0, -1, 0), glm::vec3(0, 0, -1), glm::vec3(-COS_30, 0, SIN_30), glm::vec3(COS_30, 0, SIN_30)},
+		std::vector<glm::vec3>{glm::vec3(0, 1, 0), glm::vec3(0, -1, 0), glm::vec3(SIN_45, 0, -SIN_45), glm::vec3(SIN_45, 0, SIN_45), glm::vec3(-SIN_45, 0, SIN_45), glm::vec3(-SIN_45, 0, -SIN_45)},
 	};
 
 	while (1) {
@@ -212,13 +245,18 @@ vector<BondedElement> VSEPRMain() {
 
 		if (structure.size() < 1) {
 			cout << "Lewis structure not possible" << endl;
+			continue;
 		}
 
-		else{
-			VSEPRModel = structure;
-			for (int i = 0; i < structure.size(); i++) {
-				cout << structure[i].base.name << " " << structure[i].bondedPairs << " " << structure[i].lonePairs << " " << checkStability(structure[i]) << endl;
-			}
+		for(int i = 0; i < structure.size(); i++) {
+			if(getFormalCharge(structure[i]) != 0) {
+				structure = optimizeFormalCharge(structure);
+				break;
+			} 
+		}
+		VSEPRModel = structure;
+		for (int i = 0; i < structure.size(); i++) {
+			cout << structure[i].base.name << " " << structure[i].bondedPairs << " " << structure[i].lonePairs << " " << getFormalCharge(structure[i]) << endl;
 		}
 	}
 

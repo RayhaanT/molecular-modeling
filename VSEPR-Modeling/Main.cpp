@@ -1,18 +1,21 @@
-#include "include/GLFW\glfw3.h"
-#include "include\glad\glad.h"
-#include <iostream>
-#include "include\glm\glm.hpp"
+#include "include/GLFW/glfw3.h"
+#include "include/glad/glad.h"
+#include "include/glm/glm.hpp"
 #include "include/glm/gtc/matrix_transform.hpp"
 #include "include/glm/gtc/type_ptr.hpp"
-#define STB_IMAGE_IMPLEMENTATION
-#define ARRAY_SIZE(array) (sizeof((array))/sizeof((array[0])))
+
+#define STB_IMAGE_IMPLEMENTATION //Needed for headers to compile
 #include "include/OpenGLHeaders/Camera.h"
 #include "include/OpenGLHeaders/Texture.h"
 #include "include/OpenGLHeaders/Shader.h"
 #include "VSEPR.h"
 #include "Sphere.h"
+
 #include <vector>
 #include <thread>
+#include <iostream>
+
+#define ARRAY_SIZE(array) (sizeof((array)) / sizeof((array[0])))
 
 ///VBOs Vertex Buffer Objects contain vertex data that is sent to memory in the GPU, vertex attrib calls config bound VBO
 ///VAOs Vertex Array Objects when bound, any vertex attribute calls and attribute configs are stored in VAO
@@ -147,7 +150,6 @@ int main()
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 	};
 
-	
 	//Create a Vertex Array Object
 	unsigned int VAO;
 	glGenVertexArrays(1, &VAO);
@@ -255,16 +257,15 @@ int main()
 		glm::mat4 projection;
 		projection = glm::perspective(glm::radians(fov), W / H, 0.1f, 100.0f);
 
-		glm::vec3 lightVec3 = glm::vec3(1.8 * sin((float)(glfwGetTime())), 0.0f, 1.8 * cos((float)(glfwGetTime())));
+		glm::vec3 lightVec3 = glm::vec3(1.2*sin((float)(glfwGetTime())*2), 4 * cos((float)(glfwGetTime())) + 2.5f, 0.0f);
 
 		//Pass our matrices to the shader through a uniform
 		setMat4(lightingShader, "model", model);
 		setMat4(lightingShader, "view", view);
 		setMat4(lightingShader, "projection", projection);
 		setVec3(lightingShader, "lightPos", lightVec3);
-		//setVec3(lightingShader, "lightPos", lightPos);
 
-		//Draw cube
+		//Draw spheres
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		sphere.draw();
 		if(VSEPRModel.size() > 0) {
@@ -284,7 +285,7 @@ int main()
 		//glDrawArrays(GL_TRIANGLES, 0, ARRAY_SIZE(vertices));
 
 		glUseProgram(lampProgram);
-		glBindVertexArray(lightVAO);
+		//glBindVertexArray(lightVAO);
 
 		glm::mat4 lightModel;
 		lightModel = glm::translate(lightModel, lightVec3);
@@ -293,7 +294,8 @@ int main()
 		setMat4(lampProgram, "model", lightModel);
 		setMat4(lampProgram, "view", view);
 		setMat4(lampProgram, "projection", projection);
-		glDrawArrays(GL_TRIANGLES, 0, ARRAY_SIZE(vertices));
+		sphere.draw();
+		//glDrawArrays(GL_TRIANGLES, 0, ARRAY_SIZE(vertices));
 
 		//Swap buffer and poll IO events
 		glfwSwapBuffers(window);

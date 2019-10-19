@@ -8,6 +8,9 @@
 #include <vector>
 #include "include/glm/glm.hpp"
 
+#define SIN_45 0.70710678118654752440084436210485
+#define COS_30 0.86602540378443864676372317075294
+#define SIN_30 0.5
 struct Element{
 	int atomicNumber;
 	int valenceNumber;
