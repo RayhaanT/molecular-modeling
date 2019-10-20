@@ -203,12 +203,18 @@ int main()
 	setInt(lightingShader, "material.diffuse", 0);
 	setInt(lightingShader, "material.specular", 1);
 	setFloat(lightingShader, "material.shininess", 32.0f);
-	setVec3(lightingShader, "light.ambient", glm::vec3(0.2, 0.2, 0.2));
-	setVec3(lightingShader, "light.diffuse", glm::vec3(0.5, 0.5, 0.5));
-	setVec3(lightingShader, "light.specular", glm::vec3(1.0, 1.0, 1.0));
-	setFloat(lightingShader, "light.constant", 1.0f);
-	setFloat(lightingShader, "light.linear", 0.09f);
-	setFloat(lightingShader, "light.quadratic", 0.032f);
+	setVec3(lightingShader, "pointLights[0].ambient", glm::vec3(0.2, 0.2, 0.2));
+	setVec3(lightingShader, "pointLights[0].diffuse", glm::vec3(0.5, 0.5, 0.5));
+	setVec3(lightingShader, "pointLights[0].specular", glm::vec3(1.0, 1.0, 1.0));
+	setFloat(lightingShader, "pointLights[0].constant", 1.0f);
+	setFloat(lightingShader, "pointLights[0].linear", 0.09f);
+	setFloat(lightingShader, "pointLights[0].quadratic", 0.032f);
+	setVec3(lightingShader, "pointLights[1].ambient", glm::vec3(0.2, 0.2, 0.2));
+	setVec3(lightingShader, "pointLights[1].diffuse", glm::vec3(0.5, 0.5, 0.5));
+	setVec3(lightingShader, "pointLights[1].specular", glm::vec3(1.0, 1.0, 1.0));
+	setFloat(lightingShader, "pointLights[1].constant", 1.0f);
+	setFloat(lightingShader, "pointLights[1].linear", 0.09f);
+	setFloat(lightingShader, "pointLights[1].quadratic", 0.032f);
 	//setVec3(lightingShader, "light.position", lightPos);
 
 	unsigned int lampProgram = 0;
@@ -216,11 +222,11 @@ int main()
 
 	unsigned int diffMap;
 	glActiveTexture(GL_TEXTURE0);
-	loadTexture(diffMap, "Container.png");
+	loadTexture(diffMap, "RedTexture.png");
 
 	unsigned int specMap;
 	glActiveTexture(GL_TEXTURE1);
-	loadTexture(specMap, "SpecularContainer.png");
+	loadTexture(specMap, "RedTexture.png");
 
 	glEnable(GL_DEPTH_TEST);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -255,12 +261,14 @@ int main()
 		projection = glm::perspective(glm::radians(fov), W / H, 0.1f, 100.0f);
 
 		glm::vec3 lightVec3 = glm::vec3(1.8*sin((float)(glfwGetTime())*2), 4 * cos((float)(glfwGetTime())) + 2.5f, 0.0f);
+		glm::vec3 light2Vec3 = glm::vec3(1.8 * sin((float)(glfwGetTime()) * 2), 4 * cos((float)(glfwGetTime())) - 2.5f, 0.0f);
 
 		//Pass our matrices to the shader through a uniform
 		setMat4(lightingShader, "model", model);
 		setMat4(lightingShader, "view", view);
 		setMat4(lightingShader, "projection", projection);
-		setVec3(lightingShader, "light.position", lightVec3);
+		setVec3(lightingShader, "pointLights[0].position", lightVec3);
+		setVec3(lightingShader, "pointLights[1].position", light2Vec3);
 		setVec3(lightingShader, "viewPos", camera.Position);
 
 		//Draw spheres
@@ -299,6 +307,11 @@ int main()
 		setMat4(lampProgram, "model", lightModel);
 		setMat4(lampProgram, "view", view);
 		setMat4(lampProgram, "projection", projection);
+		sphere.draw();
+		lightModel = glm::mat4();
+		lightModel = glm::translate(lightModel, light2Vec3);
+		lightModel = glm::scale(lightModel, glm::vec3(0.2f));
+		setMat4(lampProgram, "model", lightModel);
 		sphere.draw();
 		//glDrawArrays(GL_TRIANGLES, 0, ARRAY_SIZE(vertices));
 
