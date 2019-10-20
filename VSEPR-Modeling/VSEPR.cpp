@@ -26,7 +26,7 @@ Element(16, 6, 3, "Sulfur"),
 Element(17, 7, 3, "Chlorine"),
 Element(18, 8, 3, "Argon"),
 Element(19, 1, 4, "Potassium"),
-Element(20, 2, 4, "Calcium")
+Element(20, 2, 4, "Calcium"),
 };
 
 std::string elements[] = { "H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca" };
@@ -108,7 +108,12 @@ vector<Element> readFormula(string formulaFull) {
 		comp.push_back(Element(-1, -charge, -1, ""));
 	}
 
-	return comp;
+	if(comp.size() > 0) {
+		return comp;
+	}
+	else {
+		return vector<Element>();
+	}
 }
 
 int getFormalCharge(BondedElement b) {
@@ -234,6 +239,9 @@ vector<BondedElement> VSEPRMain() {
 	while (1) {
 		getline(cin, inFormula);
 		vector<Element> comp = readFormula(inFormula);
+		if(comp.size() < 1) {
+			continue;
+		}
 		if(inFormula == "H2O") {
 			comp = readFormula("OH2");
 		}

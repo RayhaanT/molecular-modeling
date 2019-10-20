@@ -200,13 +200,16 @@ int main()
 	Shader("Shaders/VeShMap.vs", "Shaders/FrShMap.fs", lightingShader);
 	glUseProgram(lightingShader);
 	setVec3(lightingShader, "objectColor", objectColour);
-	setVec3(lightingShader, "lightColor", lightColour);
 	setInt(lightingShader, "material.diffuse", 0);
 	setInt(lightingShader, "material.specular", 1);
 	setFloat(lightingShader, "material.shininess", 32.0f);
 	setVec3(lightingShader, "light.ambient", glm::vec3(0.2, 0.2, 0.2));
 	setVec3(lightingShader, "light.diffuse", glm::vec3(0.5, 0.5, 0.5));
 	setVec3(lightingShader, "light.specular", glm::vec3(1.0, 1.0, 1.0));
+	setFloat(lightingShader, "light.constant", 1.0f);
+	setFloat(lightingShader, "light.linear", 0.09f);
+	setFloat(lightingShader, "light.quadratic", 0.032f);
+	//setVec3(lightingShader, "light.position", lightPos);
 
 	unsigned int lampProgram = 0;
 	Shader("Shaders/VeShColors.vs", "Shaders/FrShLight.fs", lampProgram);
@@ -224,12 +227,6 @@ int main()
 	//Set mouse input callback function
 	void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 	glfwSetCursorPosCallback(window, mouse_callback);
-
-	/*for(int i = 0; i < configurations.size(); i++) {
-		for(int x = 0; x < configurations[i].size(); x++) {
-			std::cout << "X: " << configurations[i][x].x << "Y: " << configurations[i][x].y << "Z: " << configurations[i][x].z << std::endl;
-		}
-	}*/
 
 	//Render Loop
 	while (!glfwWindowShouldClose(window))
@@ -257,13 +254,14 @@ int main()
 		glm::mat4 projection;
 		projection = glm::perspective(glm::radians(fov), W / H, 0.1f, 100.0f);
 
-		glm::vec3 lightVec3 = glm::vec3(1.2*sin((float)(glfwGetTime())*2), 4 * cos((float)(glfwGetTime())) + 2.5f, 0.0f);
+		glm::vec3 lightVec3 = glm::vec3(1.8*sin((float)(glfwGetTime())*2), 4 * cos((float)(glfwGetTime())) + 2.5f, 0.0f);
 
 		//Pass our matrices to the shader through a uniform
 		setMat4(lightingShader, "model", model);
 		setMat4(lightingShader, "view", view);
 		setMat4(lightingShader, "projection", projection);
-		setVec3(lightingShader, "lightPos", lightVec3);
+		setVec3(lightingShader, "light.position", lightVec3);
+		setVec3(lightingShader, "viewPos", camera.Position);
 
 		//Draw spheres
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

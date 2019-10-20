@@ -12,7 +12,6 @@ uniform vec3 lightPos;
 
 out vec3 Normal;
 out vec3 FragPos;
-out vec3 LightPos;
 out vec2 TexCoords;
 
 void main()
@@ -20,7 +19,6 @@ void main()
     gl_Position = projection * view * model * vec4(aPos, 1);
     Normal = mat3(transpose(inverse(view * model))) * aNormal;  
     //Find fragment's position in view coords by multiplying by model and view only
-    FragPos = vec3(view * model * vec4(aPos, 1));
-    LightPos = vec3(view * vec4(lightPos, 1));
+    FragPos = vec3(model * vec4(aPos, 1));
     TexCoords = aTexCoords;
 }
