@@ -3,6 +3,9 @@
 #include "include/glm/glm.hpp"
 #include "include/glm/gtc/matrix_transform.hpp"
 #include "include/glm/gtc/type_ptr.hpp"
+#include "include/glm/gtx/quaternion.hpp"
+#include "include/glm/gtc/quaternion.hpp"
+#include "include/glm/gtx/norm.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION //Needed for headers to compile
 #include "include/OpenGLHeaders/Camera.h"
@@ -94,6 +97,39 @@ void setPointLightPosition(int index, unsigned int &program, glm::vec3 pos) {
 	setVec3(program, ("pointLights[" + std::to_string(index) + "].position").c_str(), pos);
 }
 
+glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest)
+{
+	start = normalize(start);
+	dest = normalize(dest);
+
+	float cosTheta = dot(start, dest);
+	glm::vec3 rotationAxis;
+
+	if (cosTheta < -1 + 0.001f)
+	{
+		// special case when vectors in opposite directions:
+		// there is no "ideal" rotation axis
+		// So guess one; any will do as long as it's perpendicular to start
+		rotationAxis = glm::cross(glm::vec3(0.0f, 0.0f, 1.0f), start);
+		if (glm::length2(rotationAxis) < 0.01) // bad luck, they were parallel, try again!
+			rotationAxis = glm::cross(glm::vec3(1.0f, 0.0f, 0.0f), start);
+
+		rotationAxis = normalize(rotationAxis);
+		return glm::angleAxis(glm::radians(180.0f), rotationAxis);
+	}
+
+	rotationAxis = cross(start, dest);
+
+	float s = sqrt((1 + cosTheta) * 2);
+	float invs = 1 / s;
+	
+	return glm::quat(
+		s * 0.5f,
+		rotationAxis.x * invs,
+		rotationAxis.y * invs,
+		rotationAxis.z * invs);
+}
+
 glm::vec3 calculateOrbitPostion(BondedElement central, BondedElement bonded, int configIndex, int modelIndex) {
 	float largerAR = getAtomicRadius(central);
 	float smallerAR = getAtomicRadius(bonded);
@@ -119,9 +155,7 @@ glm::vec3 calculateOrbitPostion(BondedElement central, BondedElement bonded, int
 	// 	transform = glm::rotate(transform, -(atan2(direction.x, direction.z) - 90), glm::vec3(0.0, 1.0, 0.0));
 	// }
 
-	glm::vec3 const up(0.f, 1.f, 0.f);
-	glm::vec3 empty = glm::vec3(0.0f, 0.0f, 0.0f);
-	transform = glm::lookAt(empty, direction, up);
+	transform = glm::toMat4(RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f), direction));
 
 	// glm::mat3 transform;
 	// glm::vec3 direction = configurations[configIndex][modelIndex - 1];
