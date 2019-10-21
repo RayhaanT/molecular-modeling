@@ -41,8 +41,8 @@
 ///Depth information stored in Z buffer, depth testing done automatically, must be enabled
 ///Depth buffer must also be cleared in the clear function
 
-const float W = 1000;
-const float H = 750;
+const float W = 800;
+const float H = 600;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -351,7 +351,6 @@ int main()
 		//glBindVertexArray(lightVAO);
 
 		glm::mat4 lightModel;
-		lightModel = glm::scale(lightModel, glm::vec3(0.1f));
 
 		setMat4(lampProgram, "model", lightModel);
 		setMat4(lampProgram, "view", view);
@@ -374,7 +373,9 @@ int main()
 				for(int x = 0; x < VSEPRModel[i].bondedPairs; x++) {
 					lightModel = glm::mat4();
 					glm::vec3 newLightPos = calculateOrbitPostion(VSEPRModel[0], VSEPRModel[i], configIndex, i);
+					glUseProgram(lightingShader);
 					setPointLightPosition(lightIndex, lightingShader, newLightPos);
+					glUseProgram(lampProgram);
 					lightModel = glm::translate(lightModel, newLightPos);
 					lightModel = glm::scale(lightModel, glm::vec3(0.1f));
 					setMat4(lampProgram, "model", lightModel);
@@ -382,16 +383,29 @@ int main()
 					lightIndex++;
 				}
 			}
+			glUseProgram(lightingShader);
+			setUpPointLights(lightIndex, lightingShader);
 			// lightVec3 = calculateOrbitPostion(VSEPRModel[0], VSEPRModel[VSEPRModel.size()-1]);
 			// glm::vec3 v = calculateOrbitPostion(VSEPRModel[0], VSEPRModel[VSEPRModel.size() - 1]);
 			// light2Vec3 = glm::vec3(v.x, -v.y, 0.0f);
 			//light2Vec3 = glm::vec3(1.4 * getAtomicRadius(VSEPRModel[0]) * sin((float)(glfwGetTime())), 1.4 * getAtomicRadius(VSEPRModel[0]) * cos((float)(glfwGetTime())), 0.0f);
 		}
 		else {
-			lightVec3 = glm::vec3(1.4 * sin((float)(glfwGetTime())), 1.4 * cos((float)(glfwGetTime())), 0.0f);
-			light2Vec3 = glm::vec3(1.4 * sin((float)(glfwGetTime())), 1.4 * cos((float)(glfwGetTime())), 0.0f);
+			lightVec3 = glm::vec3(1.2 * sin((float)(glfwGetTime())), 1.2 * cos((float)(glfwGetTime())), 0.0f);
+			light2Vec3 = glm::vec3(1.5 * sin((float)(glfwGetTime())), 1.5 * cos((float)(glfwGetTime())), 0.0f);
+			glUseProgram(lightingShader);
 			setVec3(lightingShader, "pointLights[0].position", lightVec3);
 			setVec3(lightingShader, "pointLights[1].position", light2Vec3);
+			glUseProgram(lampProgram);
+			lightModel = glm::translate(lightModel, lightVec3);
+			lightModel = glm::scale(lightModel, glm::vec3(0.1f));
+			setMat4(lampProgram, "model", lightModel);
+			sphere.draw();
+			lightModel = glm::mat4();
+			lightModel = glm::translate(lightModel, light2Vec3);
+			lightModel = glm::scale(lightModel, glm::vec3(0.1f));
+			setMat4(lampProgram, "model", lightModel);
+			sphere.draw();
 		}
 
 		glUseProgram(lightingShader);
