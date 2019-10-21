@@ -11,6 +11,9 @@
 #define SIN_45 0.70710678118654752440084436210485
 #define COS_30 0.86602540378443864676372317075294
 #define SIN_30 0.5
+#define PERIOD_CONSTANT 0.4
+#define GROUP_CONSTANT 0.8
+#define UPSCALING 4
 struct Element{
 	int atomicNumber;
 	int valenceNumber;
@@ -51,5 +54,6 @@ struct BondedElement {
 
 extern std::vector<BondedElement> VSEPRModel;
 std::vector<BondedElement> VSEPRMain();
+float getAtomicRadius(BondedElement b);
 
 #endif
