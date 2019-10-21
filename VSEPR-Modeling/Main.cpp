@@ -87,8 +87,8 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 void setUpPointLights(int num, unsigned int &program) {
 	for(int i = 0; i < num; i++) {
 		setVec3(program, ("pointLights[" + std::to_string(i) + "].ambient").c_str(), glm::vec3(0.05, 0.05, 0.05));
-		setVec3(program, ("pointLights[" + std::to_string(i) + "].diffuse").c_str(), glm::vec3(0.5, 0.5, 0.5));
-		setVec3(program, ("pointLights[" + std::to_string(i) + "].specular").c_str(), glm::vec3(1.0, 1.0, 1.0));
+		setVec3(program, ("pointLights[" + std::to_string(i) + "].diffuse").c_str(), glm::vec3(0.3, 0.3, 0.3));
+		setVec3(program, ("pointLights[" + std::to_string(i) + "].specular").c_str(), glm::vec3(0.7, 0.7, 0.7));
 		setFloat(program, ("pointLights[" + std::to_string(i) + "].constant").c_str(), 1.0f);
 		setFloat(program, ("pointLights[" + std::to_string(i) + "].linear").c_str(), 0.09f);
 		setFloat(program, ("pointLights[" + std::to_string(i) + "].quadratic").c_str(), 0.032f);
@@ -382,15 +382,19 @@ int main()
 					lightModel = glm::scale(lightModel, glm::vec3(0.1f));
 					setMat4(lampProgram, "model", lightModel);
 					sphere.draw();
+					lightIndex++;
 
 					//Draw complimentary
 					lightModel = glm::mat4();
 					newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedPairs, true);
+					glUseProgram(lightingShader);
+					setPointLightPosition(lightIndex, lightingShader, newLightPos);
+					glUseProgram(lampProgram);
 					lightModel = glm::translate(lightModel, newLightPos);
 					lightModel = glm::scale(lightModel, glm::vec3(0.1f));
 					setMat4(lampProgram, "model", lightModel);
 					sphere.draw();
-					lightIndex += 2;
+					lightIndex++;
 				}
 			}
 			glUseProgram(lightingShader);
