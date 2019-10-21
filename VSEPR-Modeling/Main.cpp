@@ -48,6 +48,7 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 bool restrictY = true;
 const float defaultBondDistance = 4;
+const float electronSpeed = 3;
 
 std::vector<BondedElement> VSEPRModel;
 std::vector<std::vector<glm::vec3>> configurations;
@@ -145,11 +146,12 @@ glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, in
 		smallerAR = largerAR;
 	}
 	
-	float xOffset = ((2.0f/offsetTotal)*offset*PI)-(4/offsetTotal*PI);
+	float ePI = (2*PI)/electronSpeed;
+	float xOffset = ((2.0f / offsetTotal) * offset * ePI) - (4 / offsetTotal * ePI);
 
-	float x = 1.4 * largerAR * sin((float)(glfwGetTime()-xOffset) * 2);
+	float x = 1.4 * largerAR * sin((float)(glfwGetTime()-xOffset) * electronSpeed);
 	float distance = defaultBondDistance * getAtomicRadius(central);
-	float y = distance * cos((float)(glfwGetTime() - xOffset)) + distance / 2;
+	float y = distance * cos((float)(glfwGetTime() - xOffset) * (electronSpeed / 2)) + distance / 2;
 
 	glm::vec3 direction = configurations[configIndex][modelIndex - 1];
 	glm::mat4 transform;
@@ -380,6 +382,8 @@ int main()
 					lightModel = glm::scale(lightModel, glm::vec3(0.1f));
 					setMat4(lampProgram, "model", lightModel);
 					sphere.draw();
+
+					//Draw complimentary
 					lightModel = glm::mat4();
 					newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedPairs, true);
 					lightModel = glm::translate(lightModel, newLightPos);
