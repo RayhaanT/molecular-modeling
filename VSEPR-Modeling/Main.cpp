@@ -85,12 +85,17 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 
 void setUpPointLights(int num, unsigned int &program) {
 	for(int i = 0; i < num; i++) {
-		setVec3(program, ("pointLights[" + std::to_string(i) + "].ambient").c_str(), glm::vec3(0.2, 0.2, 0.2));
+		setVec3(program, ("pointLights[" + std::to_string(i) + "].ambient").c_str(), glm::vec3(0.05, 0.05, 0.05));
 		setVec3(program, ("pointLights[" + std::to_string(i) + "].diffuse").c_str(), glm::vec3(0.5, 0.5, 0.5));
 		setVec3(program, ("pointLights[" + std::to_string(i) + "].specular").c_str(), glm::vec3(1.0, 1.0, 1.0));
 		setFloat(program, ("pointLights[" + std::to_string(i) + "].constant").c_str(), 1.0f);
 		setFloat(program, ("pointLights[" + std::to_string(i) + "].linear").c_str(), 0.09f);
 		setFloat(program, ("pointLights[" + std::to_string(i) + "].quadratic").c_str(), 0.032f);
+	}
+	for(int i = num; i < MAX_POINT_LIGHTS; i++) {
+		setVec3(program, ("pointLights[" + std::to_string(i) + "].ambient").c_str(), glm::vec3(0.0f));
+		setVec3(program, ("pointLights[" + std::to_string(i) + "].diffuse").c_str(), glm::vec3(0.0f));
+		setVec3(program, ("pointLights[" + std::to_string(i) + "].specular").c_str(), glm::vec3(0.0f));
 	}
 }
 
@@ -131,7 +136,7 @@ glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest)
 		rotationAxis.z * invs);
 }
 
-glm::vec3 calculateOrbitPostion(BondedElement central, BondedElement bonded, int configIndex, int modelIndex) {
+glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, int configIndex, int modelIndex, int offset, int offsetTotal, bool pair) {
 	float largerAR = getAtomicRadius(central);
 	float smallerAR = getAtomicRadius(bonded);
 	if(largerAR < smallerAR) {
@@ -140,44 +145,39 @@ glm::vec3 calculateOrbitPostion(BondedElement central, BondedElement bonded, int
 		smallerAR = largerAR;
 	}
 	
-	float x = 1.4 * largerAR * sin((float)(glfwGetTime()) * 2);
+	float xOffset = ((2.0f/offsetTotal)*offset*PI)-(4/offsetTotal*PI);
+
+	float x = 1.4 * largerAR * sin((float)(glfwGetTime()-xOffset) * 2);
 	float distance = defaultBondDistance * getAtomicRadius(central);
-	float y = distance * cos((float)(glfwGetTime())) + distance / 2;
+	float y = distance * cos((float)(glfwGetTime() - xOffset)) + distance / 2;
 
 	glm::vec3 direction = configurations[configIndex][modelIndex - 1];
 	glm::mat4 transform;
-	// if (glm::length(glm::vec2(direction.x, direction.y)) == 1) {
-	// 	transform = glm::rotate(transform, -(atan2(direction.x, direction.y) - 90), glm::vec3(0.0, 0.0, 1.0));
-	// }
-	// if (glm::length(glm::vec2(direction.z, direction.y)) == 1) {
-	// 	transform = glm::rotate(transform, -(atan2(direction.z, direction.y) - 90), glm::vec3(1.0, 0.0, 0.0));
-	// }
-	// if (glm::length(glm::vec2(direction.x, direction.z)) == 1) {
-	// 	transform = glm::rotate(transform, -(atan2(direction.x, direction.z) - 90), glm::vec3(0.0, 1.0, 0.0));
-	// }
-
+	glm::vec4 v = glm::vec4(x, y, 0.0f, 0.0f);
+	
+	if(pair) {
+		transform = glm::rotate(transform, 180.0f * (PI / 180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	}
+	transform = glm::rotate(transform, (PI)/offsetTotal * offset, glm::vec3(0.0f, 1.0f, 0.0f));
+	v = v * transform;
 	transform = glm::toMat4(RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f) * distance, direction * distance));
-	transform = glm::rotate(transform, 180.0f * (3.14159265358979323846264338f/ 180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	transform = glm::rotate(transform, 180.0f * (PI/ 180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	v = v * transform;
 
-	// glm::mat3 transform;
-	// glm::vec3 direction = configurations[configIndex][modelIndex - 1];
-
-	// if (direction.x == 0 && direction.z == 0)
-	// {
-	// 	if (direction.y < 0) // rotate 180 degrees
-	// 		transform = glm::mat3(glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	// }
-	// else
-	// {
-	// 	glm::vec3 newY = glm::normalize(direction);
-	// 	glm::vec3 newZ = glm::normalize(glm::cross(newY, glm::vec3(0, 1, 0)));
-	// 	glm::vec3 newX = glm::normalize(glm::cross(newY, newZ));
-
-	// 	transform = glm::mat3(newX, newY, newZ);
-	// }
-
-	glm::vec4 v = glm::vec4(x, y, 0.0f, 0.0f) * transform;
 	return glm::vec3(v.x, v.y, v.z);
+}
+
+glm::vec3 calculateOrbitPosition(glm::vec3 v, int configIndex, int modelIndex, bool pair) {
+	if(pair) {
+		glm::mat4 transform;
+		glm::vec4 v4 = glm::vec4(v, 1.0f);
+		transform = glm::rotate(transform, 180.0f * (PI / 180.0f), (configurations[configIndex][modelIndex]));
+		glm::vec3 test = configurations[configIndex][modelIndex];
+		printf("X: %f Y: %f Z: %f \n", test.x, test.y, test.z);
+		v4 = v4 * transform;
+		return glm::vec3(v4);
+	}
+	return v;
 }
 
 int main()
@@ -372,7 +372,7 @@ int main()
 			for(int i = 1; i < VSEPRModel.size(); i++) {
 				for(int x = 0; x < VSEPRModel[i].bondedPairs; x++) {
 					lightModel = glm::mat4();
-					glm::vec3 newLightPos = calculateOrbitPostion(VSEPRModel[0], VSEPRModel[i], configIndex, i);
+					glm::vec3 newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedPairs, false);
 					glUseProgram(lightingShader);
 					setPointLightPosition(lightIndex, lightingShader, newLightPos);
 					glUseProgram(lampProgram);
@@ -380,7 +380,13 @@ int main()
 					lightModel = glm::scale(lightModel, glm::vec3(0.1f));
 					setMat4(lampProgram, "model", lightModel);
 					sphere.draw();
-					lightIndex++;
+					lightModel = glm::mat4();
+					newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedPairs, true);
+					lightModel = glm::translate(lightModel, newLightPos);
+					lightModel = glm::scale(lightModel, glm::vec3(0.1f));
+					setMat4(lampProgram, "model", lightModel);
+					sphere.draw();
+					lightIndex += 2;
 				}
 			}
 			glUseProgram(lightingShader);

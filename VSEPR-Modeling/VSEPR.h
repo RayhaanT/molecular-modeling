@@ -14,6 +14,8 @@
 #define PERIOD_CONSTANT 0.4
 #define GROUP_CONSTANT 0.8
 #define UPSCALING 4
+#define PI 3.14159265358979323846264338f
+#define MAX_POINT_LIGHTS 36
 struct Element{
 	int atomicNumber;
 	int valenceNumber;

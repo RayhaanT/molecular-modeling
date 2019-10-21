@@ -19,7 +19,7 @@ struct PointLight {
     float linear;
     float quadratic;
 };
-#define MAX_POINT_LIGHTS 18
+#define MAX_POINT_LIGHTS 36
 uniform PointLight pointLights[MAX_POINT_LIGHTS];
 
 in vec3 Normal;
