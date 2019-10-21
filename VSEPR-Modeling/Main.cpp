@@ -18,6 +18,7 @@
 #include <thread>
 #include <iostream>
 #include <string>
+#include <cmath>
 
 #define ARRAY_SIZE(array) (sizeof((array)) / sizeof((array[0])))
 
@@ -155,7 +156,8 @@ glm::vec3 calculateOrbitPostion(BondedElement central, BondedElement bonded, int
 	// 	transform = glm::rotate(transform, -(atan2(direction.x, direction.z) - 90), glm::vec3(0.0, 1.0, 0.0));
 	// }
 
-	transform = glm::toMat4(RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f), direction));
+	transform = glm::toMat4(RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f) * distance, direction * distance));
+	transform = glm::rotate(transform, 180.0f * (3.14159265358979323846264338f/ 180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	// glm::mat3 transform;
 	// glm::vec3 direction = configurations[configIndex][modelIndex - 1];
