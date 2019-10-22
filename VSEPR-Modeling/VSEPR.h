@@ -16,6 +16,7 @@
 #define UPSCALING 4
 #define PI 3.14159265358979323846264338f
 #define MAX_POINT_LIGHTS 36
+#define smoothingConstant 0.2f
 struct Element{
 	int atomicNumber;
 	int valenceNumber;

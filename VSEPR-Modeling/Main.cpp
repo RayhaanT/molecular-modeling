@@ -49,8 +49,6 @@ float lastFrame = 0.0f;
 bool restrictY = true;
 const float defaultBondDistance = 4;
 const float electronSpeed = 3;
-const float smoothingConstant = 0.2f;
-float rotationSpeed = 0;
 
 std::vector<BondedElement> VSEPRModel;
 std::vector<std::vector<glm::vec3>> configurations;
@@ -87,7 +85,7 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-	rotationSpeed += yoffset * smoothingConstant;
+	camera.RotationSpeed += yoffset * smoothingConstant;
 }
 
 void setUpPointLights(int num, unsigned int &program) {
@@ -351,7 +349,7 @@ int main()
 
 		float lineColor[] = {0.2f, 0.2f, 0.2f, 1};
 
-		time += deltaTime*rotationSpeed;
+		time += deltaTime*camera.RotationSpeed;
 		glm::mat4 model;
 		glm::mat4 rotationModel = glm::rotate(model, time, glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::mat4 view;

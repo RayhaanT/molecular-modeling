@@ -4,6 +4,7 @@
 #include "../include/glad/glad.h"
 #include "../include/glm/glm.hpp"
 #include "../include/glm/gtc/matrix_transform.hpp"
+#include "../VSEPR.h"
 
 #include <vector>
 
@@ -38,6 +39,7 @@ public:
 	float MovementSpeed;
 	float MouseSensitivity;
 	float Zoom;
+	float RotationSpeed = 0;
 
 	// Constructor with vectors
 	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVTY), Zoom(ZOOM)
@@ -72,6 +74,12 @@ public:
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE))
 		{
 			glfwSetWindowShouldClose(window, true);
+		}
+		if(glfwGetKey(window, GLFW_KEY_E)) {
+			RotationSpeed += 1 * smoothingConstant * camspeed;
+		}
+		if (glfwGetKey(window, GLFW_KEY_Q)) {
+			RotationSpeed -= 1 * smoothingConstant * camspeed;
 		}
 		//Move without flying: along x and z only
 		if (restrictY)
