@@ -49,6 +49,8 @@ float lastFrame = 0.0f;
 bool restrictY = true;
 const float defaultBondDistance = 4;
 const float electronSpeed = 3;
+const float smoothingConstant = 0.2f;
+float rotationSpeed = 0;
 
 std::vector<BondedElement> VSEPRModel;
 std::vector<std::vector<glm::vec3>> configurations;
@@ -82,6 +84,10 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 	lastY = ypos;
 
 	camera.ProcessMouseMovement(xoffset, yoffset, true);
+}
+
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+	rotationSpeed += yoffset * smoothingConstant;
 }
 
 void setUpPointLights(int num, unsigned int &program) {
@@ -137,7 +143,7 @@ glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest)
 		rotationAxis.z * invs);
 }
 
-glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, int configIndex, int modelIndex, int offset, int offsetTotal, bool pair) {
+glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, int configIndex, int modelIndex, int offset, int offsetTotal, bool pair, glm::mat4 rotationModel) {
 	float largerAR = getAtomicRadius(central);
 	float smallerAR = getAtomicRadius(bonded);
 	if(largerAR < smallerAR) {
@@ -165,6 +171,7 @@ glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, in
 	transform = glm::toMat4(RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f) * distance, direction * distance));
 	transform = glm::rotate(transform, 180.0f * (PI/ 180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	v = v * transform;
+	v = v * rotationModel;
 
 	return glm::vec3(v.x, v.y, v.z);
 }
@@ -325,6 +332,8 @@ int main()
 	//Set mouse input callback function
 	void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+	float time = 0;
 
 	//Render Loop
 	while (!glfwWindowShouldClose(window))
@@ -342,8 +351,9 @@ int main()
 
 		float lineColor[] = {0.2f, 0.2f, 0.2f, 1};
 
+		time += deltaTime*rotationSpeed;
 		glm::mat4 model;
-		//model = glm::rotate(model, (float)(glfwGetTime()) * 2, glm::vec3(1.0f, 0.0f, 0.0f));
+		glm::mat4 rotationModel = glm::rotate(model, time, glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::mat4 view;
 		view = camera.GetViewMatrix();
 		glm::mat4 projection;
@@ -374,7 +384,7 @@ int main()
 			for(int i = 1; i < VSEPRModel.size(); i++) {
 				for(int x = 0; x < VSEPRModel[i].bondedPairs; x++) {
 					lightModel = glm::mat4();
-					glm::vec3 newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedPairs, false);
+					glm::vec3 newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedPairs, false, rotationModel);
 					glUseProgram(lightingShader);
 					setPointLightPosition(lightIndex, lightingShader, newLightPos);
 					glUseProgram(lampProgram);
@@ -386,7 +396,7 @@ int main()
 
 					//Draw complimentary
 					lightModel = glm::mat4();
-					newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedPairs, true);
+					newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedPairs, true, rotationModel);
 					glUseProgram(lightingShader);
 					setPointLightPosition(lightIndex, lightingShader, newLightPos);
 					glUseProgram(lampProgram);
@@ -446,7 +456,11 @@ int main()
 				configIndex = VSEPRModel.size() - 2;
 			}
 			for (int i = 1; i < VSEPRModel.size() + VSEPRModel[0].lonePairs; i++) {
-				model = glm::translate(model, configurations[configIndex][i - 1] * bondDistance);
+				model = glm::mat4();
+				glm::vec4 v = glm::vec4(configurations[configIndex][i - 1] * bondDistance, 1.0f);
+				glm::vec3 v3 = glm::vec3(v * rotationModel);
+				model = glm::translate(model, v3);
+				model = glm::rotate(model, -time, glm::vec3(0.0f, 1.0f, 0.0f));
 				if(i < VSEPRModel.size()) {
 					model = glm::scale(model, glm::vec3(getAtomicRadius(VSEPRModel[i])));
 				}
@@ -460,7 +474,6 @@ int main()
 				else if(VSEPRModel.size() > 2) {
 					sphere.drawLines(lineColor);
 				}
-				model = glm::mat4();
 			}
 			model = glm::mat4();
 			model = glm::scale(model, glm::vec3(getAtomicRadius(VSEPRModel[0])));
