@@ -22,11 +22,14 @@ struct Element{
 	int valenceNumber;
 	int periodNumber;
 	std::string name;
+	float electronegativity;
+	float atomicRadius;
+	float covalentRadius;
 	bool exception = false;
 
-	Element() {
+	Element() {}
 
-	}
+	Element(int _atomicNumber) {atomicNumber = _atomicNumber;}
 
 	Element(int _atomicNumber, int _valenceNumber, int _periodNumber, std::string _name) {
 		atomicNumber = _atomicNumber;

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "VSEPR.h"
 #include <string>
+#include "data.h"
 
 extern std::vector<std::vector<glm::vec3>> configurations;
 
@@ -29,20 +30,21 @@ Element(19, 1, 4, "Potassium"),
 Element(20, 2, 4, "Calcium"),
 };
 
-std::string elements[] = { "H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca" };
+std::string elementsReference[] = { "H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca" };
 int bondingPairs;
 
 using namespace std;
-
+map<string, Element> elements;
 extern vector<BondedElement> VSEPRModel;
 
-int searchElements(string symbol) {
-	for (int i = 0; i < sizeof(elements) / sizeof(*elements); i++) {
-		if (elements[i] == symbol) {
-			return i;
-		}
+Element searchElements(string symbol) {
+	int size  = elements.size();
+	Element e = elements[symbol];
+	if(size == elements.size()) {
+		return e;
 	}
-	return -1;
+	elements.erase(symbol);
+	return Element(-1);
 }
 
 vector<Element> readFormula(string formulaFull) {
@@ -81,10 +83,10 @@ vector<Element> readFormula(string formulaFull) {
 
 	for (int i = 1; i < formula.length(); i++) {
 		if (isdigit(formula[i])) {
-			int index = searchElements(symbol);
-			if (index != -1) {
+			Element e = searchElements(symbol);
+			if (e.atomicNumber != -1) {
 				for (int x = 0; x < formula[i] - '0'; x++) {
-					comp.push_back(perTable[index]);
+					comp.push_back(e);
 				}
 			}
 			symbol = "";
@@ -93,16 +95,16 @@ vector<Element> readFormula(string formulaFull) {
 			symbol += formula[i];
 		}
 		else {
-			int index = searchElements(symbol);
-			if (index != -1) {
-				comp.push_back(perTable[index]);
+			Element e = searchElements(symbol);
+			if (e.atomicNumber != -1) {
+				comp.push_back(e);
 			}
 			symbol = ""; symbol += formula[i];
 		}
 	}
-	int index = searchElements(symbol);
-	if (index != -1) {
-		comp.push_back(perTable[index]);
+	Element e = searchElements(symbol);
+	if (e.atomicNumber != -1) {
+		comp.push_back(e);
 	}
 	if(charge != 0) {
 		comp.push_back(Element(-1, -charge, -1, ""));
@@ -121,7 +123,7 @@ int getFormalCharge(BondedElement b) {
 }
 
 int checkStability(BondedElement b) {
-	if (b.base.name == "Hydrogen" || b.base.name == "Helium") {
+	if (b.base.periodNumber == 1) {
 		return 2 - ((b.bondedPairs * 2) + (b.lonePairs * 2));
 	}
 	if (b.base.exception == true) {
@@ -189,6 +191,10 @@ vector<BondedElement> constructLewisStructure(vector<Element> formula) {
 			lewisStructure = rebond(lewisStructure);
 		}
 	}
+	if(bondingPairs > 0 && lewisStructure[0].base.periodNumber >= 3) {
+		lewisStructure[0].lonePairs+=bondingPairs;
+		bondingPairs = 0;
+	}
 
 	if ((checkStability(lewisStructure[0]) != 0 && lewisStructure[0].base.periodNumber < 3) || bondingPairs != 0) {
 		return vector<BondedElement>();
@@ -235,14 +241,21 @@ float getAtomicRadius(BondedElement b) {
 }
 
 vector<BondedElement> VSEPRMain() {
+	parseCSV("periodicTableData.csv");
+	/*map<string, Element>::iterator itr;
+	for (itr = elements.begin(); itr != elements.end(); ++itr)
+	{
+		cout << itr->second.name << " " << itr->second.atomicNumber << endl;
+	}*/
+
 	string inFormula;
 	configurations = {
 		std::vector<glm::vec3>{glm::vec3(1, 0, 0)},
 		std::vector<glm::vec3>{glm::vec3(1, 0, 0), glm::vec3(-1, 0, 0)},
 		std::vector<glm::vec3>{glm::vec3(COS_30, -SIN_30, 0), glm::vec3(-COS_30, -SIN_30, 0), glm::vec3(0, 1, 0)},
 		std::vector<glm::vec3>{glm::vec3(-COS_30, -SIN_30, SIN_30), glm::vec3(COS_30, -SIN_30, SIN_30), glm::vec3(0, -SIN_30, -COS_30), glm::vec3(0, 1, 0)},
-		std::vector<glm::vec3>{glm::vec3(0, 1, 0), glm::vec3(0, -1, 0), glm::vec3(0, 0, -1), glm::vec3(-COS_30, 0, SIN_30), glm::vec3(COS_30, 0, SIN_30)},
-		std::vector<glm::vec3>{glm::vec3(0, 1, 0), glm::vec3(0, -1, 0), glm::vec3(SIN_45, 0, -SIN_45), glm::vec3(SIN_45, 0, SIN_45), glm::vec3(-SIN_45, 0, SIN_45), glm::vec3(-SIN_45, 0, -SIN_45)},
+		std::vector<glm::vec3>{glm::vec3(0, 0, -1), glm::vec3(-COS_30, 0, SIN_30), glm::vec3(0, -1, 0), glm::vec3(COS_30, 0, SIN_30), glm::vec3(0, 1, 0)},
+		std::vector<glm::vec3>{glm::vec3(SIN_45, 0, -SIN_45), glm::vec3(SIN_45, 0, SIN_45), glm::vec3(-SIN_45, 0, SIN_45), glm::vec3(-SIN_45, 0, -SIN_45), glm::vec3(0, 1, 0), glm::vec3(0, -1, 0)},
 	};
 
 	while (1) {
