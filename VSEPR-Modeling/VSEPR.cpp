@@ -7,30 +7,6 @@
 
 extern std::vector<std::vector<glm::vec3>> configurations;
 
-Element perTable[] = {
-Element(1, 1, 1, "Hydrogen"),
-Element(2, 2, 1, "Helium"),
-Element(3, 1, 2, "Lithium"),
-Element(4, 2, 2, "Beryllium", true),
-Element(5, 3, 2, "Boron", true),
-Element(6, 4, 2, "Carbon"),
-Element(7, 5, 2, "Nitrogen"),
-Element(8, 6, 2, "Oxygen"),
-Element(9, 7, 2, "Fluorine"),
-Element(10, 8, 2, "Neon"),
-Element(11, 1, 3, "Sodium"),
-Element(12, 2, 3, "Magnesium"),
-Element(13, 3, 3, "Aluminum"),
-Element(14, 4, 3, "Silicon"),
-Element(15, 5, 3, "Phosphorous"),
-Element(16, 6, 3, "Sulfur"),
-Element(17, 7, 3, "Chlorine"),
-Element(18, 8, 3, "Argon"),
-Element(19, 1, 4, "Potassium"),
-Element(20, 2, 4, "Calcium"),
-};
-
-std::string elementsReference[] = { "H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca" };
 int bondingPairs;
 
 using namespace std;
@@ -132,6 +108,8 @@ int checkStability(BondedElement b) {
 	return 8 - ((b.bondedPairs * 2) + (b.lonePairs * 2));
 }
 
+
+//Used to create double and triple bonds
 vector<BondedElement> rebond(vector<BondedElement> structure) {
 	for (int i = 1; i < structure.size(); i++)
 	{
@@ -242,11 +220,6 @@ float getAtomicRadius(BondedElement b) {
 
 vector<BondedElement> VSEPRMain() {
 	parseCSV("periodicTableData.csv");
-	/*map<string, Element>::iterator itr;
-	for (itr = elements.begin(); itr != elements.end(); ++itr)
-	{
-		cout << itr->second.name << " " << itr->second.atomicNumber << endl;
-	}*/
 
 	string inFormula;
 	configurations = {

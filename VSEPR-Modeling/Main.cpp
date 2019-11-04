@@ -41,13 +41,14 @@
 ///Depth information stored in Z buffer, depth testing done automatically, must be enabled
 ///Depth buffer must also be cleared in the clear function
 
+int representation = 0; //0 = electron, 1 = sphere, 2 = ball and stick
 const float W = 800;
 const float H = 600;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 bool restrictY = true;
-const float defaultBondDistance = 4;
+const float atomDistance = 4;
 const float electronSpeed = 3;
 
 std::vector<BondedElement> VSEPRModel;
@@ -58,9 +59,10 @@ float lastY = H / 2;
 float yaw = -90; float pitch = 0;
 bool firstMouse = true;
 float fov = 45.0f;
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 Camera camera(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
+const Sphere sphere(1.0f, 36, 18);
+unsigned int lightingShader = 0;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -84,11 +86,41 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 	camera.ProcessMouseMovement(xoffset, yoffset, true);
 }
 
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+	if (glfwGetKey(window, GLFW_KEY_R))
+	{
+		representation++;
+		representation = representation % 3;
+
+		if (representation != 0) {
+			Shader("Shaders/VeShMap.vs", "Shaders/FrShDirectional.fs", lightingShader);
+			glUseProgram(lightingShader);
+			setVec3(lightingShader, "light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+			setVec3(lightingShader, "light.ambient", glm::vec3(0.2, 0.2, 0.2));
+			setVec3(lightingShader, "light.diffuse", glm::vec3(0.3, 0.3, 0.3));
+			setVec3(lightingShader, "light.specular", glm::vec3(0.7, 0.7, 0.7));
+			setInt(lightingShader, "material.diffuse", 0);
+			setInt(lightingShader, "material.specular", 1);
+			setFloat(lightingShader, "material.shininess", 32.0f);
+		}
+		else {
+			Shader("Shaders/VeShMap.vs", "Shaders/FrShMap.fs", lightingShader);
+			glUseProgram(lightingShader);
+			setInt(lightingShader, "material.diffuse", 0);
+			setInt(lightingShader, "material.specular", 1);
+			setFloat(lightingShader, "material.shininess", 32.0f);
+		}
+	}
+}
+
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 	camera.RotationSpeed += yoffset * smoothingConstant;
 }
 
 void setUpPointLights(int num, unsigned int &program) {
+	glUseProgram(program);
+
 	for(int i = 0; i < num; i++) {
 		setVec3(program, ("pointLights[" + std::to_string(i) + "].ambient").c_str(), glm::vec3(0.05, 0.05, 0.05));
 		setVec3(program, ("pointLights[" + std::to_string(i) + "].diffuse").c_str(), glm::vec3(0.3, 0.3, 0.3));
@@ -105,6 +137,7 @@ void setUpPointLights(int num, unsigned int &program) {
 }
 
 void setPointLightPosition(int index, unsigned int &program, glm::vec3 pos) {
+	glUseProgram(program);
 	setVec3(program, ("pointLights[" + std::to_string(index) + "].position").c_str(), pos);
 }
 
@@ -142,8 +175,8 @@ glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest)
 }
 
 glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, int configIndex, int modelIndex, int offset, int offsetTotal, bool pair, glm::mat4 rotationModel) {
-	float largerAR = getAtomicRadius(central);
-	float smallerAR = getAtomicRadius(bonded);
+	float largerAR = central.base.atomicRadius;
+	float smallerAR = bonded.base.atomicRadius;
 	if(largerAR < smallerAR) {
 		float holdAR = largerAR;
 		largerAR = smallerAR;
@@ -154,7 +187,7 @@ glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, in
 	float xOffset = ((2.0f / offsetTotal) * offset * ePI) - (4 / offsetTotal * ePI);
 
 	float x = 1.4 * largerAR * sin((float)(glfwGetTime()-xOffset) * electronSpeed);
-	float distance = defaultBondDistance * getAtomicRadius(central);
+	float distance = atomDistance;
 	float y = distance * cos((float)(glfwGetTime() - xOffset) * (electronSpeed / 2)) + distance / 2;
 
 	glm::vec3 direction = configurations[configIndex][modelIndex - 1];
@@ -187,6 +220,85 @@ glm::vec3 calculateOrbitPosition(glm::vec3 v, int configIndex, int modelIndex, b
 	return v;
 }
 
+void renderElectrons(unsigned int program, unsigned int &atomProgram, std::vector<BondedElement> model, glm::mat4 rotationModel) {
+	glUseProgram(program);
+	//glBindVertexArray(lightVAO);
+
+	glm::mat4 lightModel;
+
+	setMat4(program, "model", lightModel);
+	//glDrawArrays(GL_TRIANGLES, 0, ARRAY_SIZE(vertices));
+
+	glm::vec3 lightVec3;
+	glm::vec3 light2Vec3;
+	if (VSEPRModel.size() > 0)
+	{
+		int numberOfBonds = VSEPRModel[0].bondedPairs;
+		int configIndex;
+		if (VSEPRModel.size() > 2)
+		{
+			configIndex = VSEPRModel.size() - 2 + VSEPRModel[0].lonePairs;
+		}
+		else
+		{
+			configIndex = 0;
+		}
+		int lightIndex = 0;
+		for (int i = 1; i < VSEPRModel.size(); i++)
+		{
+			for (int x = 0; x < VSEPRModel[i].bondedPairs; x++)
+			{
+				lightModel = glm::mat4();
+				glm::vec3 newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedPairs, false, rotationModel);
+				setPointLightPosition(lightIndex, atomProgram, newLightPos);
+				glUseProgram(program);
+				lightModel = glm::translate(lightModel, newLightPos);
+				lightModel = glm::scale(lightModel, glm::vec3(0.1f));
+				setMat4(program, "model", lightModel);
+				sphere.draw();
+				lightIndex++;
+
+				//Draw complimentary
+				lightModel = glm::mat4();
+				newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedPairs, true, rotationModel);
+				setPointLightPosition(lightIndex, atomProgram, newLightPos);
+				glUseProgram(program);
+				lightModel = glm::translate(lightModel, newLightPos);
+				lightModel = glm::scale(lightModel, glm::vec3(0.1f));
+				setMat4(program, "model", lightModel);
+				sphere.draw();
+				lightIndex++;
+			}
+		}
+		setUpPointLights(lightIndex, atomProgram);
+	}
+	else
+	{
+		lightVec3 = glm::vec3(1.2 * sin((float)(glfwGetTime())), 1.2 * cos((float)(glfwGetTime())), 0.0f);
+		light2Vec3 = glm::vec3(1.5 * sin((float)(glfwGetTime())), 1.5 * cos((float)(glfwGetTime())), 0.0f);
+		setPointLightPosition(0, atomProgram, lightVec3);
+		setPointLightPosition(1, atomProgram, light2Vec3);
+		glUseProgram(program);
+		lightModel = glm::translate(lightModel, lightVec3);
+		lightModel = glm::scale(lightModel, glm::vec3(0.1f));
+		setMat4(program, "model", lightModel);
+		sphere.draw();
+		lightModel = glm::mat4();
+		lightModel = glm::translate(lightModel, light2Vec3);
+		lightModel = glm::scale(lightModel, glm::vec3(0.1f));
+		setMat4(program, "model", lightModel);
+		sphere.draw();
+	}
+}
+
+float getSphereDistance(std::vector<BondedElement> model, int index) {
+	return model[0].base.covalentRadius + model[index].base.covalentRadius - 0.09 * abs(model[0].base.electronegativity - model[index].base.electronegativity);
+}
+
+float getStickDistance(std::vector<BondedElement> model, int index) {
+	return atomDistance;
+}
+
 int main()
 {
 	std::thread VSEPRthread(VSEPRMain);
@@ -214,57 +326,10 @@ int main()
 	void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-	float vertices[] = {
-		//Positions          //Normals            //Texture coords
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-		0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-		0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
-	};
-
 	//Create a Vertex Array Object
 	unsigned int VAO;
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
-
-	Sphere sphere(1.0f, 36, 18);
 
 	unsigned int sphereVBO;
 	glGenBuffers(1, &sphereVBO);
@@ -278,37 +343,18 @@ int main()
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sphere.getInterleavedStride(), (void *)(sizeof(float)*6));
 	glEnableVertexAttribArray(2);
 
-	//Create a Vertex Buffer Object
-	unsigned int VBO;
-	glGenBuffers(1, &VBO);
-	//Bind the VBO to the object type and copy its data to the state
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	/*//Configure vertex data so readable by vertex shader
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);*/
-
 	//Create light cube VAO
 	unsigned int lightVAO;
 	glGenVertexArrays(1, &lightVAO);
 	glBindVertexArray(lightVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
 	glm::vec3 objectColour = glm::vec3(1.0f, 0.5f, 0.31f);
 	glm::vec3 lightColour = glm::vec3(1.0f, 1.0f, 1.0f);
 
-	unsigned int lightingShader = 0;
 	Shader("Shaders/VeShMap.vs", "Shaders/FrShMap.fs", lightingShader);
 	glUseProgram(lightingShader);
-	setVec3(lightingShader, "objectColor", objectColour);
 	setInt(lightingShader, "material.diffuse", 0);
 	setInt(lightingShader, "material.specular", 1);
 	setFloat(lightingShader, "material.shininess", 32.0f);
@@ -331,6 +377,7 @@ int main()
 	void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetKeyCallback(window, key_callback);
 	float time = 0;
 
 	//Render Loop
@@ -357,84 +404,18 @@ int main()
 		glm::mat4 projection;
 		projection = glm::perspective(glm::radians(fov), W / H, 0.1f, 100.0f);
 
-		glUseProgram(lampProgram);
-		//glBindVertexArray(lightVAO);
-
-		glm::mat4 lightModel;
-
-		setMat4(lampProgram, "model", lightModel);
-		setMat4(lampProgram, "view", view);
-		setMat4(lampProgram, "projection", projection);
-		//glDrawArrays(GL_TRIANGLES, 0, ARRAY_SIZE(vertices));
-
-		glm::vec3 lightVec3;
-		glm::vec3 light2Vec3;
-		if(VSEPRModel.size() > 0) {
-			int numberOfBonds = VSEPRModel[0].bondedPairs;
-			int configIndex;
-			if (VSEPRModel.size() > 2) {
-				configIndex = VSEPRModel.size() - 2 + VSEPRModel[0].lonePairs;
-			}
-			else {
-				configIndex = 0;
-			}
-			int lightIndex = 0;
-			for(int i = 1; i < VSEPRModel.size(); i++) {
-				for(int x = 0; x < VSEPRModel[i].bondedPairs; x++) {
-					lightModel = glm::mat4();
-					glm::vec3 newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedPairs, false, rotationModel);
-					glUseProgram(lightingShader);
-					setPointLightPosition(lightIndex, lightingShader, newLightPos);
-					glUseProgram(lampProgram);
-					lightModel = glm::translate(lightModel, newLightPos);
-					lightModel = glm::scale(lightModel, glm::vec3(0.1f));
-					setMat4(lampProgram, "model", lightModel);
-					sphere.draw();
-					lightIndex++;
-
-					//Draw complimentary
-					lightModel = glm::mat4();
-					newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedPairs, true, rotationModel);
-					glUseProgram(lightingShader);
-					setPointLightPosition(lightIndex, lightingShader, newLightPos);
-					glUseProgram(lampProgram);
-					lightModel = glm::translate(lightModel, newLightPos);
-					lightModel = glm::scale(lightModel, glm::vec3(0.1f));
-					setMat4(lampProgram, "model", lightModel);
-					sphere.draw();
-					lightIndex++;
-				}
-			}
-			glUseProgram(lightingShader);
-			setUpPointLights(lightIndex, lightingShader);
-			// lightVec3 = calculateOrbitPostion(VSEPRModel[0], VSEPRModel[VSEPRModel.size()-1]);
-			// glm::vec3 v = calculateOrbitPostion(VSEPRModel[0], VSEPRModel[VSEPRModel.size() - 1]);
-			// light2Vec3 = glm::vec3(v.x, -v.y, 0.0f);
-			//light2Vec3 = glm::vec3(1.4 * getAtomicRadius(VSEPRModel[0]) * sin((float)(glfwGetTime())), 1.4 * getAtomicRadius(VSEPRModel[0]) * cos((float)(glfwGetTime())), 0.0f);
-		}
-		else {
-			lightVec3 = glm::vec3(1.2 * sin((float)(glfwGetTime())), 1.2 * cos((float)(glfwGetTime())), 0.0f);
-			light2Vec3 = glm::vec3(1.5 * sin((float)(glfwGetTime())), 1.5 * cos((float)(glfwGetTime())), 0.0f);
-			glUseProgram(lightingShader);
-			setVec3(lightingShader, "pointLights[0].position", lightVec3);
-			setVec3(lightingShader, "pointLights[1].position", light2Vec3);
-			glUseProgram(lampProgram);
-			lightModel = glm::translate(lightModel, lightVec3);
-			lightModel = glm::scale(lightModel, glm::vec3(0.1f));
-			setMat4(lampProgram, "model", lightModel);
-			sphere.draw();
-			lightModel = glm::mat4();
-			lightModel = glm::translate(lightModel, light2Vec3);
-			lightModel = glm::scale(lightModel, glm::vec3(0.1f));
-			setMat4(lampProgram, "model", lightModel);
-			sphere.draw();
-		}
-
 		glUseProgram(lightingShader);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, diffMap);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, specMap);
+
+		if(representation == 0) {
+			glUseProgram(lampProgram);
+			setMat4(lampProgram, "view", view);
+			setMat4(lampProgram, "projection", projection);
+			renderElectrons(lampProgram, lightingShader, VSEPRModel, rotationModel);
+		}
 
 		//Pass our matrices to the shader through a uniform
 		setMat4(lightingShader, "model", model);
@@ -446,7 +427,7 @@ int main()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		if(VSEPRModel.size() > 0) {
 			int configIndex;
-			float bondDistance = defaultBondDistance * getAtomicRadius(VSEPRModel[0]);
+			float bondDistance;
 			if(VSEPRModel.size() > 2) {
 				configIndex = VSEPRModel.size() - 2 + VSEPRModel[0].lonePairs;
 			}
@@ -455,16 +436,19 @@ int main()
 			}
 			for (int i = 1; i < VSEPRModel.size() + VSEPRModel[0].lonePairs; i++) {
 				model = glm::mat4();
+				if(i < VSEPRModel.size()) {
+					bondDistance = representation == 1 ? getSphereDistance(VSEPRModel, i) : getStickDistance(VSEPRModel, i);
+					//model = glm::scale(model, glm::vec3(VSEPRModel[i].base.atomicRadius));
+				}
+				else if(representation == 0) {
+					bondDistance = getStickDistance(VSEPRModel, 0);
+					//model = glm::scale(model, glm::vec3(VSEPRModel[0].base.atomicRadius*0.8));
+				}
+				else  {continue;}
 				glm::vec4 v = glm::vec4(configurations[configIndex][i - 1] * bondDistance, 1.0f);
 				glm::vec3 v3 = glm::vec3(v * rotationModel);
 				model = glm::translate(model, v3);
 				model = glm::rotate(model, -time, glm::vec3(0.0f, 1.0f, 0.0f));
-				if(i < VSEPRModel.size()) {
-					model = glm::scale(model, glm::vec3(getAtomicRadius(VSEPRModel[i])));
-				}
-				else {
-					model = glm::scale(model, glm::vec3(getAtomicRadius(VSEPRModel[0])*0.8));
-				}
 				setMat4(lightingShader, "model", model);
 				if(i < VSEPRModel.size()) {
 					sphere.draw();
@@ -474,7 +458,7 @@ int main()
 				}
 			}
 			model = glm::mat4();
-			model = glm::scale(model, glm::vec3(getAtomicRadius(VSEPRModel[0])));
+			model = glm::scale(model, glm::vec3(VSEPRModel[0].base.atomicRadius));
 			setMat4(lightingShader, "model", model);
 			sphere.draw();
 		}
@@ -483,7 +467,6 @@ int main()
 			setMat4(lightingShader, "model", model);
 			sphere.draw();
 		}
-		//glDrawArrays(GL_TRIANGLES, 0, ARRAY_SIZE(vertices));
 
 		//Swap buffer and poll IO events
 		glfwSwapBuffers(window);

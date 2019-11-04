@@ -69,7 +69,6 @@ public:
 	// Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
 	void ProcessKeyboard(GLFWwindow *window, float deltaTime, bool restrictY)
 	{
-
 		float camspeed = 7 * deltaTime;
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE))
 		{
