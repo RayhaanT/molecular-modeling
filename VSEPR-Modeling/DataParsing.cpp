@@ -86,8 +86,6 @@ void parseCSV(std::string path)
         newElement.periodNumber = periodNumber;
         newElement.valenceNumber = valenceNumber;
 
-        cout << name << ": " << vanDerWaalsRadius << endl;
-
         if(name == "beryllium" || name == "boron") {
             newElement.exception = true;
         }

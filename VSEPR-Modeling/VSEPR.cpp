@@ -248,7 +248,7 @@ vector<BondedElement> VSEPRMain() {
 		}
 		for (int i = 0; i < comp.size(); i++)
 		{
-			cout << comp[i].name << " " << comp[i].valenceNumber << endl;
+			//cout << comp[i].name << " " << comp[i].valenceNumber << endl;
 		}
 		vector<BondedElement> structure = constructLewisStructure(comp);
 
@@ -264,8 +264,27 @@ vector<BondedElement> VSEPRMain() {
 			} 
 		}
 		VSEPRModel = structure;
+		int longestName = 0;
+		for(int i = 0; i < structure.size(); i++) {
+			if(structure[i].base.name.length() > longestName) {
+				longestName = structure[i].base.name.length();
+			}
+		}
+		printf(string(longestName + 2, ' ').c_str());
+		printf("| AN | VN | BP | LP | FC |\n");
 		for (int i = 0; i < structure.size(); i++) {
-			cout << structure[i].base.name << " " << structure[i].bondedPairs << " " << structure[i].lonePairs << " " << getFormalCharge(structure[i]) << endl;
+			Element e = structure[i].base;
+			int formalCharge = getFormalCharge(structure[i]);
+			int rName = longestName + 2 - structure[i].base.name.length();
+			int rAN = e.atomicNumber < 10 ? 3 : e.atomicNumber < 100 ? 2 : 1;
+			char sign = formalCharge < 0 ? '-' : '+';
+			if(formalCharge != 0) {
+				printf("%s%s|%d%s|%d   |%d   |%d   |%c%d  |\n", structure[i].base.name.c_str(), string(rName, ' ').c_str(), e.atomicNumber, string(rAN, ' ').c_str(), e.valenceNumber, structure[i].bondedPairs, structure[i].lonePairs, sign, abs(formalCharge));
+			}
+			else {
+				printf("%s%s|%d%s|%d   |%d   |%d   |%d   |\n", structure[i].base.name.c_str(), string(rName, ' ').c_str(), e.atomicNumber, string(rAN, ' ').c_str(), e.valenceNumber, structure[i].bondedPairs, structure[i].lonePairs, abs(formalCharge));
+			}
+			//cout << structure[i].base.name << " BP: " << structure[i].bondedPairs << " LP: " << structure[i].lonePairs << " FC: " << getFormalCharge(structure[i]) << endl;
 		}
 	}
 
