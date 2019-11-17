@@ -239,16 +239,13 @@ vector<BondedElement> VSEPRMain() {
 
 	while (1) {
 		getline(cin, inFormula);
-		vector<Element> comp = readFormula(inFormula);
+		vector<Element> comp;
+		if(inFormula == "H2O")
+			comp = readFormula("OH2");
+		else
+			comp = readFormula(inFormula);
 		if(comp.size() < 1) {
 			continue;
-		}
-		if(inFormula == "H2O") {
-			comp = readFormula("OH2");
-		}
-		for (int i = 0; i < comp.size(); i++)
-		{
-			//cout << comp[i].name << " " << comp[i].valenceNumber << endl;
 		}
 		vector<BondedElement> structure = constructLewisStructure(comp);
 
@@ -284,7 +281,6 @@ vector<BondedElement> VSEPRMain() {
 			else {
 				printf("%s%s|%d%s|%d   |%d   |%d   |%d   |\n", structure[i].base.name.c_str(), string(rName, ' ').c_str(), e.atomicNumber, string(rAN, ' ').c_str(), e.valenceNumber, structure[i].bondedPairs, structure[i].lonePairs, abs(formalCharge));
 			}
-			//cout << structure[i].base.name << " BP: " << structure[i].bondedPairs << " LP: " << structure[i].lonePairs << " FC: " << getFormalCharge(structure[i]) << endl;
 		}
 	}
 
