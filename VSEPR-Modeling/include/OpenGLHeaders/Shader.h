@@ -1,13 +1,13 @@
 #pragma once
 
-#include "../include/glad/glad.h"
+#include "glad/glad.h"
 
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "../include/glm/glm.hpp"
-#include "../include/glm/gtc/type_ptr.hpp"
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 void Shader(const GLchar* vertexPath, const GLchar* fragmentPath, unsigned int &Program)
 {

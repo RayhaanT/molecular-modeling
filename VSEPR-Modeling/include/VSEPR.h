@@ -6,7 +6,7 @@
 #include <string>
 #include <map>
 #include <vector>
-#include "include/glm/glm.hpp"
+#include "glm/glm.hpp"
 
 #define SIN_45 0.70710678118654752440084436210485
 #define COS_30 0.86602540378443864676372317075294
@@ -61,6 +61,5 @@ struct BondedElement {
 
 extern std::vector<BondedElement> VSEPRModel;
 std::vector<BondedElement> VSEPRMain();
-float getAtomicRadius(BondedElement b);
 
 #endif

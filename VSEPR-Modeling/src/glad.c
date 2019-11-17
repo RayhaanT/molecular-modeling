@@ -21,7 +21,7 @@ http://glad.dav1d.de/#profile=compatibility&language=c&specification=gl&loader=o
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "include/glad/glad.h"
+#include "glad/glad.h"
 
 static void* get_proc(const char *namez);
 

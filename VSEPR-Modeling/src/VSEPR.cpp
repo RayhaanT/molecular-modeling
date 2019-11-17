@@ -215,15 +215,6 @@ vector<BondedElement> optimizeFormalCharge(vector<BondedElement> structure) {
 	return returnVector;
 }
 
-float getAtomicRadius(BondedElement b) {
-	float periodMod = b.base.periodNumber * PERIOD_CONSTANT;
-	float groupMod = b.base.valenceNumber * GROUP_CONSTANT;
-	if (b.base.atomicNumber == 1) {
-		groupMod = 7 * GROUP_CONSTANT;
-	}
-	return (periodMod/groupMod)*UPSCALING;
-}
-
 vector<BondedElement> VSEPRMain() {
 	parseCSV("periodicTableData.csv");
 

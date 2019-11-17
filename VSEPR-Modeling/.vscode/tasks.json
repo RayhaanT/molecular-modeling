@@ -7,10 +7,11 @@
             "command": "g++",
             "args": [
                 "-g",
-                "*.cpp",
-                "*.c",
+                "src/*.cpp",
+                "src/*.c",
                 "-static",
                 "-Iinclude",
+                "-iquote include",
                 "-Llib",
                 "-lopengl32",
                 "-lglfw3",
