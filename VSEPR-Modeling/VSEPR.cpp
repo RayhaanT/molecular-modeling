@@ -40,7 +40,7 @@ vector<Element> readFormula(string formulaFull) {
 				if (isdigit(formulaFull[i]) && formulaFull[i] != '-' && formulaFull[i] != '+') {
 					charge = formulaFull[i] - '0';
 				}
-				else {
+				else if(formulaFull[i] != ' ') {
 					sign = formulaFull[i];
 				}
 			}
@@ -65,6 +65,9 @@ vector<Element> readFormula(string formulaFull) {
 					comp.push_back(e);
 				}
 			}
+			else {
+				return vector<Element>();
+			}
 			symbol = "";
 		}
 		else if (islower(formula[i])) {
@@ -74,6 +77,9 @@ vector<Element> readFormula(string formulaFull) {
 			Element e = searchElements(symbol);
 			if (e.atomicNumber != -1) {
 				comp.push_back(e);
+			}
+			else {
+				return vector<Element>();
 			}
 			symbol = ""; symbol += formula[i];
 		}

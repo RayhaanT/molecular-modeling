@@ -292,7 +292,8 @@ void renderElectrons(unsigned int program, unsigned int &atomProgram, std::vecto
 }
 
 float getSphereDistance(std::vector<BondedElement> model, int index) {
-	return model[0].base.covalentRadius + model[index].base.covalentRadius - 0.09 * abs(model[0].base.electronegativity - model[index].base.electronegativity);
+	// return model[0].base.covalentRadius + model[index].base.covalentRadius - 0.09 * abs(model[0].base.electronegativity - model[index].base.electronegativity);
+	return model[0].base.covalentRadius + model[index].base.covalentRadius;
 }
 
 float getStickDistance(std::vector<BondedElement> model, int index) {
@@ -438,17 +439,21 @@ int main()
 				model = glm::mat4();
 				if(i < VSEPRModel.size()) {
 					bondDistance = representation == 1 ? getSphereDistance(VSEPRModel, i) : getStickDistance(VSEPRModel, i);
-					//model = glm::scale(model, glm::vec3(VSEPRModel[i].base.atomicRadius));
 				}
 				else if(representation == 0) {
 					bondDistance = getStickDistance(VSEPRModel, 0);
-					//model = glm::scale(model, glm::vec3(VSEPRModel[0].base.atomicRadius*0.8));
 				}
 				else  {continue;}
 				glm::vec4 v = glm::vec4(configurations[configIndex][i - 1] * bondDistance, 1.0f);
 				glm::vec3 v3 = glm::vec3(v * rotationModel);
 				model = glm::translate(model, v3);
 				model = glm::rotate(model, -time, glm::vec3(0.0f, 1.0f, 0.0f));
+				if (i < VSEPRModel.size() && representation == 1) {
+					model = glm::scale(model, glm::vec3(VSEPRModel[i].base.vanDerWaalsRadius));
+				}
+				else if(representation != 1) {
+					model = glm::scale(model, i < VSEPRModel.size() ? glm::vec3(VSEPRModel[i].base.atomicRadius) : glm::vec3(VSEPRModel[0].base.atomicRadius * 0.8));
+				}
 				setMat4(lightingShader, "model", model);
 				if(i < VSEPRModel.size()) {
 					sphere.draw();
@@ -458,7 +463,7 @@ int main()
 				}
 			}
 			model = glm::mat4();
-			model = glm::scale(model, glm::vec3(VSEPRModel[0].base.atomicRadius));
+			model = glm::scale(model, glm::vec3(representation == 1 ? VSEPRModel[0].base.vanDerWaalsRadius : VSEPRModel[0].base.atomicRadius));
 			setMat4(lightingShader, "model", model);
 			sphere.draw();
 		}

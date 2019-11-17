@@ -37,10 +37,11 @@ void parseCSV(std::string path)
         int periodNumber = stoiSafe(line[4]);
 
         float electronegativity = stofSafe(line[12]);
-        float atomicRadius = stofSafe(line[25]);
-        float covalentRadius = stofSafe(line[27]);
+        float atomicRadius = stofSafe(line[23]);
+        float covalentRadius = stofSafe(line[25]);
+        float vanDerWaalsRadius = stofSafe(line[46])/100.0;
 
-        string electronConfig = line[24];
+        string electronConfig = line[22];
 
         int valenceNumber = stoiSafe(line[2]);
         if(valenceNumber > 12) {
@@ -80,10 +81,13 @@ void parseCSV(std::string path)
         newElement.atomicNumber = atomicNumber;
         newElement.atomicRadius = atomicRadius;
         newElement.covalentRadius = covalentRadius;
+        newElement.vanDerWaalsRadius = vanDerWaalsRadius;
         newElement.electronegativity = electronegativity;
         newElement.periodNumber = periodNumber;
         newElement.valenceNumber = valenceNumber;
-        
+
+        cout << name << ": " << vanDerWaalsRadius << endl;
+
         if(name == "beryllium" || name == "boron") {
             newElement.exception = true;
         }

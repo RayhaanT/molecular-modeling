@@ -25,6 +25,7 @@ struct Element{
 	float electronegativity;
 	float atomicRadius;
 	float covalentRadius;
+	float vanDerWaalsRadius;
 	bool exception = false;
 
 	Element() {}
