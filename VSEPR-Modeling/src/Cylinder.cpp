@@ -192,16 +192,27 @@ void Cylinder::buildVertices()
         }
     }
 
-    //Rectangular side panels
-    //Two triangles per panel
-    for (int i = 0; i < edgeCount; ++i)
-    {
-        addIndices(i+1, (i+2), i+edgeCount+2);
-        addIndices(i+edgeCount+2, (i+edgeCount+3), (i+2));
+    int baseOffset = edgeCount*2+2;
+
+    int max = vertices.size();
+    for(int i = 1; i < max; i++) {
+        if(i == edgeCount+1) {continue;}
+        vertices.push_back(vertices[i]);
+        texCoords.push_back(texCoords[i]);
+        normals.push_back(glm::normalize(glm::vec3(vertices[i].x, 0.0f, vertices[i].z)));
     }
 
-    addIndices(1, edgeCount, edgeCount+2);
-    addIndices(edgeCount+2, vertices.size()-1, edgeCount);
+    //Rectangular side panels
+    //Two triangles per panel
+    for (int i = 0; i < edgeCount; i++)
+    {
+        int newI = i+baseOffset;
+        addIndices(newI, newI+1, newI+edgeCount);
+        addIndices(newI + edgeCount, newI + edgeCount + 1, newI + 1);
+    }
+
+    addIndices(baseOffset, baseOffset+edgeCount-1, baseOffset+edgeCount);
+    addIndices(baseOffset+edgeCount, vertices.size()-1, baseOffset+edgeCount-1);
 
     //generate interleaved vertex array
     buildInterleavedVertices();
