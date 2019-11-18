@@ -13,6 +13,7 @@
 #include "OpenGLHeaders/Shader.h"
 #include "VSEPR.h"
 #include "Sphere.h"
+#include "cylinder.h"
 
 #include <vector>
 #include <thread>
@@ -61,7 +62,9 @@ bool firstMouse = true;
 float fov = 45.0f;
 
 Camera camera(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
-const Sphere sphere(1.0f, 36, 18);
+// const Sphere sphere(1.0f, 36, 18, false); //Blocky
+const Sphere sphere(1.0f, 36, 18, true); //Smooth
+const Cylinder cylinder(1.0f, 1.0f, 25);
 unsigned int lightingShader = 0;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -344,6 +347,22 @@ int main()
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sphere.getInterleavedStride(), (void *)(sizeof(float)*6));
 	glEnableVertexAttribArray(2);
 
+	unsigned int cylinderVAO;
+	glGenVertexArrays(1, &cylinderVAO);
+	glBindVertexArray(cylinderVAO);
+
+	unsigned int cylinderVBO;
+	glGenBuffers(1, &cylinderVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, cylinderVBO);
+	glBufferData(GL_ARRAY_BUFFER, cylinder.getInterleavedVertexSize(), cylinder.getInterleavedVertices(), GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, cylinder.getInterleavedStride(), (void *)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, cylinder.getInterleavedStride(), (void *)(sizeof(float) * 3));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, cylinder.getInterleavedStride(), (void *)(sizeof(float) * 6));
+	glEnableVertexAttribArray(2);
+
 	//Create light cube VAO
 	unsigned int lightVAO;
 	glGenVertexArrays(1, &lightVAO);
@@ -394,6 +413,7 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glBindVertexArray(VAO);
+		glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
 
 		float lineColor[] = {0.2f, 0.2f, 0.2f, 1};
 
@@ -456,7 +476,12 @@ int main()
 				}
 				setMat4(lightingShader, "model", model);
 				if(i < VSEPRModel.size()) {
-					sphere.draw();
+					glBindVertexArray(cylinderVAO);
+					glBindBuffer(GL_ARRAY_BUFFER, cylinderVBO);
+					cylinder.draw();
+					glBindVertexArray(VAO);
+					glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+					//sphere.draw();
 				}
 				else if(VSEPRModel.size() > 2) {
 					sphere.drawLines(lineColor);
