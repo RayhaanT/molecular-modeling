@@ -17,6 +17,7 @@ class Cylinder {
 
 private:
     void buildVertices();
+    void buildSquareVertices();
     void buildInterleavedVertices();
     void clearArrays();
 

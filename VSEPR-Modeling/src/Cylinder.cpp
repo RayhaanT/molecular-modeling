@@ -22,18 +22,7 @@ The interleaved vector is constructed to fulfill this
 
 void Cylinder::draw() const
 {
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_NORMAL_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glVertexPointer(3, GL_FLOAT, interleavedStride, &interleavedVertices[0]);
-    glNormalPointer(GL_FLOAT, interleavedStride, &interleavedVertices[3]);
-    glTexCoordPointer(2, GL_FLOAT, interleavedStride, &interleavedVertices[6]);
-
-    glDrawElements(GL_LINES, (unsigned int)indices.size(), GL_UNSIGNED_INT, indices.data());
-
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glDrawElements(GL_TRIANGLES, (unsigned int)indices.size(), GL_UNSIGNED_INT, indices.data());
 }
 
 void Cylinder::drawLines(const float lineColor[4]) const
@@ -190,7 +179,7 @@ void Cylinder::buildVertices()
         }
 
         if(a == 0) {
-            addIndices(0, 1, edgeCount-1);
+            addIndices(0, 1, edgeCount);
             yOffset = -length;
             centerPoint.y = yOffset;
             centerPointNormal.y = -1.0f;
@@ -203,23 +192,19 @@ void Cylinder::buildVertices()
         }
     }
 
-    for(int i = 0; i < (edgeCount*2)+2; i++) {
-        std::cout << vertices[i].x << " " << vertices[i].y << " " << vertices[i].z << std::endl;
-    }
-    for (int i = 0; i < ((edgeCount * 2) + 2)*3; i+=3) {
-        std::cout << indices[i] << " " << indices[i+1] << " " << indices[i+2] << std::endl;
-    }
-
-        //Rectangular side panels
-        //Two triangles per panel
-        /*for (int i = 0; i < edgeCount; ++i)
+    //Rectangular side panels
+    //Two triangles per panel
+    for (int i = 0; i < edgeCount; ++i)
     {
-        addIndices(i+1, (i+2)%(edgeCount+1), i+edgeCount+2);
-        addIndices(i + edgeCount+2, (i+edgeCount+3)%(edgeCount*2+1), (i+2)%(edgeCount+1));
-    }*/
+        addIndices(i+1, (i+2), i+edgeCount+2);
+        addIndices(i+edgeCount+2, (i+edgeCount+3), (i+2));
+    }
 
-        // generate interleaved vertex array as well
-        buildInterleavedVertices();
+    addIndices(1, edgeCount, edgeCount+2);
+    addIndices(edgeCount+2, vertices.size()-1, edgeCount);
+
+    //generate interleaved vertex array
+    buildInterleavedVertices();
 }
 
 void Cylinder::buildInterleavedVertices()
@@ -228,7 +213,7 @@ void Cylinder::buildInterleavedVertices()
 
     std::size_t i;
     std::size_t count = vertices.size();
-    for (i = 0; i < count; i += 3)
+    for (i = 0; i < count; i ++)
     {
         interleavedVertices.push_back(vertices[i].x);
         interleavedVertices.push_back(vertices[i].y);

@@ -51,6 +51,7 @@ float lastFrame = 0.0f;
 bool restrictY = true;
 const float atomDistance = 4;
 const float electronSpeed = 3;
+float lineColor[] = {0.2f, 0.2f, 0.2f, 1};
 
 std::vector<BondedElement> VSEPRModel;
 std::vector<std::vector<glm::vec3>> configurations;
@@ -64,7 +65,7 @@ float fov = 45.0f;
 Camera camera(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
 // const Sphere sphere(1.0f, 36, 18, false); //Blocky
 const Sphere sphere(1.0f, 36, 18, true); //Smooth
-const Cylinder cylinder(1.0f, 1.0f, 25);
+const Cylinder cylinder(1.0f, 1.0f, 64);
 unsigned int lightingShader = 0;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -258,7 +259,7 @@ void renderElectrons(unsigned int program, unsigned int &atomProgram, std::vecto
 				lightModel = glm::translate(lightModel, newLightPos);
 				lightModel = glm::scale(lightModel, glm::vec3(0.1f));
 				setMat4(program, "model", lightModel);
-				sphere.draw();
+				sphere.drawLines(lineColor);
 				lightIndex++;
 
 				//Draw complimentary
@@ -269,7 +270,7 @@ void renderElectrons(unsigned int program, unsigned int &atomProgram, std::vecto
 				lightModel = glm::translate(lightModel, newLightPos);
 				lightModel = glm::scale(lightModel, glm::vec3(0.1f));
 				setMat4(program, "model", lightModel);
-				sphere.draw();
+				sphere.drawLines(lineColor);
 				lightIndex++;
 			}
 		}
@@ -414,8 +415,6 @@ int main()
 
 		glBindVertexArray(VAO);
 		glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
-
-		float lineColor[] = {0.2f, 0.2f, 0.2f, 1};
 
 		time += deltaTime*camera.RotationSpeed;
 		glm::mat4 model;
