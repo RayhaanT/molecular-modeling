@@ -211,8 +211,8 @@ glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, in
 	return glm::vec3(v.x, v.y, v.z);
 }
 
-glm::mat4 getAtomRotation(int configIndex, int modelIndex) {
-	glm::vec3 direction = configurations[configIndex][modelIndex];
+glm::mat4 getAtomRotation(int configIndex, int modelIndex, glm::mat4 rotationModel) {
+	glm::vec3 direction = glm::vec3(glm::vec4(configurations[configIndex][modelIndex], 0.0f) * rotationModel);
 	return glm::toMat4(RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f) * atomDistance, direction * atomDistance));
 }
 
@@ -481,8 +481,7 @@ int main()
 				setMat4(lightingShader, "model", model);
 				if(i < VSEPRModel.size()) {
 					if(representation == 2) {
-						glm::mat4 cylinderModel = getAtomRotation(configIndex, i - 1);
-						cylinderModel = glm::rotate(cylinderModel, time, glm::vec3(0.0f, 1.0f, 0.0f));
+						glm::mat4 cylinderModel = getAtomRotation(configIndex, i - 1, rotationModel);
 						setMat4(lightingShader, "model", cylinderModel);
 						glBindVertexArray(cylinderVAO);
 						glBindBuffer(GL_ARRAY_BUFFER, cylinderVBO);
