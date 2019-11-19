@@ -49,7 +49,7 @@ const float H = 600;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 bool restrictY = true;
-const float atomDistance = 4;
+const float atomDistance = 3.5f;
 const float electronSpeed = 3;
 float lineColor[] = {0.2f, 0.2f, 0.2f, 1};
 
@@ -65,7 +65,7 @@ float fov = 45.0f;
 Camera camera(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
 // const Sphere sphere(1.0f, 36, 18, false); //Blocky
 const Sphere sphere(1.0f, 36, 18, true); //Smooth
-const Cylinder cylinder(1.0f, 1.0f, 64);
+const Cylinder cylinder(0.2f, atomDistance, 64);
 unsigned int lightingShader = 0;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -209,6 +209,11 @@ glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, in
 	v = v * rotationModel;
 
 	return glm::vec3(v.x, v.y, v.z);
+}
+
+glm::mat4 getAtomRotation(int configIndex, int modelIndex) {
+	glm::vec3 direction = configurations[configIndex][modelIndex];
+	return glm::toMat4(RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f) * atomDistance, direction * atomDistance));
 }
 
 glm::vec3 calculateOrbitPosition(glm::vec3 v, int configIndex, int modelIndex, bool pair) {
@@ -457,7 +462,7 @@ int main()
 			for (int i = 1; i < VSEPRModel.size() + VSEPRModel[0].lonePairs; i++) {
 				model = glm::mat4();
 				if(i < VSEPRModel.size()) {
-					bondDistance = representation == 1 ? getSphereDistance(VSEPRModel, i) : getStickDistance(VSEPRModel, i);
+					bondDistance = representation == 1 ? getSphereDistance(VSEPRModel, i) : atomDistance;
 				}
 				else if(representation == 0) {
 					bondDistance = getStickDistance(VSEPRModel, 0);
@@ -475,12 +480,18 @@ int main()
 				}
 				setMat4(lightingShader, "model", model);
 				if(i < VSEPRModel.size()) {
-					glBindVertexArray(cylinderVAO);
-					glBindBuffer(GL_ARRAY_BUFFER, cylinderVBO);
-					cylinder.draw();
-					glBindVertexArray(VAO);
-					glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
-					//sphere.draw();
+					if(representation == 2) {
+						glm::mat4 cylinderModel = getAtomRotation(configIndex, i - 1);
+						cylinderModel = glm::rotate(cylinderModel, time, glm::vec3(0.0f, 1.0f, 0.0f));
+						setMat4(lightingShader, "model", cylinderModel);
+						glBindVertexArray(cylinderVAO);
+						glBindBuffer(GL_ARRAY_BUFFER, cylinderVBO);
+						cylinder.draw();
+						glBindVertexArray(VAO);
+						glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+						setMat4(lightingShader, "model", model);
+					}
+					sphere.draw();
 				}
 				else if(VSEPRModel.size() > 2) {
 					sphere.drawLines(lineColor);

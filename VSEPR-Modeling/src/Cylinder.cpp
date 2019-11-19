@@ -180,7 +180,7 @@ void Cylinder::buildVertices()
 
         if(a == 0) {
             addIndices(0, 1, edgeCount);
-            yOffset = -length;
+            yOffset = 0.0f;
             centerPoint.y = yOffset;
             centerPointNormal.y = -1.0f;
             vertices.push_back(centerPoint);
