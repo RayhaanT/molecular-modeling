@@ -60,6 +60,7 @@ float lastX = W / 2;
 float lastY = H / 2;
 float yaw = -90; float pitch = 0;
 bool firstMouse = true;
+bool clicked = false;
 float fov = 45.0f;
 
 Camera camera(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
@@ -67,6 +68,10 @@ Camera camera(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pit
 const Sphere sphere(1.0f, 36, 18, true); //Smooth
 const Cylinder cylinder(0.2f, atomDistance, 64);
 unsigned int lightingShader = 0;
+
+float xRotation = 0.0f;
+float yRotation = 0.0f;
+glm::mat4 arcMatrix = glm::mat4(1.0f);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -87,7 +92,26 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 	lastX = xpos;
 	lastY = ypos;
 
-	camera.ProcessMouseMovement(xoffset, yoffset, true);
+	if(clicked) {
+		xRotation += xoffset * viewSmoothingConstant;
+		yRotation += yoffset * viewSmoothingConstant;
+		float magnitude = sqrt((xRotation*xRotation)+(yRotation*yRotation));
+
+		arcMatrix = glm::rotate(arcMatrix, magnitude, glm::normalize(glm::vec3(xRotation, yRotation, 0.0f)));
+	}
+
+	//camera.ProcessMouseMovement(xoffset, yoffset, true);
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+	if(button == GLFW_MOUSE_BUTTON_LEFT) {
+		if(action == GLFW_PRESS) {
+			clicked = true;
+		}
+		else {
+			clicked = false;
+		}
+	}
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -404,6 +428,7 @@ int main()
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	float time = 0;
 
 	//Render Loop
@@ -470,7 +495,7 @@ int main()
 				}
 				else  {continue;}
 				glm::vec4 v = glm::vec4(configurations[configIndex][i - 1] * bondDistance, 1.0f);
-				glm::vec3 v3 = glm::vec3(v * rotationModel);
+				glm::vec3 v3 = glm::vec3(v * rotationModel * arcMatrix);
 				model = glm::translate(model, v3);
 				model = glm::rotate(model, -time, glm::vec3(0.0f, 1.0f, 0.0f));
 				if (i < VSEPRModel.size() && representation == 1) {
@@ -483,7 +508,7 @@ int main()
 				if(i < VSEPRModel.size()) {
 					if(representation == 2) {
 						glm::mat4 cylinderModel = getAtomRotation(configIndex, i - 1);
-						cylinderModel = reverseRotationModel * cylinderModel;	
+						cylinderModel = arcMatrix * reverseRotationModel * cylinderModel;	
 						setMat4(lightingShader, "model", cylinderModel);
 						glBindVertexArray(cylinderVAO);
 						glBindBuffer(GL_ARRAY_BUFFER, cylinderVBO);

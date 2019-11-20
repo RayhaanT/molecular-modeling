@@ -17,6 +17,7 @@
 #define PI 3.14159265358979323846264338f
 #define MAX_POINT_LIGHTS 36
 #define smoothingConstant 0.2f
+#define viewSmoothingConstant 0.000005f;
 struct Element{
 	int atomicNumber;
 	int valenceNumber;
