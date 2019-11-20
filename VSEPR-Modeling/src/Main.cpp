@@ -526,6 +526,12 @@ int main()
 			sphere.draw();
 		}
 
+		model = glm::mat4();
+		//model = glm::translate(model, camera.ballPos);
+		model = glm::scale(model, glm::vec3(0.2f));
+		setMat4(lightingShader, "model", model);
+		sphere.draw();
+
 		//Swap buffer and poll IO events
 		glfwSwapBuffers(window);
 		glfwPollEvents();

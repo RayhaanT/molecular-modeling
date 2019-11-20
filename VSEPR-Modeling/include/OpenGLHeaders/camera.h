@@ -6,6 +6,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "VSEPR.h"
 
+#include <iostream>
 #include <vector>
 
 enum Camera_Movement {
@@ -36,6 +37,7 @@ class Camera
 public:
 	//Camera properties
 	glm::vec3 Position;
+	glm::vec3 ballPos;
 	glm::vec3 Front;
 	glm::vec3 Up;
 	glm::vec3 Right;
@@ -141,17 +143,25 @@ public:
 	}
 
 	void ProcessArcBall(float xoffset, float yoffset) {
-		xoffset*=MouseSensitivity/10;
-		yoffset*=MouseSensitivity/10;
-		arcX+=xoffset;
-		arcY+=yoffset;
-		float magnitude = sqrt((arcX * arcX) + (arcY * arcY));
-		float theta = 2*C_PI*(magnitude/CIRCUMFERENCE);
-		glm::vec3 curve = glm::vec3(0.0f, CAMERA_DISTANCE*sin(theta), CAMERA_DISTANCE*cos(theta));
-		float shiftAngle = atan2(arcX, arcY) + (90 * C_PI / 180);
-		curve = glm::vec3(glm::vec4(curve, 0.0f) * glm::rotate(glm::mat4(1.0f), shiftAngle, glm::vec3(0.0f, 0.0f, 1.0f)));
-		Position = curve;
-		updateArcVectors();
+		xoffset*=MouseSensitivity/20;
+		yoffset*=MouseSensitivity/20;
+		arcY+=xoffset;
+		arcX+=yoffset;
+		// std::cout << arcX << " ";
+		// std::cout << arcY << std::endl;
+		glm::vec3 spherePos;
+		spherePos.y = sin(arcX)*CAMERA_DISTANCE;
+		float rCross = cos(arcX)*CAMERA_DISTANCE;
+		spherePos.x = rCross*sin(arcY);
+		spherePos.z = -rCross*cos(arcY);
+		Position = spherePos;
+		// float magnitude = sqrt((arcX * arcX) + (arcY * arcY));
+		// float theta = 2*C_PI*(magnitude/CIRCUMFERENCE);
+		// glm::vec3 curve = glm::vec3(0.0f, CAMERA_DISTANCE*sin(theta), CAMERA_DISTANCE*cos(theta));
+		// float shiftAngle = atan2(arcX, arcY) + (90 * C_PI / 180);
+		// curve = glm::vec3(glm::vec4(curve, 0.0f) * glm::rotate(glm::mat4(1.0f), shiftAngle, glm::vec3(0.0f, 0.0f, 1.0f)));
+		// Position = curve;
+		// updateArcVectors();
 	}
 
 	// Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
