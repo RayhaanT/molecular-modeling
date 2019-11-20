@@ -15,12 +15,20 @@ enum Camera_Movement {
 	RIGHT
 };
 
+#define C_PI 3.14159265359
+
 // Default camera values
 const float YAW = 0.0f;
 const float PITCH = 0.0f;
 const float SPEED = 2.5f;
 const float SENSITIVTY = 0.08f;
 const float ZOOM = 45.0f;
+const float CAMERA_DISTANCE = 5.0f;
+const float CIRCUMFERENCE = CAMERA_DISTANCE * 2 * PI;
+bool clicked;
+
+void mouse_button_callback(GLFWwindow *window, int button, int action, int mods);
+void arcballScroll(double yOffset);
 
 //Processes input and calculates euler values and view matrix
 class Camera
@@ -127,6 +135,19 @@ public:
 		updateCameraVectors();
 	}
 
+	void ProcessArcBall(float xoffset, float yoffset) {
+		arcX+=xoffset;
+		arcY+=yoffset;
+		float magnitude = sqrt((arcX * arcX) + (arcY * arcY));
+		float theta = 2*C_PI*(magnitude/CIRCUMFERENCE);
+		glm::vec3 curve = glm::vec3(0.0f, CAMERA_DISTANCE*sin(theta), CAMERA_DISTANCE*cos(theta));
+		float shiftAngle = atan2(arcX, arcY) + (90 * C_PI / 180);
+		curve = glm::vec3(glm::vec4(curve, 0.0f) * glm::rotate(glm::mat4(1.0f), shiftAngle, glm::vec3(0.0f, 0.0f, 1.0f)));
+		Position = curve;
+		Yaw = -shiftAngle * 180 / C_PI;
+		Pitch = -theta*180/C_PI;
+	}
+
 	// Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
 	void ProcessMouseScroll(float yoffset)
 	{
@@ -139,6 +160,9 @@ public:
 	}
 
 private:
+	float arcX = 0.0f;
+	float arcY = 0.0f;
+
 	// Calculates the front vector from the Camera's (updated) Eular Angles
 	void updateCameraVectors()
 	{

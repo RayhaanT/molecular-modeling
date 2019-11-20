@@ -62,7 +62,7 @@ float yaw = -90; float pitch = 0;
 bool firstMouse = true;
 float fov = 45.0f;
 
-Camera camera(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
+Camera camera(glm::vec3(0.0f, 0.0f, CAMERA_DISTANCE), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
 // const Sphere sphere(1.0f, 36, 18, false); //Blocky
 const Sphere sphere(1.0f, 36, 18, true); //Smooth
 const Cylinder cylinder(0.2f, atomDistance, 64);
@@ -87,7 +87,11 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 	lastX = xpos;
 	lastY = ypos;
 
-	camera.ProcessMouseMovement(xoffset, yoffset, true);
+	//camera.ProcessMouseMovement(xoffset, yoffset, true);
+	std::cout << clicked;
+	if(clicked) {
+		camera.ProcessArcBall(xoffset, yoffset);
+	}
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -120,6 +124,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 	camera.RotationSpeed += yoffset * smoothingConstant;
+	camera.ProcessMouseScroll(yoffset);
 }
 
 void setUpPointLights(int num, unsigned int &program) {
@@ -309,8 +314,20 @@ float getStickDistance(std::vector<BondedElement> model, int index) {
 	return atomDistance;
 }
 
+void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+	{
+		if (action == GLFW_PRESS)
+			clicked = true;
+		else
+			clicked = false;
+	}
+}
+
 int main()
 {
+	clicked = false;
 	std::thread VSEPRthread(VSEPRMain);
 
 	//Initialize GLFW
@@ -404,6 +421,7 @@ int main()
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	float time = 0;
 
 	//Render Loop
