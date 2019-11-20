@@ -23,7 +23,7 @@ const float PITCH = 0.0f;
 const float SPEED = 2.5f;
 const float SENSITIVTY = 0.08f;
 const float ZOOM = 45.0f;
-const float CAMERA_DISTANCE = 5.0f;
+const float CAMERA_DISTANCE = 20.0f;
 const float CIRCUMFERENCE = CAMERA_DISTANCE * 2 * PI;
 bool clicked;
 
@@ -48,6 +48,7 @@ public:
 	float MouseSensitivity;
 	float Zoom;
 	float RotationSpeed = 0;
+	const glm::vec3 origin = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	// Constructor with vectors
 	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVTY), Zoom(ZOOM)
@@ -72,6 +73,10 @@ public:
 	glm::mat4 GetViewMatrix()
 	{
 		return glm::lookAt(Position, Position + Front, Up);
+	}
+
+	glm::mat4 GetArcMatrix() {
+		return glm::lookAt(Position, origin, Up);
 	}
 
 	// Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
@@ -136,6 +141,8 @@ public:
 	}
 
 	void ProcessArcBall(float xoffset, float yoffset) {
+		xoffset*=MouseSensitivity/10;
+		yoffset*=MouseSensitivity/10;
 		arcX+=xoffset;
 		arcY+=yoffset;
 		float magnitude = sqrt((arcX * arcX) + (arcY * arcY));
@@ -144,8 +151,7 @@ public:
 		float shiftAngle = atan2(arcX, arcY) + (90 * C_PI / 180);
 		curve = glm::vec3(glm::vec4(curve, 0.0f) * glm::rotate(glm::mat4(1.0f), shiftAngle, glm::vec3(0.0f, 0.0f, 1.0f)));
 		Position = curve;
-		Yaw = -shiftAngle * 180 / C_PI;
-		Pitch = -theta*180/C_PI;
+		updateArcVectors();
 	}
 
 	// Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
@@ -175,6 +181,11 @@ private:
 		// Also re-calculate the Right and Up vector
 		Right = glm::normalize(glm::cross(Front, WorldUp));  // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
 		Up = glm::normalize(glm::cross(Right, Front));
+	}
+
+	void updateArcVectors() {
+		Right = glm::normalize(glm::cross(glm::normalize(Position-origin), WorldUp)); // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+		Up = glm::normalize(glm::cross(Right, glm::normalize(Position - origin)));
 	}
 };
 #endif

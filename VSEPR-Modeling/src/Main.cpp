@@ -88,7 +88,6 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 	lastY = ypos;
 
 	//camera.ProcessMouseMovement(xoffset, yoffset, true);
-	std::cout << clicked;
 	if(clicked) {
 		camera.ProcessArcBall(xoffset, yoffset);
 	}
@@ -444,7 +443,7 @@ int main()
 		glm::mat4 rotationModel = glm::rotate(model, time, glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::mat4 reverseRotationModel = glm::rotate(model, -time, glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::mat4 view;
-		view = camera.GetViewMatrix();
+		view = camera.GetArcMatrix();
 		glm::mat4 projection;
 		projection = glm::perspective(glm::radians(fov), W / H, 0.1f, 100.0f);
 
