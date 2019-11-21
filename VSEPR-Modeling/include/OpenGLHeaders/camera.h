@@ -180,7 +180,7 @@ private:
 	float lat = 0.0f;
 	float divisor = 1.0f;
 
-	float findModulus(float base, float divisor) {
+	float GetModulus(float base, float divisor) {
 		float mod;
 		// Handle negatives
 		if (base < 0)
@@ -219,10 +219,14 @@ private:
 
 	void updateArcVectors() {
 		Right = glm::normalize(glm::cross(glm::normalize(Position-origin), WorldUp)); // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
-		if(abs(lat*180/C_PI) < 90) {
+		float simpleAngle = abs(GetModulus(lat*180/C_PI, 360));
+		//Check which half of the sphere the angle is in
+		if(simpleAngle < 90 || simpleAngle > 270) {
+			//Calculate up with global up of (0, 1, 0)
 			Up = glm::normalize(glm::cross(Right, glm::normalize(Position - origin)));
 		}
 		else {
+			//Calculate up with global up of (0, -1, 0) -- Reversing order of cross results in this
 			Up = glm::normalize(glm::cross(glm::normalize(Position - origin), Right));
 		}
 	}
