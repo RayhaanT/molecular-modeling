@@ -144,9 +144,15 @@ public:
 		updateCameraVectors();
 	}
 
+	void SetDivisor(double xPos, double yPos) {
+		xPos -= W / 2;
+		yPos -= H / 2;
+		divisor = 2*sqrt((xPos * xPos) + (yPos * yPos));
+	}
+
 	void ProcessArcBall(float xoffset, float yoffset) {
-		lon+=(xoffset/W)*2*C_PI;
-		lat += (yoffset / H)*2*C_PI;
+		lon += (xoffset / divisor) * C_PI;
+		lat += (yoffset / divisor) * C_PI;
 		// std::cout << lon * 180 / C_PI << " " << lat * 180 / C_PI << std::endl;
 		// std::cout << Up.x << " " << Up.y << " " << Up.z << std::endl;
 		glm::vec3 spherePos;
@@ -155,12 +161,6 @@ public:
 		spherePos.x = rCrossSection * sin(lon);
 		spherePos.z = -rCrossSection * cos(lon);
 		Position = spherePos;
-		// float magnitude = sqrt((arcX * arcX) + (arcY * arcY));
-		// float theta = 2*C_PI*(magnitude/CIRCUMFERENCE);
-		// glm::vec3 curve = glm::vec3(0.0f, CAMERA_DISTANCE*sin(theta), CAMERA_DISTANCE*cos(theta));
-		// float shiftAngle = atan2(arcX, arcY) + (90 * C_PI / 180);
-		// curve = glm::vec3(glm::vec4(curve, 0.0f) * glm::rotate(glm::mat4(1.0f), shiftAngle, glm::vec3(0.0f, 0.0f, 1.0f)));
-		// Position = curve;
 		updateArcVectors();
 	}
 
@@ -178,6 +178,7 @@ public:
 private:
 	float lon = 0.0f;
 	float lat = 0.0f;
+	float divisor = 1.0f;
 
 	float findModulus(float base, float divisor) {
 		float mod;

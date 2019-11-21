@@ -315,8 +315,12 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
 	if (button == GLFW_MOUSE_BUTTON_LEFT)
 	{
-		if (action == GLFW_PRESS)
+		if (action == GLFW_PRESS) {
 			clicked = true;
+			double xpos, ypos;
+			glfwGetCursorPos(window, &xpos, &ypos);
+			camera.SetDivisor(xpos, ypos);
+		}
 		else
 			clicked = false;
 	}
