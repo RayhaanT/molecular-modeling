@@ -19,6 +19,8 @@ enum Camera_Movement {
 #define C_PI 3.14159265359
 
 // Default camera values
+const float W = 800;
+const float H = 600;
 const float YAW = 0.0f;
 const float PITCH = 0.0f;
 const float SPEED = 2.5f;
@@ -143,17 +145,15 @@ public:
 	}
 
 	void ProcessArcBall(float xoffset, float yoffset) {
-		xoffset*=MouseSensitivity/20;
-		yoffset*=MouseSensitivity/20;
-		arcY+=xoffset;
-		arcX+=yoffset;
-		// std::cout << arcX << " ";
-		// std::cout << arcY << std::endl;
+		lon+=(xoffset/W)*2*C_PI;
+		lat += (yoffset / H)*2*C_PI;
+		// std::cout << lon * 180 / C_PI << " " << lat * 180 / C_PI << std::endl;
+		// std::cout << Up.x << " " << Up.y << " " << Up.z << std::endl;
 		glm::vec3 spherePos;
-		spherePos.y = sin(arcX)*CAMERA_DISTANCE;
-		float rCross = cos(arcX)*CAMERA_DISTANCE;
-		spherePos.x = rCross*sin(arcY);
-		spherePos.z = -rCross*cos(arcY);
+		spherePos.y = -sin(lat) * CAMERA_DISTANCE;
+		float rCrossSection = cos(lat) * CAMERA_DISTANCE;
+		spherePos.x = rCrossSection * sin(lon);
+		spherePos.z = -rCrossSection * cos(lon);
 		Position = spherePos;
 		// float magnitude = sqrt((arcX * arcX) + (arcY * arcY));
 		// float theta = 2*C_PI*(magnitude/CIRCUMFERENCE);
@@ -161,7 +161,7 @@ public:
 		// float shiftAngle = atan2(arcX, arcY) + (90 * C_PI / 180);
 		// curve = glm::vec3(glm::vec4(curve, 0.0f) * glm::rotate(glm::mat4(1.0f), shiftAngle, glm::vec3(0.0f, 0.0f, 1.0f)));
 		// Position = curve;
-		// updateArcVectors();
+		updateArcVectors();
 	}
 
 	// Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
@@ -176,8 +176,31 @@ public:
 	}
 
 private:
-	float arcX = 0.0f;
-	float arcY = 0.0f;
+	float lon = 0.0f;
+	float lat = 0.0f;
+
+	float findModulus(float base, float divisor) {
+		float mod;
+		// Handle negatives
+		if (base < 0)
+			mod = -base;
+		else
+			mod = base;
+		if (divisor < 0)
+			divisor = -divisor;
+
+		// Finding mod by repeated subtraction
+
+		while (mod >= divisor)
+			mod = mod - divisor;
+
+		// Sign of result typically depends
+		// on sign of a.
+		if (base < 0)
+			return -mod;
+
+		return mod;
+	}
 
 	// Calculates the front vector from the Camera's (updated) Eular Angles
 	void updateCameraVectors()
@@ -195,7 +218,12 @@ private:
 
 	void updateArcVectors() {
 		Right = glm::normalize(glm::cross(glm::normalize(Position-origin), WorldUp)); // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
-		Up = glm::normalize(glm::cross(Right, glm::normalize(Position - origin)));
+		if(abs(lat*180/C_PI) < 90) {
+			Up = glm::normalize(glm::cross(Right, glm::normalize(Position - origin)));
+		}
+		else {
+			Up = glm::normalize(glm::cross(glm::normalize(Position - origin), Right));
+		}
 	}
 };
 #endif

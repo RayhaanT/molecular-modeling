@@ -43,8 +43,6 @@
 ///Depth buffer must also be cleared in the clear function
 
 int representation = 0; //0 = electron, 1 = sphere, 2 = ball and stick
-const float W = 800;
-const float H = 600;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -62,7 +60,7 @@ float yaw = -90; float pitch = 0;
 bool firstMouse = true;
 float fov = 45.0f;
 
-Camera camera(glm::vec3(0.0f, 0.0f, CAMERA_DISTANCE), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
+Camera camera(glm::vec3(0.0f, 0.0f, -CAMERA_DISTANCE), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
 // const Sphere sphere(1.0f, 36, 18, false); //Blocky
 const Sphere sphere(1.0f, 36, 18, true); //Smooth
 const Cylinder cylinder(0.2f, atomDistance, 64);
@@ -315,7 +313,7 @@ float getStickDistance(std::vector<BondedElement> model, int index) {
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+	if (button == GLFW_MOUSE_BUTTON_LEFT)
 	{
 		if (action == GLFW_PRESS)
 			clicked = true;
@@ -414,7 +412,7 @@ int main()
 	loadTexture(specMap, "RedTexture.png");
 
 	glEnable(GL_DEPTH_TEST);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//Set mouse input callback function
 	void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 	glfwSetCursorPosCallback(window, mouse_callback);
