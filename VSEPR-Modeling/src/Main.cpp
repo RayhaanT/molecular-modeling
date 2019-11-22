@@ -120,7 +120,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-	camera.RotationSpeed += yoffset * smoothingConstant;
+	//camera.RotationSpeed += yoffset * smoothingConstant;
 	camera.ProcessMouseScroll(yoffset);
 }
 

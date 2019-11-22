@@ -57,6 +57,7 @@ public:
 	// Constructor with vectors
 	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVTY), Zoom(ZOOM)
 	{
+		arcDistance = abs(position.z);
 		Position = position;
 		WorldUp = up;
 		Yaw = yaw;
@@ -66,6 +67,7 @@ public:
 	// Constructor with scalar values
 	Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVTY), Zoom(ZOOM)
 	{
+		arcDistance = abs(posZ);
 		Position = glm::vec3(posX, posY, posZ);
 		WorldUp = glm::vec3(upX, upY, upZ);
 		Yaw = yaw;
@@ -153,14 +155,14 @@ public:
 	void ProcessArcBall(float xoffset, float yoffset) {
 		lon += (xoffset / divisor) * C_PI;
 		lat += (yoffset / divisor) * C_PI;
-		// std::cout << lon * 180 / C_PI << " " << lat * 180 / C_PI << std::endl;
-		// std::cout << Up.x << " " << Up.y << " " << Up.z << std::endl;
+
 		glm::vec3 spherePos;
-		spherePos.y = -sin(lat) * CAMERA_DISTANCE;
-		float rCrossSection = cos(lat) * CAMERA_DISTANCE;
+		spherePos.y = -sin(lat) * arcDistance;
+		float rCrossSection = cos(lat) * arcDistance;
 		spherePos.x = rCrossSection * sin(lon);
 		spherePos.z = -rCrossSection * cos(lon);
 		Position = spherePos;
+		
 		updateArcVectors();
 	}
 
@@ -173,12 +175,17 @@ public:
 			Zoom = 1.0f;
 		if (Zoom >= 45.0f)
 			Zoom = 45.0f;
+
+		arcDistance -= yoffset*zoomSmoothing;
+		ProcessArcBall(0, 0);
 	}
 
 private:
 	float lon = 0.0f;
 	float lat = 0.0f;
 	float divisor = 1.0f;
+	float arcDistance;
+	const float zoomSmoothing = 0.5f;
 
 	float GetModulus(float base, float divisor) {
 		float mod;
