@@ -24,7 +24,7 @@ struct Element{
 	std::string name;
 	float electronegativity;
 	float atomicRadius;
-	float covalentRadius;
+	float covalentRadii[3];
 	float vanDerWaalsRadius;
 	bool exception = false;
 

@@ -300,9 +300,12 @@ void renderElectrons(unsigned int program, unsigned int &atomProgram, std::vecto
 	}
 }
 
-float getSphereDistance(std::vector<BondedElement> model, int index) {
+float getSphereDistance(std::vector<BondedElement> model, int index, int order) {
+	//Schomaker and Stevenson formula for bond length
 	// return model[0].base.covalentRadius + model[index].base.covalentRadius - 0.09 * abs(model[0].base.electronegativity - model[index].base.electronegativity);
-	return model[0].base.covalentRadius + model[index].base.covalentRadius;
+
+	//Sum of covalent radii based on bond order
+	return (model[0].base.covalentRadii[order-1] + model[index].base.covalentRadii[order-1])/100;
 }
 
 float getStickDistance(std::vector<BondedElement> model, int index) {
@@ -463,7 +466,7 @@ int main()
 			for (int i = 1; i < VSEPRModel.size() + VSEPRModel[0].lonePairs; i++) {
 				model = glm::mat4();
 				if(i < VSEPRModel.size()) {
-					bondDistance = representation == 1 ? getSphereDistance(VSEPRModel, i) : atomDistance;
+					bondDistance = representation == 1 ? getSphereDistance(VSEPRModel, i, VSEPRModel[i].bondedPairs) : atomDistance;
 				}
 				else if(representation == 0) {
 					bondDistance = getStickDistance(VSEPRModel, 0);

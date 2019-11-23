@@ -38,8 +38,12 @@ void parseCSV(std::string path)
 
         float electronegativity = stofSafe(line[12]);
         float atomicRadius = stofSafe(line[23]);
-        float covalentRadius = stofSafe(line[25]);
+        //float covalentRadius = stofSafe(line[25]);
         float vanDerWaalsRadius = stofSafe(line[46])/100.0;
+
+        float covalentRadiusSingle = (stofSafe(line[50]) + stof(line[51]))/2.0f;
+        float covalentRadiusDouble = stofSafe(line[52]);
+        float covalentRadiusTriple = stofSafe(line[53]);
 
         string electronConfig = line[22];
 
@@ -80,7 +84,9 @@ void parseCSV(std::string path)
         newElement.name = name;
         newElement.atomicNumber = atomicNumber;
         newElement.atomicRadius = atomicRadius;
-        newElement.covalentRadius = covalentRadius;
+        newElement.covalentRadii[0] = covalentRadiusSingle;
+        newElement.covalentRadii[1] = covalentRadiusDouble;
+        newElement.covalentRadii[2] = covalentRadiusTriple;
         newElement.vanDerWaalsRadius = vanDerWaalsRadius;
         newElement.electronegativity = electronegativity;
         newElement.periodNumber = periodNumber;
