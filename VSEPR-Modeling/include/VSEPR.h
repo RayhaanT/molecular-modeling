@@ -27,6 +27,7 @@ struct Element{
 	float covalentRadii[3];
 	float vanDerWaalsRadius;
 	bool exception = false;
+	glm::vec3 color;
 
 	Element() {}
 

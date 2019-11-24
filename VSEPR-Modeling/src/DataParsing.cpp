@@ -45,6 +45,23 @@ void parseCSV(std::string path)
         float covalentRadiusDouble = stofSafe(line[52]);
         float covalentRadiusTriple = stofSafe(line[53]);
 
+        //CPK colors
+        float colors[3];
+        int colorIndex = 0;
+        string value = "";
+        string rgbCode = line[54];
+        for(int i = 0; i < rgbCode.length(); i++) {
+            if(isdigit(rgbCode[i]) && rgbCode[i] != '-') {
+                value += rgbCode[i];
+            }
+            if(rgbCode[i] == '-') {
+                colors[colorIndex] = stofSafe(value)/255.0f;
+                value = "";
+                colorIndex++;
+            }
+        }
+        colors[colorIndex] = stofSafe(value)/255.0f;
+        
         string electronConfig = line[22];
 
         int valenceNumber = stoiSafe(line[2]);
@@ -87,6 +104,9 @@ void parseCSV(std::string path)
         newElement.covalentRadii[0] = covalentRadiusSingle;
         newElement.covalentRadii[1] = covalentRadiusDouble;
         newElement.covalentRadii[2] = covalentRadiusTriple;
+        newElement.color.x = colors[0]; //Red
+        newElement.color.y = colors[1]; //Blue
+        newElement.color.z = colors[2]; //Green
         newElement.vanDerWaalsRadius = vanDerWaalsRadius;
         newElement.electronegativity = electronegativity;
         newElement.periodNumber = periodNumber;

@@ -29,6 +29,7 @@ in vec2 TexCoords;
 uniform Material material;
 uniform PointLight light;
 uniform vec3 viewPos;
+uniform vec3 color;
 
 vec3 calculatePointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) {
     vec3 lightDir = normalize(light.position - fragPos);
@@ -45,9 +46,9 @@ vec3 calculatePointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewD
     float attenuation = 1.0 / (light.constant + light.linear * dis + light.quadratic * (dis * dis));
 
     //Combined calculation
-    vec3 ambient  = light.ambient  * vec3(texture(material.diffuse, TexCoords));
-    vec3 diffuse  = light.diffuse  * diff * vec3(texture(material.diffuse, TexCoords));
-    vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));
+    vec3 ambient  = light.ambient  * color;
+    vec3 diffuse  = light.diffuse  * diff * color;
+    vec3 specular = light.specular * spec * color;
     ambient  *= attenuation;
     diffuse  *= attenuation;
     specular *= attenuation;

@@ -101,9 +101,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 			Shader("Shaders/VeShMap.vs", "Shaders/FrShDirectional.fs", lightingShader);
 			glUseProgram(lightingShader);
 			setVec3(lightingShader, "light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-			setVec3(lightingShader, "light.ambient", glm::vec3(0.2, 0.2, 0.2));
-			setVec3(lightingShader, "light.diffuse", glm::vec3(0.3, 0.3, 0.3));
-			setVec3(lightingShader, "light.specular", glm::vec3(0.7, 0.7, 0.7));
+			setVec3(lightingShader, "light.ambient", glm::vec3(0.4, 0.4, 0.4));
+			setVec3(lightingShader, "light.diffuse", glm::vec3(0.5, 0.5, 0.5));
+			setVec3(lightingShader, "light.specular", glm::vec3(0.5, 0.5, 0.5));
 			setInt(lightingShader, "material.diffuse", 0);
 			setInt(lightingShader, "material.specular", 1);
 			setFloat(lightingShader, "material.shininess", 32.0f);
@@ -495,6 +495,7 @@ int main()
 						glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
 						setMat4(lightingShader, "model", model);
 					}
+					setVec3(lightingShader, "color", VSEPRModel[i].base.color);
 					sphere.draw();
 				}
 				else if(VSEPRModel.size() > 2) {
@@ -504,6 +505,7 @@ int main()
 			model = glm::mat4();
 			model = glm::scale(model, glm::vec3(representation == 1 ? VSEPRModel[0].base.vanDerWaalsRadius : VSEPRModel[0].base.atomicRadius));
 			setMat4(lightingShader, "model", model);
+			setVec3(lightingShader, "color", VSEPRModel[0].base.color);
 			sphere.draw();
 		}
 		else {
