@@ -490,6 +490,7 @@ int main()
 						setMat4(lightingShader, "model", cylinderModel);
 						glBindVertexArray(cylinderVAO);
 						glBindBuffer(GL_ARRAY_BUFFER, cylinderVBO);
+						setVec3(lightingShader, "color", glm::vec3(1));
 						cylinder.draw();
 						glBindVertexArray(VAO);
 						glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
