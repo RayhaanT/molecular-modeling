@@ -82,7 +82,7 @@ public:
 	}
 
 	glm::mat4 GetArcMatrix() {
-		return glm::lookAt(Position, origin, Up);
+		return arcMatrix;
 	}
 
 	// Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
@@ -146,24 +146,67 @@ public:
 		updateCameraVectors();
 	}
 
-	void SetDivisor(double xPos, double yPos) {
-		xPos -= W / 2;
-		yPos -= H / 2;
-		divisor = 2*sqrt((xPos * xPos) + (yPos * yPos));
+	void SetRadius(double xPos, double yPos) {
+		// Adjust for origin at top-left corner
+		xPos -= W / 2; xPos *= 2;
+		yPos -= H / 2; yPos *= -2;
+		// Convert to screen coords
+		xPos /= W;
+		yPos /= H;
+		sphereRadius = sqrt((xPos * xPos) + (yPos * yPos));
+		if(sphereRadius < 1) {
+			sphereRadius = 1.0f;
+		}
+		lastPos.x = xPos;
+		lastPos.y = yPos;
+		lastPos.z = 0;
+
+		float xySquare = xPos*xPos + yPos*yPos;
+		if (xySquare > sphereRadius * sphereRadius) {
+			lastPos = glm::normalize(lastPos);
+		}
+		else {
+			lastPos.z = sqrt((sphereRadius*sphereRadius) - xySquare);
+		}
 	}
 
-	void ProcessArcBall(float xoffset, float yoffset) {
-		lon += (xoffset / divisor) * C_PI;
-		lat += (yoffset / divisor) * C_PI;
+	void ProcessArcBall(float xPos, float yPos) {
+		// Adjust for origin at top-left corner
+		xPos -= W / 2;
+		yPos -= H / 2;
+		// Convert to screen coords
+		xPos /= W; xPos *= 2;
+		yPos /= H; yPos *= -2;
+		std::cout << xPos << " " << yPos << std::endl;
 
-		glm::vec3 spherePos;
-		spherePos.y = -sin(lat) * arcDistance;
-		float rCrossSection = cos(lat) * arcDistance;
-		spherePos.x = rCrossSection * sin(lon);
-		spherePos.z = -rCrossSection * cos(lon);
-		Position = spherePos;
+		glm::vec3 newPos;
+		newPos.x = xPos;
+		newPos.y = yPos;
+		float xySquare = xPos * xPos + yPos * yPos;
+		if (xySquare > sphereRadius * sphereRadius) {
+			newPos = glm::normalize(newPos);
+		}
+		else {
+			newPos.z = sqrt((sphereRadius * sphereRadius) - xySquare);
+		}
+
+		glm::vec3 rotAxis = glm::normalize(glm::cross(newPos, lastPos));
+		std::cout << rotAxis.x << " " << rotAxis.y << " " << rotAxis.z << std::endl;
+		float angle = acos(glm::dot(newPos, lastPos)/(GetMagnitude(newPos) * GetMagnitude(lastPos)));
+		//std::cout << angle << std::endl;
+		glm::quat rotation = glm::angleAxis(angle, rotAxis);
+		glm::mat4 rotationMatrix = glm::toMat4(rotation);
+		arcMatrix *= rotationMatrix;
+		lastPos = newPos;
+
+		// glm::vec3 spherePos;
+		// spherePos.y = -sin(lat) * arcDistance;
+		// float rCrossSection = cos(lat) * arcDistance;
+		// spherePos.x = rCrossSection * sin(lon);
+		// spherePos.z = -rCrossSection * cos(lon);
+		// Position = spherePos;
 		
-		updateArcVectors();
+		//updateArcVectors();
 	}
 
 	// Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
@@ -181,11 +224,15 @@ public:
 	}
 
 private:
-	float lon = 0.0f;
-	float lat = 0.0f;
-	float divisor = 1.0f;
+	float sphereRadius = 1.0f;
 	float arcDistance;
+	glm::mat4 arcMatrix;
+	glm::vec3 lastPos;
 	const float zoomSmoothing = 0.5f;
+
+	float GetMagnitude(glm::vec3 v) {
+		return sqrt((v.x*v.x) + (v.y*v.y) + (v.z*v.z));
+	}
 
 	float GetModulus(float base, float divisor) {
 		float mod;
@@ -226,7 +273,9 @@ private:
 
 	void updateArcVectors() {
 		Right = glm::normalize(glm::cross(glm::normalize(Position-origin), WorldUp)); // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
-		float simpleAngle = abs(GetModulus(lat*180/C_PI, 360));
+		//float simpleAngle = abs(GetModulus(lat*180/C_PI, 360));
+		float simpleAngle = 0;
+
 		//Check which half of the sphere the angle is in
 		if(simpleAngle < 90 || simpleAngle > 270) {
 			//Calculate up with global up of (0, 1, 0)

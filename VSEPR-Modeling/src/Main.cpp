@@ -60,7 +60,7 @@ float yaw = -90; float pitch = 0;
 bool firstMouse = true;
 float fov = 45.0f;
 
-Camera camera(glm::vec3(0.0f, 0.0f, -CAMERA_DISTANCE), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
+Camera camera(glm::vec3(0.0f, 0.0f, CAMERA_DISTANCE), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
 // const Sphere sphere(1.0f, 36, 18, false); //Blocky
 const Sphere sphere(1.0f, 36, 18, true); //Smooth
 const Cylinder cylinder(0.2f, atomDistance, 64);
@@ -87,7 +87,7 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 
 	//camera.ProcessMouseMovement(xoffset, yoffset, true);
 	if(clicked) {
-		camera.ProcessArcBall(xoffset, yoffset);
+		camera.ProcessArcBall(xpos, ypos);
 	}
 }
 
@@ -319,7 +319,7 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 			clicked = true;
 			double xpos, ypos;
 			glfwGetCursorPos(window, &xpos, &ypos);
-			camera.SetDivisor(xpos, ypos);
+			camera.SetRadius(xpos, ypos);
 		}
 		else
 			clicked = false;
@@ -443,9 +443,11 @@ int main()
 		time += deltaTime*camera.RotationSpeed;
 		glm::mat4 model;
 		glm::mat4 rotationModel = glm::rotate(model, time, glm::vec3(0.0f, 1.0f, 0.0f));
+		rotationModel *= camera.GetArcMatrix();
 		glm::mat4 reverseRotationModel = glm::rotate(model, -time, glm::vec3(0.0f, 1.0f, 0.0f));
+		reverseRotationModel *= camera.GetArcMatrix();
 		glm::mat4 view;
-		view = camera.GetArcMatrix();
+		view = camera.GetViewMatrix();
 		glm::mat4 projection;
 		projection = glm::perspective(glm::radians(fov), W / H, 0.1f, 100.0f);
 
