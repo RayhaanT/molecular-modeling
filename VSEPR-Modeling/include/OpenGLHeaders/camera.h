@@ -148,26 +148,15 @@ public:
 
 	void SetRadius(double xPos, double yPos) {
 		// Adjust for origin at top-left corner
-		xPos -= W / 2; xPos *= 2;
-		yPos -= H / 2; yPos *= -2;
+		xPos -= W / 2;
+		yPos -= H / 2;
 		// Convert to screen coords
-		xPos /= W;
-		yPos /= H;
+		xPos /= W; xPos *= 2*mouseSense;
+		yPos /= H; yPos *= -2*mouseSense;
 		sphereRadius = sqrt((xPos * xPos) + (yPos * yPos));
-		if(sphereRadius < 1) {
-			sphereRadius = 1.0f;
-		}
 		lastPos.x = xPos;
 		lastPos.y = yPos;
 		lastPos.z = 0;
-
-		float xySquare = xPos*xPos + yPos*yPos;
-		if (xySquare > sphereRadius * sphereRadius) {
-			lastPos = glm::normalize(lastPos);
-		}
-		else {
-			lastPos.z = sqrt((sphereRadius*sphereRadius) - xySquare);
-		}
 	}
 
 	void ProcessArcBall(float xPos, float yPos) {
@@ -175,59 +164,18 @@ public:
 		xPos -= W / 2;
 		yPos -= H / 2;
 		// Convert to screen coords
-		xPos /= W; xPos *= 2;
-		yPos /= H; yPos *= -2;
+		xPos /= W; xPos *= 2*mouseSense;
+		yPos /= H; yPos *= -2*mouseSense;
 
-		glm::vec3 newPos;
-		float xySquare = xPos * xPos + yPos * yPos;
-		int evenOdd = floor(xySquare/sphereRadius);
-
-		glm::vec2 tempPoint(xPos, yPos);
-		float tempMagnitude = GetMagnitude(glm::vec3(tempPoint, 0.0f));
-
-		std::cout << "MOD: " << GetModulus(tempMagnitude, sphereRadius) << std::endl;
-		std::cout << "MAG:" << tempMagnitude << std::endl;
-
-		if(evenOdd % 3 == 1) {
-			float desiredLength = GetModulus(tempMagnitude, sphereRadius) + sphereRadius;
-			tempPoint = (desiredLength / tempMagnitude) * tempPoint;
-
-			newPos = glm::vec3(-tempPoint + (2.0f * sphereRadius * glm::normalize(tempPoint)), 0.0f);
-			xySquare = newPos.x * newPos.x + newPos.y * newPos.y;
-			newPos.z = -sqrt((sphereRadius * sphereRadius) - xySquare);
-		} else if(evenOdd % 3 == 2) {
-			float desiredLength = GetModulus(tempMagnitude, sphereRadius);
-			tempPoint = (desiredLength / tempMagnitude) * tempPoint;
-
-			newPos = -glm::vec3(tempPoint, 0.0f);std::cout << newPos.x << " " << newPos.y << std::endl;
-			xySquare = newPos.x * newPos.x + newPos.y * newPos.y;
-			newPos.z = -sqrt((sphereRadius * sphereRadius) - xySquare);
-		} else {
-			float desiredLength = GetModulus(tempMagnitude, sphereRadius);
-			tempPoint = (desiredLength / tempMagnitude) * tempPoint;
-
-			newPos = glm::vec3(tempPoint, 0.0f);
-			xySquare = newPos.x * newPos.x + newPos.y * newPos.y;
-			newPos.z = sqrt((sphereRadius * sphereRadius) - xySquare);
-		}
+		glm::vec3 newPos = GetSurfacePoint(xPos, yPos);
 
 		glm::vec3 rotAxis = glm::normalize(glm::cross(newPos, lastPos));
 		float angle = acos(glm::dot(newPos, lastPos)/(GetMagnitude(newPos) * GetMagnitude(lastPos)));
-		//std::cout << angle << std::endl;
 		glm::quat rotation = glm::angleAxis(angle, rotAxis);
 		glm::mat4 rotationMatrix = glm::toMat4(rotation);
 		arcMatrix *= rotationMatrix;
 		lastPos = newPos;
 		ballPos = newPos;
-
-		// glm::vec3 spherePos;
-		// spherePos.y = -sin(lat) * arcDistance;
-		// float rCrossSection = cos(lat) * arcDistance;
-		// spherePos.x = rCrossSection * sin(lon);
-		// spherePos.z = -rCrossSection * cos(lon);
-		// Position = spherePos;
-		
-		//updateArcVectors();
 	}
 
 	// Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
@@ -240,7 +188,7 @@ public:
 		if (Zoom >= 45.0f)
 			Zoom = 45.0f;
 
-		arcDistance -= yoffset*zoomSmoothing;
+		arcDistance -= yoffset*zoomSense;
 		ProcessArcBall(0, 0);
 	}
 
@@ -249,7 +197,52 @@ private:
 	float arcDistance;
 	glm::mat4 arcMatrix;
 	glm::vec3 lastPos;
-	const float zoomSmoothing = 0.5f;
+	const float zoomSense = 0.5f;
+	const float mouseSense = 4.0f;
+
+	glm::vec3 GetSurfacePoint(float x, float y) {
+		glm::vec3 newPos;
+		float xySquare = x * x + y * y;
+
+		glm::vec2 tempPoint(x, y);
+		float tempMagnitude = GetMagnitude(glm::vec3(tempPoint, 0.0f));
+
+		int zone = floor(tempMagnitude / sphereRadius);
+
+		if(zone % 4 == 1 || zone % 4 == 2) {
+			float desiredLength = GetModulus(tempMagnitude, sphereRadius) + sphereRadius * (zone % 4 == 1 ? 1 : 2);
+			tempPoint = (desiredLength / tempMagnitude) * tempPoint;
+
+			newPos = glm::vec3(-tempPoint + (2.0f * sphereRadius * glm::normalize(tempPoint)), 0.0f);
+			xySquare = newPos.x * newPos.x + newPos.y * newPos.y;
+			newPos.z = -sqrt((sphereRadius * sphereRadius) - xySquare);
+		} 
+		// Code for 3rd quadrant if computed on its own:
+		/*else if(zone % 4 == 2) {
+			float desiredLength = GetModulus(tempMagnitude, sphereRadius);
+			tempPoint = (desiredLength / tempMagnitude) * tempPoint;
+
+			newPos = -glm::vec3(tempPoint, 0.0f);
+			xySquare = newPos.x * newPos.x + newPos.y * newPos.y;
+			newPos.z = -sqrt((sphereRadius * sphereRadius) - xySquare);
+		}*/ else if(zone % 4 == 3) {
+			float desiredLength = GetModulus(tempMagnitude, sphereRadius) + sphereRadius;
+			tempPoint = (desiredLength / tempMagnitude) * tempPoint;
+
+			newPos = glm::vec3(tempPoint - (2.0f*sphereRadius*glm::normalize(tempPoint)), 0.0f);
+			xySquare = newPos.x * newPos.x + newPos.y * newPos.y;
+			newPos.z = sqrt((sphereRadius * sphereRadius) - xySquare);
+		} else {
+			float desiredLength = GetModulus(tempMagnitude, sphereRadius);
+			tempPoint = (desiredLength / tempMagnitude) * tempPoint;
+
+			newPos = glm::vec3(tempPoint, 0.0f);
+			xySquare = newPos.x * newPos.x + newPos.y * newPos.y;
+			newPos.z = sqrt((sphereRadius * sphereRadius) - xySquare);
+		}
+
+		return newPos;
+	}
 
 	float GetMagnitude(glm::vec3 v) {
 		return sqrt((v.x*v.x) + (v.y*v.y) + (v.z*v.z));
