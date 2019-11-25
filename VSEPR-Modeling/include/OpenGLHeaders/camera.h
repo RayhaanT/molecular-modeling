@@ -177,27 +177,48 @@ public:
 		// Convert to screen coords
 		xPos /= W; xPos *= 2;
 		yPos /= H; yPos *= -2;
-		std::cout << xPos << " " << yPos << std::endl;
 
 		glm::vec3 newPos;
-		newPos.x = xPos;
-		newPos.y = yPos;
 		float xySquare = xPos * xPos + yPos * yPos;
-		if (xySquare > sphereRadius * sphereRadius) {
-			newPos = glm::normalize(newPos);
-		}
-		else {
+		int evenOdd = floor(xySquare/sphereRadius);
+
+		glm::vec2 tempPoint(xPos, yPos);
+		float tempMagnitude = GetMagnitude(glm::vec3(tempPoint, 0.0f));
+
+		std::cout << "MOD: " << GetModulus(tempMagnitude, sphereRadius) << std::endl;
+		std::cout << "MAG:" << tempMagnitude << std::endl;
+
+		if(evenOdd % 3 == 1) {
+			float desiredLength = GetModulus(tempMagnitude, sphereRadius) + sphereRadius;
+			tempPoint = (desiredLength / tempMagnitude) * tempPoint;
+
+			newPos = glm::vec3(-tempPoint + (2.0f * sphereRadius * glm::normalize(tempPoint)), 0.0f);
+			xySquare = newPos.x * newPos.x + newPos.y * newPos.y;
+			newPos.z = -sqrt((sphereRadius * sphereRadius) - xySquare);
+		} else if(evenOdd % 3 == 2) {
+			float desiredLength = GetModulus(tempMagnitude, sphereRadius);
+			tempPoint = (desiredLength / tempMagnitude) * tempPoint;
+
+			newPos = -glm::vec3(tempPoint, 0.0f);std::cout << newPos.x << " " << newPos.y << std::endl;
+			xySquare = newPos.x * newPos.x + newPos.y * newPos.y;
+			newPos.z = -sqrt((sphereRadius * sphereRadius) - xySquare);
+		} else {
+			float desiredLength = GetModulus(tempMagnitude, sphereRadius);
+			tempPoint = (desiredLength / tempMagnitude) * tempPoint;
+
+			newPos = glm::vec3(tempPoint, 0.0f);
+			xySquare = newPos.x * newPos.x + newPos.y * newPos.y;
 			newPos.z = sqrt((sphereRadius * sphereRadius) - xySquare);
 		}
 
 		glm::vec3 rotAxis = glm::normalize(glm::cross(newPos, lastPos));
-		std::cout << rotAxis.x << " " << rotAxis.y << " " << rotAxis.z << std::endl;
 		float angle = acos(glm::dot(newPos, lastPos)/(GetMagnitude(newPos) * GetMagnitude(lastPos)));
 		//std::cout << angle << std::endl;
 		glm::quat rotation = glm::angleAxis(angle, rotAxis);
 		glm::mat4 rotationMatrix = glm::toMat4(rotation);
 		arcMatrix *= rotationMatrix;
 		lastPos = newPos;
+		ballPos = newPos;
 
 		// glm::vec3 spherePos;
 		// spherePos.y = -sin(lat) * arcDistance;

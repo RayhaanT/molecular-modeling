@@ -531,7 +531,7 @@ int main()
 		}
 
 		model = glm::mat4();
-		//model = glm::translate(model, camera.ballPos);
+		model = glm::translate(model, camera.ballPos);
 		model = glm::scale(model, glm::vec3(0.2f));
 		setMat4(lightingShader, "model", model);
 		sphere.draw();
