@@ -57,7 +57,6 @@ public:
 	// Constructor with vectors
 	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVTY), Zoom(ZOOM)
 	{
-		arcDistance = abs(position.z);
 		Position = position;
 		WorldUp = up;
 		Yaw = yaw;
@@ -67,7 +66,6 @@ public:
 	// Constructor with scalar values
 	Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVTY), Zoom(ZOOM)
 	{
-		arcDistance = abs(posZ);
 		Position = glm::vec3(posX, posY, posZ);
 		WorldUp = glm::vec3(upX, upY, upZ);
 		Yaw = yaw;
@@ -106,10 +104,6 @@ public:
 				Position += camspeed*glm::vec3(Front.x, 0.0f, Front.z);
 			if (glfwGetKey(window, GLFW_KEY_S) || glfwGetKey(window, GLFW_KEY_DOWN))
 				Position -= camspeed*glm::vec3(Front.x, 0.0f, Front.z);
-			if (glfwGetKey(window, GLFW_KEY_A) || glfwGetKey(window, GLFW_KEY_LEFT))
-				Position -= camspeed*glm::normalize(glm::cross(glm::vec3(Front.x, 0.0f, Front.z), Up));
-			if (glfwGetKey(window, GLFW_KEY_D) || glfwGetKey(window, GLFW_KEY_RIGHT))
-				Position += camspeed*glm::normalize(glm::cross(glm::vec3(Front.x, 0.0f, Front.z), Up));
 		}
 		else
 		{
@@ -117,10 +111,6 @@ public:
 				Position += camspeed*Front;
 			if (glfwGetKey(window, GLFW_KEY_S) || glfwGetKey(window, GLFW_KEY_DOWN))
 				Position -= camspeed*Front;
-			if (glfwGetKey(window, GLFW_KEY_A) || glfwGetKey(window, GLFW_KEY_LEFT))
-				Position -= camspeed*glm::normalize(glm::cross(Front, Up));
-			if (glfwGetKey(window, GLFW_KEY_D) || glfwGetKey(window, GLFW_KEY_RIGHT))
-				Position += camspeed*glm::normalize(glm::cross(Front, Up));
 		}
 	}
 
@@ -169,8 +159,8 @@ public:
 		float xoffset = xPos - lastPos2D.x;
 		float yoffset = yPos - lastPos2D.y;
 
-		glm::quat xRotation = glm::angleAxis((float)(xoffset * C_PI), glm::vec3(0.0f, 1.0f, 0.0f));
-		glm::quat yRotation = glm::angleAxis((float)(yoffset * C_PI), glm::vec3(1.0f, 0.0f, 0.0f));
+		glm::quat xRotation = glm::angleAxis((float)(xoffset * C_PI)/(sphereRadius*2), glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::quat yRotation = glm::angleAxis((float)(yoffset * C_PI)/(sphereRadius*2), glm::vec3(1.0f, 0.0f, 0.0f));
 		glm::mat4 xMatrix = glm::toMat4(xRotation);
 		glm::mat4 yMatrix = glm::toMat4(yRotation);
 
@@ -179,7 +169,7 @@ public:
 	}
 
 	// Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
-	void ProcessMouseScroll(float yoffset)
+	void ProcessMouseScroll(GLFWwindow *window, float yoffset)
 	{
 		if (Zoom >= 1.0f && Zoom <= 45.0f)
 			Zoom -= yoffset;
@@ -188,17 +178,17 @@ public:
 		if (Zoom >= 45.0f)
 			Zoom = 45.0f;
 
-		arcDistance -= yoffset*zoomSense;
-		ProcessArcBall(0, 0);
+		Position += zoomSense * Front * yoffset;
+		//ProcessArcBall(lastPos2D.x, lastPos2D.y);
 	}
 
 private:
 	float sphereRadius = 1.0f;
-	float arcDistance;
 	glm::mat4 arcMatrix;
 	glm::vec2 lastPos2D = glm::vec2(0.0f);
-	const float zoomSense = 0.5f;
+	const float zoomSense = 0.75f;
 
+	// Code used to find point on a sphere from a given point (pythagoras method)
 	glm::vec3 GetSurfacePoint(float x, float y) {
 		glm::vec3 newPos;
 		float xySquare = x * x + y * y;
@@ -206,7 +196,6 @@ private:
 		glm::vec2 tempPoint(x, y);
 		float tempMagnitude = GetMagnitude(glm::vec3(tempPoint, 0.0f));
 		int zone = floor(tempMagnitude / sphereRadius);
-		std::cout << zone << std::endl;
 
 		if(zone % 4 == 1 || zone % 4 == 2) {
 			float desiredLength = GetModulus(tempMagnitude, sphereRadius) + sphereRadius * (zone % 4 == 1 ? 1 : 2);
@@ -255,6 +244,7 @@ private:
 		return sqrt((v.x*v.x) + (v.y*v.y) + (v.z*v.z));
 	}
 
+	//Modulus of floating points
 	float GetModulus(float base, float divisor) {
 		float mod;
 		// Handle negatives
@@ -265,13 +255,9 @@ private:
 		if (divisor < 0)
 			divisor = -divisor;
 
-		// Finding mod by repeated subtraction
-
 		while (mod >= divisor)
 			mod = mod - divisor;
 
-		// Sign of result typically depends
-		// on sign of a.
 		if (base < 0)
 			return -mod;
 

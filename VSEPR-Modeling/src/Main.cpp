@@ -121,7 +121,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 	//camera.RotationSpeed += yoffset * smoothingConstant;
-	camera.ProcessMouseScroll(yoffset);
+	camera.ProcessMouseScroll(window, yoffset);
 }
 
 void setUpPointLights(int num, unsigned int &program) {
