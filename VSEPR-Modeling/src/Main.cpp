@@ -43,8 +43,6 @@
 ///Depth buffer must also be cleared in the clear function
 
 int representation = 0; //0 = electron, 1 = sphere, 2 = ball and stick
-const float W = 800;
-const float H = 600;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -62,7 +60,7 @@ float yaw = -90; float pitch = 0;
 bool firstMouse = true;
 float fov = 45.0f;
 
-Camera camera(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
+Camera camera(glm::vec3(0.0f, 0.0f, CAMERA_DISTANCE), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
 // const Sphere sphere(1.0f, 36, 18, false); //Blocky
 const Sphere sphere(1.0f, 36, 18, true); //Smooth
 const Cylinder cylinder(0.2f, atomDistance, 64);
@@ -87,7 +85,10 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 	lastX = xpos;
 	lastY = ypos;
 
-	camera.ProcessMouseMovement(xoffset, yoffset, true);
+	//camera.ProcessMouseMovement(xoffset, yoffset, true);
+	if(clicked) {
+		camera.ProcessArcBall(xpos, ypos);
+	}
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -119,7 +120,8 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-	camera.RotationSpeed += yoffset * smoothingConstant;
+	//camera.RotationSpeed += yoffset * smoothingConstant;
+	camera.ProcessMouseScroll(window, yoffset);
 }
 
 void setUpPointLights(int num, unsigned int &program) {
@@ -312,8 +314,24 @@ float getStickDistance(std::vector<BondedElement> model, int index) {
 	return atomDistance;
 }
 
+void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_LEFT)
+	{
+		if (action == GLFW_PRESS) {
+			clicked = true;
+			double xpos, ypos;
+			glfwGetCursorPos(window, &xpos, &ypos);
+			camera.SetRadius(xpos, ypos);
+		}
+		else
+			clicked = false;
+	}
+}
+
 int main()
 {
+	clicked = false;
 	std::thread VSEPRthread(VSEPRMain);
 
 	//Initialize GLFW
@@ -401,12 +419,13 @@ int main()
 	loadTexture(specMap, "RedTexture.png");
 
 	glEnable(GL_DEPTH_TEST);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//Set mouse input callback function
 	void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	float time = 0;
 
 	//Render Loop
@@ -427,7 +446,9 @@ int main()
 		time += deltaTime*camera.RotationSpeed;
 		glm::mat4 model;
 		glm::mat4 rotationModel = glm::rotate(model, time, glm::vec3(0.0f, 1.0f, 0.0f));
+		rotationModel *= camera.GetArcMatrix();
 		glm::mat4 reverseRotationModel = glm::rotate(model, -time, glm::vec3(0.0f, 1.0f, 0.0f));
+		reverseRotationModel *= camera.GetArcMatrix();
 		glm::mat4 view;
 		view = camera.GetViewMatrix();
 		glm::mat4 projection;
@@ -514,6 +535,12 @@ int main()
 			setMat4(lightingShader, "model", model);
 			sphere.draw();
 		}
+
+		model = glm::mat4();
+		model = glm::translate(model, camera.ballPos);
+		model = glm::scale(model, glm::vec3(0.2f));
+		setMat4(lightingShader, "model", model);
+		sphere.draw();
 
 		//Swap buffer and poll IO events
 		glfwSwapBuffers(window);
