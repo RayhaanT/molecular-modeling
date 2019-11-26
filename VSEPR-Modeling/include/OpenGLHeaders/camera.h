@@ -151,13 +151,11 @@ public:
 		xPos -= W / 2;
 		yPos -= H / 2;
 		// Convert to screen coords
-		xPos /= W; xPos *= 2*mouseSense;
-		yPos /= H; yPos *= -2*mouseSense;
+		xPos /= W; xPos *= -2;
+		yPos /= H; yPos *= -2;
 		sphereRadius = sqrt((xPos * xPos) + (yPos * yPos));
 
-		lastPos.x = xPos;
-		lastPos.y = yPos;
-		lastPos.z = 0;
+		lastPos2D = glm::vec2(xPos, yPos);
 	}
 
 	void ProcessArcBall(float xPos, float yPos) {
@@ -165,19 +163,19 @@ public:
 		xPos -= W / 2;
 		yPos -= H / 2;
 		// Convert to screen coords
-		xPos /= W; xPos *= 2*mouseSense;
-		yPos /= H; yPos *= -2*mouseSense;
+		xPos /= W; xPos *= -2;
+		yPos /= H; yPos *= -2;
 
-		glm::vec3 newPos = GetSurfacePoint(xPos, yPos);
+		float xoffset = xPos - lastPos2D.x;
+		float yoffset = yPos - lastPos2D.y;
 
-		glm::vec3 rotAxis = glm::normalize(glm::cross(newPos, lastPos));
-		float angle = acos(glm::dot(newPos, lastPos)/(GetMagnitude(newPos) * GetMagnitude(lastPos)));
-		glm::quat rotation = glm::angleAxis(angle, rotAxis);
-		glm::mat4 rotationMatrix = glm::toMat4(rotation);
-		arcMatrix *= rotationMatrix;
-		lastPos = newPos;
-		ballPos = newPos;
-		ballPos.z = abs(ballPos.z);
+		glm::quat xRotation = glm::angleAxis((float)(xoffset * C_PI), glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::quat yRotation = glm::angleAxis((float)(yoffset * C_PI), glm::vec3(1.0f, 0.0f, 0.0f));
+		glm::mat4 xMatrix = glm::toMat4(xRotation);
+		glm::mat4 yMatrix = glm::toMat4(yRotation);
+
+		arcMatrix *= yMatrix * xMatrix;
+		lastPos2D = glm::vec2(xPos, yPos);
 	}
 
 	// Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
@@ -198,9 +196,8 @@ private:
 	float sphereRadius = 1.0f;
 	float arcDistance;
 	glm::mat4 arcMatrix;
-	glm::vec3 lastPos;
+	glm::vec2 lastPos2D = glm::vec2(0.0f);
 	const float zoomSense = 0.5f;
-	const float mouseSense = 1.0f;
 
 	glm::vec3 GetSurfacePoint(float x, float y) {
 		glm::vec3 newPos;
