@@ -83,6 +83,10 @@ public:
 		return arcMatrix;
 	}
 
+	glm::mat4 GetReverseArcMatrix() {
+		return reverseArcMatrix;
+	}
+
 	// Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
 	void ProcessKeyboard(GLFWwindow *window, float deltaTime, bool restrictY)
 	{
@@ -164,6 +168,12 @@ public:
 		glm::mat4 xMatrix = glm::toMat4(xRotation);
 		glm::mat4 yMatrix = glm::toMat4(yRotation);
 
+		glm::quat xRotationReverse = glm::angleAxis((float)(-xoffset * C_PI) / (sphereRadius * 2), glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::quat yRotationReverse = glm::angleAxis((float)(-yoffset * C_PI) / (sphereRadius * 2), glm::vec3(1.0f, 0.0f, 0.0f));
+		glm::mat4 xMatrixReverse = glm::toMat4(xRotationReverse);
+		glm::mat4 yMatrixReverse = glm::toMat4(yRotationReverse);
+
+		reverseArcMatrix *= yMatrixReverse * xMatrixReverse;
 		arcMatrix *= yMatrix * xMatrix;
 		lastPos2D = glm::vec2(xPos, yPos);
 	}
@@ -185,6 +195,7 @@ public:
 private:
 	float sphereRadius = 1.0f;
 	glm::mat4 arcMatrix;
+	glm::mat4 reverseArcMatrix;
 	glm::vec2 lastPos2D = glm::vec2(0.0f);
 	const float zoomSense = 0.75f;
 
