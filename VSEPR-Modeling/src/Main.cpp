@@ -443,7 +443,9 @@ int main()
 		glBindVertexArray(VAO);
 		glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
 
-		time += deltaTime*camera.RotationSpeed;
+		if(!clicked) {
+			time += deltaTime * camera.RotationSpeed;
+		}
 		glm::mat4 model;
 		glm::mat4 rotationModel = camera.GetArcMatrix();
 		rotationModel *= glm::rotate(model, time, glm::vec3(0.0f, 1.0f, 0.0f));

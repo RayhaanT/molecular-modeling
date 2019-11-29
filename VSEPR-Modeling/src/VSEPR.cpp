@@ -1,8 +1,9 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include "VSEPR.h"
 #include <string>
+#include "VSEPR.h"
+#include "glm/gtc/quaternion.hpp"
 #include "data.h"
 
 extern std::vector<std::vector<glm::vec3>> configurations;
@@ -218,12 +219,19 @@ vector<BondedElement> optimizeFormalCharge(vector<BondedElement> structure) {
 vector<BondedElement> VSEPRMain() {
 	parseCSV("periodicTableData.csv");
 
+	std::vector<glm::vec3> tetrahedron = {glm::vec3(1, 0, -1/sqrt(2)), glm::vec3(-1, 0, -1/sqrt(2)), glm::vec3(0, 1, 1/sqrt(2)), glm::vec3(0, -1, 1/sqrt(2))};
+	glm::quat shift = glm::angleAxis((float)((PI/2)-atan(sqrt(2))), glm::vec3(1.0f, 0.0f, 0.0f));
+	for(int i = 0; i < tetrahedron.size(); i++) {
+		glm::vec4 temp = glm::vec4(tetrahedron[i], 1.0f);
+		tetrahedron[i] = glm::normalize(glm::vec3(temp * shift));
+	} 
+
 	string inFormula;
 	configurations = {
 		std::vector<glm::vec3>{glm::vec3(1, 0, 0)},
 		std::vector<glm::vec3>{glm::vec3(1, 0, 0), glm::vec3(-1, 0, 0)},
 		std::vector<glm::vec3>{glm::vec3(COS_30, -SIN_30, 0), glm::vec3(-COS_30, -SIN_30, 0), glm::vec3(0, 1, 0)},
-		std::vector<glm::vec3>{glm::vec3(-COS_30, -SIN_30, SIN_30), glm::vec3(COS_30, -SIN_30, SIN_30), glm::vec3(0, -SIN_30, -COS_30), glm::vec3(0, 1, 0)},
+		tetrahedron,
 		std::vector<glm::vec3>{glm::vec3(0, 0, -1), glm::vec3(-COS_30, 0, SIN_30), glm::vec3(0, -1, 0), glm::vec3(COS_30, 0, SIN_30), glm::vec3(0, 1, 0)},
 		std::vector<glm::vec3>{glm::vec3(SIN_45, 0, -SIN_45), glm::vec3(SIN_45, 0, SIN_45), glm::vec3(-SIN_45, 0, SIN_45), glm::vec3(-SIN_45, 0, -SIN_45), glm::vec3(0, 1, 0), glm::vec3(0, -1, 0)},
 	};
