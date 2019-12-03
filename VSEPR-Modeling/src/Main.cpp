@@ -20,6 +20,7 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include <utility>
 
 #define ARRAY_SIZE(array) (sizeof((array)) / sizeof((array[0])))
 
@@ -63,7 +64,7 @@ float fov = 45.0f;
 Camera camera(glm::vec3(0.0f, 0.0f, CAMERA_DISTANCE), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
 // const Sphere sphere(1.0f, 36, 18, false); //Blocky
 const Sphere sphere(1.0f, 36, 18, true); //Smooth
-const Cylinder cylinder(0.2f, atomDistance, 64);
+const Cylinder cylinder(0.15f, atomDistance, 64);
 unsigned int lightingShader = 0;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -213,9 +214,33 @@ glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, in
 	return glm::vec3(v.x, v.y, v.z);
 }
 
-glm::mat4 getAtomRotation(int configIndex, int modelIndex, glm::mat4 rotationModel) {
-	glm::vec3 direction = glm::vec3(glm::vec4(configurations[configIndex][modelIndex], 0.0f) * rotationModel);
-	return glm::toMat4(RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f) * atomDistance, direction * atomDistance));
+glm::mat4 getCylinderRotation(int configIndex, int modelIndex, std::pair<int, int> bondOrder, float atomicRadius, glm::mat4 rotationModel) {
+	glm::vec3 target = configurations[configIndex][modelIndex];
+	glm::vec3 direction = glm::vec3(glm::vec4(target, 0.0f) * rotationModel);
+	
+	glm::mat4 rotMatrix;
+	if(bondOrder.first == 2) {
+		rotMatrix = glm::translate(rotMatrix, glm::vec3(bondOrder.second == 1 ? atomicRadius/1.8 : -atomicRadius/1.8, 0.0f, 0.0f));
+	}
+	else if(bondOrder.first == 3 && bondOrder.second != 2) {
+		rotMatrix = glm::translate(rotMatrix, glm::vec3(bondOrder.second == 1 ? atomicRadius/2 : -atomicRadius/2, 0.0f, 0.0f));
+	}
+
+	rotMatrix *= glm::toMat4(RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f) * atomDistance, direction * atomDistance));
+
+	// if(bondOrder.first == 2) {
+	// 	glm::vec4 mockPos = glm::vec4(0.f, 1.0f, 0.0f, 0.0f) * rotMatrix;
+	// 	glm::vec3 right = glm::cross(mockPos, glm::vec3(0.0f, 1.0f, 0.0f));
+	// 	glm::vec3 norm = glm::cross(mockPos, right);
+	// 	target += bondOrder.second == 1 ? norm : -norm;
+	// }
+	// else if(bondOrder.first == 3 && bondOrder.second != 2) {
+	// 	glm::vec3 right = glm::cross(target, glm::vec3(0.0f, 1.0f, 0.0f));
+	// 	glm::vec3 norm = glm::cross(target, right);
+	// 	target += 1.3f * bondOrder.second == 1 ? norm : -norm;
+	// }
+
+	return rotMatrix;
 }
 
 glm::vec3 calculateOrbitPosition(glm::vec3 v, int configIndex, int modelIndex, bool pair) {
@@ -507,13 +532,15 @@ int main()
 				setMat4(lightingShader, "model", model);
 				if(i < VSEPRModel.size()) {
 					if(representation == 2) {
-						glm::mat4 cylinderModel = getAtomRotation(configIndex, i - 1, rotationModel);
-						cylinderModel = cylinderModel;	
-						setMat4(lightingShader, "model", cylinderModel);
-						glBindVertexArray(cylinderVAO);
-						glBindBuffer(GL_ARRAY_BUFFER, cylinderVBO);
-						setVec3(lightingShader, "color", glm::vec3(1));
-						cylinder.draw();
+						for(int c = 0; c < VSEPRModel[i].bondedPairs; c++) {
+							glm::mat4 cylinderModel = getCylinderRotation(configIndex, i - 1, std::make_pair(VSEPRModel[i].bondedPairs, c), VSEPRModel[i].base.atomicRadius, rotationModel);
+							cylinderModel = cylinderModel;	
+							setMat4(lightingShader, "model", cylinderModel);
+							glBindVertexArray(cylinderVAO);
+							glBindBuffer(GL_ARRAY_BUFFER, cylinderVBO);
+							setVec3(lightingShader, "color", glm::vec3(1));
+							cylinder.draw();
+						}
 						glBindVertexArray(VAO);
 						glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
 						setMat4(lightingShader, "model", model);
