@@ -64,7 +64,7 @@ float fov = 45.0f;
 Camera camera(glm::vec3(0.0f, 0.0f, CAMERA_DISTANCE), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
 // const Sphere sphere(1.0f, 36, 18, false); //Blocky
 const Sphere sphere(1.0f, 36, 18, true); //Smooth
-const Cylinder cylinder(0.15f, atomDistance, 64);
+const Cylinder cylinder(0.125f, atomDistance, 64);
 unsigned int lightingShader = 0;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -220,10 +220,10 @@ glm::mat4 getCylinderRotation(int configIndex, int modelIndex, std::pair<int, in
 	
 	glm::mat4 rotMatrix;
 	if(bondOrder.first == 2) {
-		rotMatrix = glm::translate(rotMatrix, glm::vec3(bondOrder.second == 1 ? atomicRadius/1.8 : -atomicRadius/1.8, 0.0f, 0.0f));
+		rotMatrix = glm::translate(rotMatrix, glm::vec3(bondOrder.second == 1 ? atomicRadius/2.2 : -atomicRadius/2.2, 0.0f, 0.0f));
 	}
 	else if(bondOrder.first == 3 && bondOrder.second != 2) {
-		rotMatrix = glm::translate(rotMatrix, glm::vec3(bondOrder.second == 1 ? atomicRadius/2 : -atomicRadius/2, 0.0f, 0.0f));
+		rotMatrix = glm::translate(rotMatrix, glm::vec3(bondOrder.second == 1 ? atomicRadius/2.2 : -atomicRadius/2.2, 0.0f, 0.0f));
 	}
 
 	rotMatrix *= glm::toMat4(RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f) * atomDistance, direction * atomDistance));
