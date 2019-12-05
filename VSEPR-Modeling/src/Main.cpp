@@ -526,8 +526,11 @@ int main()
 				if (i < VSEPRModel.size() && representation == 1) {
 					model = glm::scale(model, glm::vec3(VSEPRModel[i].base.vanDerWaalsRadius));
 				}
-				else if(representation != 1) {
+				else if(representation == 0) {
 					model = glm::scale(model, i < VSEPRModel.size() ? glm::vec3(VSEPRModel[i].base.atomicRadius) : glm::vec3(VSEPRModel[0].base.atomicRadius * 0.8));
+				}
+				else if (i < VSEPRModel.size() && representation == 2) {
+					model = glm::scale(model, glm::vec3(0.75f));
 				}
 				setMat4(lightingShader, "model", model);
 				if(i < VSEPRModel.size()) {
@@ -553,7 +556,12 @@ int main()
 				}
 			}
 			model = glm::mat4();
-			model = glm::scale(model, glm::vec3(representation == 1 ? VSEPRModel[0].base.vanDerWaalsRadius : VSEPRModel[0].base.atomicRadius));
+			if(representation != 2) {
+				model = glm::scale(model, glm::vec3(representation == 1 ? VSEPRModel[0].base.vanDerWaalsRadius : VSEPRModel[0].base.atomicRadius));
+			}
+			else {
+				model = glm::scale(model, glm::vec3(0.75f));
+			}
 			setMat4(lightingShader, "model", model);
 			setVec3(lightingShader, "color", VSEPRModel[0].base.color);
 			sphere.draw();
@@ -563,12 +571,6 @@ int main()
 			setMat4(lightingShader, "model", model);
 			sphere.draw();
 		}
-
-		model = glm::mat4();
-		model = glm::translate(model, camera.ballPos);
-		model = glm::scale(model, glm::vec3(0.2f));
-		setMat4(lightingShader, "model", model);
-		sphere.draw();
 
 		//Swap buffer and poll IO events
 		glfwSwapBuffers(window);
