@@ -214,31 +214,20 @@ glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, in
 	return glm::vec3(v.x, v.y, v.z);
 }
 
-glm::mat4 getCylinderRotation(int configIndex, int modelIndex, std::pair<int, int> bondOrder, float atomicRadius, glm::mat4 rotationModel) {
+glm::mat4 getCylinderRotation(int configIndex, int modelIndex, std::pair<int, int> bondOrder, glm::mat4 rotationModel) {
 	glm::vec3 target = configurations[configIndex][modelIndex];
 	glm::vec3 direction = glm::vec3(glm::vec4(target, 0.0f) * rotationModel);
 	
 	glm::mat4 rotMatrix;
+	rotMatrix = glm::toMat4(RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f) * atomDistance, direction * atomDistance));
 	if(bondOrder.first == 2) {
-		rotMatrix = glm::translate(rotMatrix, glm::vec3(bondOrder.second == 1 ? atomicRadius/2.2 : -atomicRadius/2.2, 0.0f, 0.0f));
+		rotMatrix = glm::translate(rotMatrix, glm::vec3(bondOrder.second == 1 ? 1.0f/2.7 : -1.0f/2.7, 0.0f, 0.0f));
 	}
 	else if(bondOrder.first == 3 && bondOrder.second != 2) {
-		rotMatrix = glm::translate(rotMatrix, glm::vec3(bondOrder.second == 1 ? atomicRadius/2.2 : -atomicRadius/2.2, 0.0f, 0.0f));
+		rotMatrix = glm::translate(rotMatrix, glm::vec3(bondOrder.second == 1 ? 1.0f/2.7 : -1.0f/2.7, 0.0f, 0.0f));
 	}
 
-	rotMatrix *= glm::toMat4(RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f) * atomDistance, direction * atomDistance));
-
-	// if(bondOrder.first == 2) {
-	// 	glm::vec4 mockPos = glm::vec4(0.f, 1.0f, 0.0f, 0.0f) * rotMatrix;
-	// 	glm::vec3 right = glm::cross(mockPos, glm::vec3(0.0f, 1.0f, 0.0f));
-	// 	glm::vec3 norm = glm::cross(mockPos, right);
-	// 	target += bondOrder.second == 1 ? norm : -norm;
-	// }
-	// else if(bondOrder.first == 3 && bondOrder.second != 2) {
-	// 	glm::vec3 right = glm::cross(target, glm::vec3(0.0f, 1.0f, 0.0f));
-	// 	glm::vec3 norm = glm::cross(target, right);
-	// 	target += 1.3f * bondOrder.second == 1 ? norm : -norm;
-	// }
+	//rotMatrix *= glm::toMat4(RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f) * atomDistance, direction * atomDistance));
 
 	return rotMatrix;
 }
@@ -536,7 +525,7 @@ int main()
 				if(i < VSEPRModel.size()) {
 					if(representation == 2) {
 						for(int c = 0; c < VSEPRModel[i].bondedPairs; c++) {
-							glm::mat4 cylinderModel = getCylinderRotation(configIndex, i - 1, std::make_pair(VSEPRModel[i].bondedPairs, c), VSEPRModel[i].base.atomicRadius, rotationModel);
+							glm::mat4 cylinderModel = getCylinderRotation(configIndex, i - 1, std::make_pair(VSEPRModel[i].bondedPairs, c), rotationModel);
 							cylinderModel = cylinderModel;	
 							setMat4(lightingShader, "model", cylinderModel);
 							glBindVertexArray(cylinderVAO);
