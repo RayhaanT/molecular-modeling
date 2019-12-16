@@ -94,6 +94,18 @@ void parseCSV(std::string path)
             for (int i = 0; i < filteredConfig.size(); i++) {
                 valenceNumber += filteredConfig[i][2] - '0';
             }
+
+            for(int i = 0; i < electronConfig.length(); i++) {
+                if(electronConfig[i] == 'f') {
+                    if(isdigit(electronConfig[i+2])) {
+                        valenceNumber += (electronConfig[i + 1] - '0')*10;
+                        valenceNumber += (electronConfig[i + 2] - '0');
+                    }
+                    else {
+                        valenceNumber += electronConfig[i + 1] - '0';
+                    }
+                }
+            }
         }
 
         Element newElement;
