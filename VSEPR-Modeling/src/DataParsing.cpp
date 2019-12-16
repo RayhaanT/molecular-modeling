@@ -68,7 +68,7 @@ void parseCSV(std::string path)
         if(valenceNumber > 12) {
             valenceNumber -= 10;
         }
-        else if (valenceNumber > 2) {
+        else if (valenceNumber > 2 || valenceNumber == 0) {
             vector<string> config;
             string sect;
             stringstream configStream(electronConfig);

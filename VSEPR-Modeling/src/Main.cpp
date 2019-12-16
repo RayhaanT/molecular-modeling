@@ -516,7 +516,7 @@ int main()
 					model = glm::scale(model, glm::vec3(VSEPRModel[i].base.vanDerWaalsRadius));
 				}
 				else if(representation == 0) {
-					model = glm::scale(model, i < VSEPRModel.size() ? glm::vec3(VSEPRModel[i].base.atomicRadius) : glm::vec3(VSEPRModel[0].base.atomicRadius * 0.8));
+					model = glm::scale(model, i < VSEPRModel.size() ? glm::vec3(VSEPRModel[i].base.atomicRadius) : VSEPRModel[0].base.atomicRadius > 0 ? glm::vec3(VSEPRModel[0].base.atomicRadius * 0.8) : glm::vec3(0.8f));
 				}
 				else if (i < VSEPRModel.size() && representation == 2) {
 					model = glm::scale(model, glm::vec3(0.75f));
@@ -546,7 +546,7 @@ int main()
 			}
 			model = glm::mat4();
 			if(representation != 2) {
-				model = glm::scale(model, glm::vec3(representation == 1 ? VSEPRModel[0].base.vanDerWaalsRadius : VSEPRModel[0].base.atomicRadius));
+				model = glm::scale(model, glm::vec3(representation == 1 ? VSEPRModel[0].base.vanDerWaalsRadius : VSEPRModel[0].base.atomicRadius > 0 ? VSEPRModel[0].base.atomicRadius : 0.8f));
 			}
 			else {
 				model = glm::scale(model, glm::vec3(0.75f));
