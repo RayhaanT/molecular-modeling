@@ -236,8 +236,6 @@ vector<BondedElement> VSEPRMain() {
 		std::vector<glm::vec3>{glm::vec3(SIN_45, 0, -SIN_45), glm::vec3(SIN_45, 0, SIN_45), glm::vec3(-SIN_45, 0, SIN_45), glm::vec3(-SIN_45, 0, -SIN_45), glm::vec3(0, 1, 0), glm::vec3(0, -1, 0)},
 	};
 
-	std::cout << elements["U"].valenceNumber << std::endl;
-
 	while (1) {
 		getline(cin, inFormula);
 		vector<Element> comp;

@@ -64,7 +64,7 @@ float fov = 45.0f;
 Camera camera(glm::vec3(0.0f, 0.0f, CAMERA_DISTANCE), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
 // const Sphere sphere(1.0f, 36, 18, false); //Blocky
 const Sphere sphere(1.0f, 36, 18, true); //Smooth
-const Cylinder cylinder(0.125f, atomDistance, 64);
+const Cylinder cylinder(0.125f, atomDistance/2, 64);
 unsigned int lightingShader = 0;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -214,35 +214,39 @@ glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, in
 	return glm::vec3(v.x, v.y, v.z);
 }
 
+glm::mat4 getCylinderOffset(std::pair<int, int> bondOrder, glm::mat4 rotationModel, glm::vec3 direction, glm::mat4 cylinderModel) {
+	if(bondOrder.first == 1 || (bondOrder.first == 3 && bondOrder.second == 2)) {
+		return cylinderModel;
+	}
+	
+	glm::mat4 finalMat = glm::mat4();
+	glm::vec3 up = glm::vec3(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f) * rotationModel);
+	glm::vec3 left = glm::cross(direction, up);
+	float length = 0;
+	if(bondOrder.first == 2) {
+		length = bondOrder.second == 1 ? 1.0f/2.7 : -1.0f/2.7;
+	}
+	else if(bondOrder.first == 3) {
+		length = bondOrder.second == 1 ? 1.0f / 2.7 : -1.0f / 2.7;
+	}
+
+	left = glm::normalize(left) * length;
+	finalMat = glm::translate(finalMat, left);
+	finalMat *= cylinderModel;
+
+	return finalMat;
+}
+
+
 glm::mat4 getCylinderRotation(int configIndex, int modelIndex, std::pair<int, int> bondOrder, glm::mat4 rotationModel) {
 	glm::vec3 target = configurations[configIndex][modelIndex];
 	glm::vec3 direction = glm::vec3(glm::vec4(target, 0.0f) * rotationModel);
 	
 	glm::mat4 rotMatrix;
 	rotMatrix = glm::toMat4(RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f) * atomDistance, direction * atomDistance));
-	if(bondOrder.first == 2) {
-		rotMatrix = glm::translate(rotMatrix, glm::vec3(bondOrder.second == 1 ? 1.0f/2.7 : -1.0f/2.7, 0.0f, 0.0f));
-	}
-	else if(bondOrder.first == 3 && bondOrder.second != 2) {
-		rotMatrix = glm::translate(rotMatrix, glm::vec3(bondOrder.second == 1 ? 1.0f/2.7 : -1.0f/2.7, 0.0f, 0.0f));
-	}
-
-	//rotMatrix *= glm::toMat4(RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f) * atomDistance, direction * atomDistance));
+	rotMatrix = getCylinderOffset(bondOrder, rotationModel, direction, rotMatrix);
 
 	return rotMatrix;
-}
-
-glm::vec3 calculateOrbitPosition(glm::vec3 v, int configIndex, int modelIndex, bool pair) {
-	if(pair) {
-		glm::mat4 transform;
-		glm::vec4 v4 = glm::vec4(v, 1.0f);
-		transform = glm::rotate(transform, 180.0f * (PI / 180.0f), (configurations[configIndex][modelIndex]));
-		glm::vec3 test = configurations[configIndex][modelIndex];
-		printf("X: %f Y: %f Z: %f \n", test.x, test.y, test.z);
-		v4 = v4 * transform;
-		return glm::vec3(v4);
-	}
-	return v;
 }
 
 void renderElectrons(unsigned int program, unsigned int &atomProgram, std::vector<BondedElement> model, glm::mat4 rotationModel) {
@@ -525,12 +529,22 @@ int main()
 				if(i < VSEPRModel.size()) {
 					if(representation == 2) {
 						for(int c = 0; c < VSEPRModel[i].bondedPairs; c++) {
+							//Base cylinder
 							glm::mat4 cylinderModel = getCylinderRotation(configIndex, i - 1, std::make_pair(VSEPRModel[i].bondedPairs, c), rotationModel);
-							cylinderModel = cylinderModel;	
 							setMat4(lightingShader, "model", cylinderModel);
+							setVec3(lightingShader, "color", VSEPRModel[0].base.color);
 							glBindVertexArray(cylinderVAO);
 							glBindBuffer(GL_ARRAY_BUFFER, cylinderVBO);
-							setVec3(lightingShader, "color", glm::vec3(1));
+							cylinder.draw();
+
+							//Outer cylinder
+							cylinderModel = glm::mat4();
+							cylinderModel = getCylinderRotation(configIndex, i - 1, std::make_pair(VSEPRModel[i].bondedPairs, c), rotationModel);
+							cylinderModel = glm::translate(cylinderModel, glm::vec3(0.0f, atomDistance / 2, 0.0f));
+							setMat4(lightingShader, "model", cylinderModel);
+							setVec3(lightingShader, "color", VSEPRModel[i].base.color);
+							glBindVertexArray(cylinderVAO);
+							glBindBuffer(GL_ARRAY_BUFFER, cylinderVBO);
 							cylinder.draw();
 						}
 						glBindVertexArray(VAO);
