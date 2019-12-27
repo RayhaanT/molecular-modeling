@@ -130,6 +130,10 @@ void parseCSV(std::string path)
 
         elements.insert(pair<string, Element>(shortHand, newElement));
     }
+
+    Element lonePair;
+    lonePair.name = "Lone pair";
+    elements.insert(pair<string, Element>("LP", lonePair));
 }
 
 //stoi and stof cause errors if the string is empty

@@ -8,7 +8,7 @@
 
 extern std::vector<std::vector<glm::vec3>> configurations;
 
-int bondingPairs;
+int bondingElectrons;
 
 using namespace std;
 map<string, Element> elements;
@@ -102,17 +102,17 @@ vector<Element> readFormula(string formulaFull) {
 }
 
 int getFormalCharge(BondedElement b) {
-	return b.base.valenceNumber - b.bondedPairs - (b.lonePairs*2);
+	return b.base.valenceNumber - (b.bondedElectrons/2) - b.loneElectrons;
 }
 
 int checkStability(BondedElement b) {
 	if (b.base.periodNumber == 1) {
-		return 2 - ((b.bondedPairs * 2) + (b.lonePairs * 2));
+		return 2 - b.bondedElectrons - b.loneElectrons;
 	}
 	if (b.base.exception == true) {
 		return 0;
 	}
-	return 8 - ((b.bondedPairs * 2) + (b.lonePairs * 2));
+	return 8 - b.bondedElectrons - b.loneElectrons;
 }
 
 
@@ -120,16 +120,16 @@ int checkStability(BondedElement b) {
 vector<BondedElement> rebond(vector<BondedElement> structure) {
 	for (int i = 1; i < structure.size(); i++)
 	{
-		if (structure[i].lonePairs < 1 || structure[0].lonePairs < 1)
+		if (structure[i].loneElectrons < 1 || structure[0].loneElectrons < 1)
 		{
 			continue;
 		}
-		structure[i].lonePairs--;
-		structure[i].bondedPairs++;
-		structure[0].lonePairs--;
-		structure[0].bondedPairs++;
-		bondingPairs++;
-		if (bondingPairs == 0)
+		structure[i].loneElectrons-=2;
+		structure[i].bondedElectrons+=2;
+		structure[0].loneElectrons-=2;
+		structure[0].bondedElectrons+=2;
+		bondingElectrons+=2;
+		if (bondingElectrons == 0)
 		{
 			break;
 		}
@@ -142,15 +142,15 @@ vector<BondedElement> constructLewisStructure(vector<Element> formula) {
 	for(int i = 0; i < formula.size(); i++) {
 		eTotal += formula[i].valenceNumber;
 	}
-	bondingPairs = eTotal / 2;
+	bondingElectrons = eTotal;
 
 	vector<BondedElement> lewisStructure;
 	lewisStructure.push_back(BondedElement(0, 0, formula[0]));
 	for (int i = 1; i < formula.size(); i++) {
 		if(formula[i].name != "") {
-			lewisStructure[0].bondedPairs++;
-			lewisStructure.push_back(BondedElement(0, 1, formula[i]));
-			bondingPairs--;
+			lewisStructure[0].bondedElectrons+=2;
+			lewisStructure.push_back(BondedElement(0, 2, formula[i]));
+			bondingElectrons-=2;
 		}
 	}
 
@@ -158,30 +158,30 @@ vector<BondedElement> constructLewisStructure(vector<Element> formula) {
 		int missingElectrons = checkStability(lewisStructure[i]);
 		if (missingElectrons > 0) {
 			for (int x = 0; x < missingElectrons / 2; x++) {
-				lewisStructure[i].lonePairs++;
-				bondingPairs--;
+				lewisStructure[i].loneElectrons+=2;
+				bondingElectrons-=2;
 			}
 		}
 	}
 	int missingElectrons = checkStability(lewisStructure[0]);
 	if (missingElectrons > 0) {
 		for (int x = 0; x < missingElectrons / 2; x++) {
-			lewisStructure[0].lonePairs++;
-			bondingPairs--;
+			lewisStructure[0].loneElectrons+=2;
+			bondingElectrons-=2;
 		}
 	}
-	if (bondingPairs < 0) {
+	if (bondingElectrons < 0) {
 		lewisStructure = rebond(lewisStructure);
-		if(bondingPairs < 0) {
+		if(bondingElectrons < 0) {
 			lewisStructure = rebond(lewisStructure);
 		}
 	}
-	if(bondingPairs > 0 && lewisStructure[0].base.periodNumber >= 3) {
-		lewisStructure[0].lonePairs+=bondingPairs;
-		bondingPairs = 0;
+	if(bondingElectrons > 0 && lewisStructure[0].base.periodNumber >= 3) {
+		lewisStructure[0].loneElectrons+=bondingElectrons;
+		bondingElectrons = 0;
 	}
 
-	if ((checkStability(lewisStructure[0]) != 0 && lewisStructure[0].base.periodNumber < 3) || bondingPairs != 0) {
+	if ((checkStability(lewisStructure[0]) != 0 && lewisStructure[0].base.periodNumber < 3) || bondingElectrons != 0) {
 		return vector<BondedElement>();
 	}
 	return lewisStructure;
@@ -200,10 +200,10 @@ vector<BondedElement> optimizeFormalCharge(vector<BondedElement> structure) {
 	int totalCharge = getTotalFormalCharge(structure);
 	for(int x = 0; x < 1; x++) {
 		for(int i = structure.size() - 1; i > 1; i--) {
-			if(structure[0].base.periodNumber >= 3 && structure[i].lonePairs > 0) {
-				structure[0].bondedPairs++;
-				structure[i].bondedPairs++;
-				structure[i].lonePairs--;
+			if(structure[0].base.periodNumber >= 3 && structure[i].loneElectrons > 0) {
+				structure[0].bondedElectrons+=2;
+				structure[i].bondedElectrons+=2;
+				structure[i].loneElectrons-=2;
 				int newTotal = getTotalFormalCharge(structure);
 				if(newTotal < totalCharge) {
 					totalCharge = newTotal;
@@ -216,7 +216,128 @@ vector<BondedElement> optimizeFormalCharge(vector<BondedElement> structure) {
 	return returnVector;
 }
 
+bool checkStringComponent(string main, string check) {
+	size_t pos = main.find(check);
+	return pos != std::string::npos;
+}
+
+int findLastComponent(string main, string check) {
+	if(check.length() > main.length()) {
+		return 0;
+	}
+	int compIndex = -1;
+	int index = 0;
+	for(int i = 0; i < main.length(); i++) {
+		if(main[i] == check[index]) {
+			index++;
+		}
+		else {
+			index = 0;
+		}
+		if(index == check.length()) {
+			compIndex = i - check.length() + 1;
+			index = 0;
+		}
+	}
+	return compIndex;
+}
+
+int findNumberTerm(string name) {
+	vector<string> keys;
+	int diIndex;
+	for(auto it = numberTerms.begin(); it != numberTerms.end(); it++) {
+		if(it->first == "di") {
+			break;
+		}
+		keys.push_back(it->first);
+	}
+
+	int lastTerm = 0;
+	int highestIndex = -1;
+	for(int i = 0; i < keys.size(); i++) {
+		int newIndex = findLastComponent(name, keys[i]);
+		if(newIndex > highestIndex) {
+			lastTerm = numberTerms[keys[i]];
+		}
+	}
+
+	return lastTerm;
+}
+
+vector<Substituent> interpretSubstituent(string name, string place) {
+	std::vector<int> attachPoints;
+	string num = "";
+
+	for(int i = 0; i < place.length(); i++) {
+		if(place[i]==',') {
+			attachPoints.push_back(stoi(num));
+		}
+		else {
+			num+=place[i];
+		}
+	}
+	attachPoints.push_back(stoi(num));
+
+	int carbonNum = findNumberTerm(name);
+
+	string suffix = name.substr(name.length()-4, 3);
+	for(int i = 0; i < carbonNum; i++) {
+		Substituent newSub;
+
+	}
+
+	if(checkStringComponent(name, "cyclo")) {
+
+	}
+}
+
+vector<Substituent> findSubstituents(string in) {
+	transform(in.begin(), in.end(), in.begin(), ::tolower); //Make string lowercase
+	
+	std::vector<string> splitIn;
+	string current = "";
+	for(int i = 0; i < in.length(); i++) {
+		if(i < in.length()-2) { //Check for groups without dash separation
+			if(in[i] == 'y' && in[i+1] == 'l' && in[i+2] != '-') {
+				current += 'y' + 'l';
+				splitIn.push_back(current);
+				current = " ";
+				i += 2;
+			}
+		}
+		if(in[i]=='-') {
+			splitIn.push_back(current);
+			current = " ";
+		}
+		else {
+			current+=in[i];
+		}
+	}
+	splitIn.push_back(current);
+}
+
+void setUpMap() {
+	numberTerms["meth"] = 1;
+	numberTerms["eth"] = 2;
+	numberTerms["prop"] = 3;
+	numberTerms["but"] = 4;
+	numberTerms["pent"] = 5;
+	numberTerms["hex"] = 6;
+	numberTerms["hept"] = 7;
+	numberTerms["oct"] = 8;
+	numberTerms["non"] = 9;
+	numberTerms["dec"] = 10;
+	numberTerms["di"] = 2;
+	numberTerms["tri"] = 3;
+	numberTerms["tetr"] = 4;
+	numberTerms["bis"] = 2;
+	numberTerms["tris"] = 3;
+	numberTerms["tetrakis"] = 4;
+	numberTerms["pentakis"] = 5;
+}
+
 vector<BondedElement> VSEPRMain() {
+	setUpMap();
 	parseCSV("periodicTableData.csv");
 
 	std::vector<glm::vec3> tetrahedron = {glm::vec3(1, 0, -1/sqrt(2)), glm::vec3(-1, 0, -1/sqrt(2)), glm::vec3(0, 1, 1/sqrt(2)), glm::vec3(0, -1, 1/sqrt(2))};
@@ -238,6 +359,10 @@ vector<BondedElement> VSEPRMain() {
 
 	while (1) {
 		getline(cin, inFormula);
+		if (checkStringComponent(inFormula, "ane") || checkStringComponent(inFormula, "ene") || checkStringComponent(inFormula, "yne")) {
+			printf("hey");
+		}
+
 		vector<Element> comp;
 		if(inFormula == "H2O")
 			comp = readFormula("OH2");
@@ -275,10 +400,10 @@ vector<BondedElement> VSEPRMain() {
 			int rAN = e.atomicNumber < 10 ? 3 : e.atomicNumber < 100 ? 2 : 1;
 			char sign = formalCharge < 0 ? '-' : '+';
 			if(formalCharge != 0) {
-				printf("%s%s|%d%s|%d   |%d   |%d   |%c%d  |\n", structure[i].base.name.c_str(), string(rName, ' ').c_str(), e.atomicNumber, string(rAN, ' ').c_str(), e.valenceNumber, structure[i].bondedPairs, structure[i].lonePairs, sign, abs(formalCharge));
+				printf("%s%s|%d%s|%d   |%d   |%d   |%c%d  |\n", structure[i].base.name.c_str(), string(rName, ' ').c_str(), e.atomicNumber, string(rAN, ' ').c_str(), e.valenceNumber, structure[i].bondedElectrons/2, structure[i].loneElectrons/2, sign, abs(formalCharge));
 			}
 			else {
-				printf("%s%s|%d%s|%d   |%d   |%d   |%d   |\n", structure[i].base.name.c_str(), string(rName, ' ').c_str(), e.atomicNumber, string(rAN, ' ').c_str(), e.valenceNumber, structure[i].bondedPairs, structure[i].lonePairs, abs(formalCharge));
+				printf("%s%s|%d%s|%d   |%d   |%d   |%d   |\n", structure[i].base.name.c_str(), string(rName, ' ').c_str(), e.atomicNumber, string(rAN, ' ').c_str(), e.valenceNumber, structure[i].bondedElectrons/2, structure[i].loneElectrons/2, abs(formalCharge));
 			}
 		}
 	}

@@ -262,11 +262,11 @@ void renderElectrons(unsigned int program, unsigned int &atomProgram, std::vecto
 	glm::vec3 light2Vec3;
 	if (VSEPRModel.size() > 0)
 	{
-		int numberOfBonds = VSEPRModel[0].bondedPairs;
+		int numberOfBonds = VSEPRModel[0].bondedElectrons/2;
 		int configIndex;
 		if (VSEPRModel.size() > 2)
 		{
-			configIndex = VSEPRModel.size() - 2 + VSEPRModel[0].lonePairs;
+			configIndex = VSEPRModel.size() - 2 + (VSEPRModel[0].loneElectrons/2);
 		}
 		else
 		{
@@ -275,10 +275,10 @@ void renderElectrons(unsigned int program, unsigned int &atomProgram, std::vecto
 		int lightIndex = 0;
 		for (int i = 1; i < VSEPRModel.size(); i++)
 		{
-			for (int x = 0; x < VSEPRModel[i].bondedPairs; x++)
+			for (int x = 0; x < VSEPRModel[i].bondedElectrons/2; x++)
 			{
 				lightModel = glm::mat4();
-				glm::vec3 newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedPairs, false, rotationModel);
+				glm::vec3 newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedElectrons/2, false, rotationModel);
 				setPointLightPosition(lightIndex, atomProgram, newLightPos);
 				glUseProgram(program);
 				lightModel = glm::translate(lightModel, newLightPos);
@@ -289,7 +289,7 @@ void renderElectrons(unsigned int program, unsigned int &atomProgram, std::vecto
 
 				//Draw complimentary
 				lightModel = glm::mat4();
-				newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedPairs, true, rotationModel);
+				newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedElectrons/2, true, rotationModel);
 				setPointLightPosition(lightIndex, atomProgram, newLightPos);
 				glUseProgram(program);
 				lightModel = glm::translate(lightModel, newLightPos);
@@ -498,15 +498,15 @@ int main()
 			int configIndex;
 			float bondDistance;
 			if(VSEPRModel.size() > 2) {
-				configIndex = VSEPRModel.size() - 2 + VSEPRModel[0].lonePairs;
+				configIndex = VSEPRModel.size() - 2 + (VSEPRModel[0].loneElectrons/2);
 			}
 			else {
 				configIndex = VSEPRModel.size() - 2;
 			}
-			for (int i = 1; i < VSEPRModel.size() + VSEPRModel[0].lonePairs; i++) {
+			for (int i = 1; i < VSEPRModel.size() + (VSEPRModel[0].loneElectrons/2); i++) {
 				model = glm::mat4();
 				if(i < VSEPRModel.size()) {
-					bondDistance = representation == 1 ? getSphereDistance(VSEPRModel, i, VSEPRModel[i].bondedPairs) : atomDistance;
+					bondDistance = representation == 1 ? getSphereDistance(VSEPRModel, i, VSEPRModel[i].bondedElectrons/2) : atomDistance;
 				}
 				else if(representation == 0) {
 					bondDistance = getStickDistance(VSEPRModel, 0);
@@ -528,9 +528,9 @@ int main()
 				setMat4(lightingShader, "model", model);
 				if(i < VSEPRModel.size()) {
 					if(representation == 2) {
-						for(int c = 0; c < VSEPRModel[i].bondedPairs; c++) {
+						for(int c = 0; c < VSEPRModel[i].bondedElectrons/2; c++) {
 							//Base cylinder
-							glm::mat4 cylinderModel = getCylinderRotation(configIndex, i - 1, std::make_pair(VSEPRModel[i].bondedPairs, c), rotationModel);
+							glm::mat4 cylinderModel = getCylinderRotation(configIndex, i - 1, std::make_pair(VSEPRModel[i].bondedElectrons/2, c), rotationModel);
 							setMat4(lightingShader, "model", cylinderModel);
 							setVec3(lightingShader, "color", VSEPRModel[0].base.color);
 							glBindVertexArray(cylinderVAO);
@@ -539,7 +539,7 @@ int main()
 
 							//Outer cylinder
 							cylinderModel = glm::mat4();
-							cylinderModel = getCylinderRotation(configIndex, i - 1, std::make_pair(VSEPRModel[i].bondedPairs, c), rotationModel);
+							cylinderModel = getCylinderRotation(configIndex, i - 1, std::make_pair(VSEPRModel[i].bondedElectrons/2, c), rotationModel);
 							cylinderModel = glm::translate(cylinderModel, glm::vec3(0.0f, atomDistance / 2, 0.0f));
 							setMat4(lightingShader, "model", cylinderModel);
 							setVec3(lightingShader, "color", VSEPRModel[i].base.color);

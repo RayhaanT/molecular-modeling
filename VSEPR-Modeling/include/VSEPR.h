@@ -17,6 +17,9 @@
 #define PI 3.14159265358979323846264338f
 #define MAX_POINT_LIGHTS 36
 #define smoothingConstant 0.2f
+
+static std::map <std::string, int> numberTerms;
+
 struct Element{
 	int atomicNumber;
 	int valenceNumber;
@@ -50,14 +53,23 @@ struct Element{
 
 struct BondedElement {
 	Element base;
-	int lonePairs;
-	int bondedPairs;
+	int loneElectrons;
+	int bondedElectrons;
+	int id = 0;
+	std::vector<BondedElement> neighbours;
+	glm::vec3 position;
 
-	BondedElement(int _lonePairs, int _bondedPairs, Element _base) {
+	BondedElement(int _loneElectrons, int _bondedElectrons, Element _base) {
 		base = _base;
-		lonePairs = _lonePairs;
-		bondedPairs = _bondedPairs;
+		loneElectrons = _loneElectrons;
+		bondedElectrons = _bondedElectrons;
 	}
+};
+
+struct Substituent {
+	std::vector<BondedElement> components;
+	Substituent *parent;
+	int connectionPoint;
 };
 
 extern std::vector<BondedElement> VSEPRModel;
