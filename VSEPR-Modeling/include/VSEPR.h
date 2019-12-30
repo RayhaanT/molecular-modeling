@@ -58,8 +58,10 @@ struct BondedElement {
 	int id = 0;
 	std::vector<BondedElement> neighbours;
 	glm::vec3 position;
+	uint32_t uid;
 
 	BondedElement(int _loneElectrons, int _bondedElectrons, Element _base) {
+		uid = reinterpret_cast<uint32_t>(&_base);
 		base = _base;
 		loneElectrons = _loneElectrons;
 		bondedElectrons = _bondedElectrons;

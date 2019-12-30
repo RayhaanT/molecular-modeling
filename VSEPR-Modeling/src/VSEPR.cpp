@@ -221,9 +221,18 @@ bool checkStringComponent(string main, string check) {
 	return pos != std::string::npos;
 }
 
+bool checkForDigits(string main) {
+	for(auto i : main) {
+		if(isdigit(i)) {
+			return true;
+		}
+	}
+	return false;
+}
+
 int findLastComponent(string main, string check) {
 	if(check.length() > main.length()) {
-		return 0;
+		return -1;
 	}
 	int compIndex = -1;
 	int index = 0;
@@ -246,9 +255,6 @@ int findNumberTerm(string name) {
 	vector<string> keys;
 	int diIndex;
 	for(auto it = numberTerms.begin(); it != numberTerms.end(); it++) {
-		if(it->first == "di") {
-			break;
-		}
 		keys.push_back(it->first);
 	}
 
@@ -262,6 +268,15 @@ int findNumberTerm(string name) {
 	}
 
 	return lastTerm;
+}
+
+void Bond(BondedElement &a, BondedElement &b) {
+	a.neighbours.push_back(b);
+	a.bondedElectrons+=2;
+	a.loneElectrons--;
+	b.neighbours.push_back(a);
+	b.bondedElectrons+=2;
+	b.loneElectrons--;
 }
 
 vector<Substituent> interpretSubstituent(string name, string place) {
@@ -279,15 +294,35 @@ vector<Substituent> interpretSubstituent(string name, string place) {
 	attachPoints.push_back(stoi(num));
 
 	int carbonNum = findNumberTerm(name);
+	cout << "C:::" << carbonNum << endl;
 
-	string suffix = name.substr(name.length()-4, 3);
+	Substituent newSub;
+	Element carbon = elements["C"];
 	for(int i = 0; i < carbonNum; i++) {
-		Substituent newSub;
-
+		BondedElement newCarbon = BondedElement(4, 0, carbon);
+		newCarbon.id = i+1;
+		if(i > 0) {
+			Bond(newCarbon, newSub.components[i-1]);
+		}
+		newSub.components.push_back(newCarbon);
 	}
 
 	if(checkStringComponent(name, "cyclo")) {
+		Bond(newSub.components[0], newSub.components[newSub.components.size()-1]);
+	}
 
+	string suffix = name.substr(name.length()-4, 3);
+	if(suffix == "ane" || suffix == "ene" || suffix == "yne") {
+		newSub.connectionPoint = -1;
+		return {newSub};
+	}
+	else {
+		vector<Substituent> allSubs;
+		for(int i = 0; i < attachPoints.size(); i++) {
+			newSub.connectionPoint = attachPoints[i];
+			allSubs.push_back(newSub);
+		}
+		return allSubs;
 	}
 }
 
@@ -299,7 +334,8 @@ vector<Substituent> findSubstituents(string in) {
 	for(int i = 0; i < in.length(); i++) {
 		if(i < in.length()-2) { //Check for groups without dash separation
 			if(in[i] == 'y' && in[i+1] == 'l' && in[i+2] != '-') {
-				current += 'y' + 'l';
+				current += 'y';
+				current += 'l';
 				splitIn.push_back(current);
 				current = " ";
 				i += 2;
@@ -314,7 +350,31 @@ vector<Substituent> findSubstituents(string in) {
 		}
 	}
 	splitIn.push_back(current);
+	for(int i = 0; i < splitIn.size(); i++) {
+		cout << splitIn[i] << endl;
+	}
+
+	vector<Substituent> newSubGroup;
+	vector<Substituent> returnVec;
+	for(int i = splitIn.size()-2; i > 0; i--) {
+		if(checkForDigits(splitIn[i])) {
+			continue;
+		}
+		newSubGroup = interpretSubstituent(splitIn[i], splitIn[i-1]);
+		for(auto s : newSubGroup) {
+			for(auto b : s.components) {
+				std::cout << b.base.name << " " << b.id << std::endl;
+			}
+		}
+		returnVec.insert(returnVec.begin(), newSubGroup.begin(), newSubGroup.end());
+	}
+	newSubGroup = interpretSubstituent(splitIn[splitIn.size()-1], "-1");
+	return returnVec;
 }
+
+void interpretOrganic(string in) {
+	vector<Substituent> subs = findSubstituents(in);
+} 
 
 void setUpMap() {
 	numberTerms["meth"] = 1;
@@ -360,7 +420,7 @@ vector<BondedElement> VSEPRMain() {
 	while (1) {
 		getline(cin, inFormula);
 		if (checkStringComponent(inFormula, "ane") || checkStringComponent(inFormula, "ene") || checkStringComponent(inFormula, "yne")) {
-			printf("hey");
+			interpretOrganic(inFormula);
 		}
 
 		vector<Element> comp;
