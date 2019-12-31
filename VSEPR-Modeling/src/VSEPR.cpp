@@ -13,6 +13,7 @@ int bondingElectrons;
 using namespace std;
 map<string, Element> elements;
 extern vector<BondedElement> VSEPRModel;
+std::vector<glm::vec3> tetrahedron;
 
 Element searchElements(string symbol) {
 	int size  = elements.size();
@@ -279,6 +280,20 @@ void Bond(BondedElement &a, BondedElement &b) {
 	b.loneElectrons--;
 }
 
+Substituent positionAtoms(Substituent structure) {
+	if(structure.components.size() < 1) {
+		return Substituent();
+	}
+	
+	structure.components[0].position = glm::vec3(0.0f);
+	for(int i = 1; i < structure.components.size(); i++) {
+		structure.components[i].position = structure.components[i-1].position;
+		structure.components[i].position += glm::vec3(tetrahedron[0].x, structure.components[i].id % 2 == 1 ? tetrahedron[0].y : -tetrahedron[0].y, 0);
+	}
+
+	return structure;
+}
+
 vector<Substituent> interpretSubstituent(string name, string place) {
 	std::vector<int> attachPoints;
 	string num = "";
@@ -350,9 +365,6 @@ vector<Substituent> findSubstituents(string in) {
 		}
 	}
 	splitIn.push_back(current);
-	for(int i = 0; i < splitIn.size(); i++) {
-		cout << splitIn[i] << endl;
-	}
 
 	vector<Substituent> newSubGroup;
 	vector<Substituent> returnVec;
@@ -369,11 +381,24 @@ vector<Substituent> findSubstituents(string in) {
 		returnVec.insert(returnVec.begin(), newSubGroup.begin(), newSubGroup.end());
 	}
 	newSubGroup = interpretSubstituent(splitIn[splitIn.size()-1], "-1");
+	returnVec.insert(returnVec.begin(), newSubGroup.begin(), newSubGroup.end());
 	return returnVec;
+}
+
+Substituent fillInHydrogens(Substituent structure) {
+	Element hydrogen = elements["H"];
+	for(int i = 0; i < structure.components.size(); i++) {
+		
+	}
 }
 
 void interpretOrganic(string in) {
 	vector<Substituent> subs = findSubstituents(in);
+	Substituent central = subs[subs.size()-1];
+	for(int i = 0; i < subs.size()-1; i++) {
+		Bond(subs[i].components[0], central.components[subs[i].connectionPoint-1]);
+	}
+
 } 
 
 void setUpMap() {
@@ -400,11 +425,13 @@ vector<BondedElement> VSEPRMain() {
 	setUpMap();
 	parseCSV("periodicTableData.csv");
 
-	std::vector<glm::vec3> tetrahedron = {glm::vec3(1, 0, -1/sqrt(2)), glm::vec3(-1, 0, -1/sqrt(2)), glm::vec3(0, 1, 1/sqrt(2)), glm::vec3(0, -1, 1/sqrt(2))};
-	glm::quat shift = glm::angleAxis((float)((PI/2)-atan(sqrt(2))), glm::vec3(1.0f, 0.0f, 0.0f));
+	tetrahedron = {glm::vec3(1, 0, -1/sqrt(2)), glm::vec3(-1, 0, -1/sqrt(2)), glm::vec3(0, 1, 1/sqrt(2)), glm::vec3(0, -1, 1/sqrt(2))};
+	//glm::quat shift = glm::angleAxis((float)((PI/2)-atan(sqrt(2))), glm::vec3(1.0f, 0.0f, 0.0f));
+	glm::quat shift = glm::angleAxis((float)(PI/2), glm::vec3(1.0f, 0.0f, 0.0f));
 	for(int i = 0; i < tetrahedron.size(); i++) {
 		glm::vec4 temp = glm::vec4(tetrahedron[i], 1.0f);
 		tetrahedron[i] = glm::normalize(glm::vec3(temp * shift));
+		cout << tetrahedron[i].x << " " << tetrahedron[i].y << " " << tetrahedron[i].z << endl;
 	} 
 
 	string inFormula;

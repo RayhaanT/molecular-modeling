@@ -59,12 +59,22 @@ struct BondedElement {
 	std::vector<BondedElement> neighbours;
 	glm::vec3 position;
 	uint32_t uid;
+	int numberOfBonds;
 
 	BondedElement(int _loneElectrons, int _bondedElectrons, Element _base) {
 		uid = reinterpret_cast<uint32_t>(&_base);
 		base = _base;
 		loneElectrons = _loneElectrons;
 		bondedElectrons = _bondedElectrons;
+		if(base.periodNumber == 1) {
+			numberOfBonds = 2 - base.valenceNumber;
+		}
+		else {
+			numberOfBonds = 8 - base.valenceNumber;
+		}
+		if(numberOfBonds < 1) {
+			numberOfBonds = 1;
+		}
 	}
 };
 
