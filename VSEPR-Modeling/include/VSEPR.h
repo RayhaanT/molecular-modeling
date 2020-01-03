@@ -58,6 +58,7 @@ struct BondedElement {
 	int id = 0;
 	std::vector<BondedElement> neighbours;
 	glm::vec3 position;
+	glm::mat4 rotation = glm::mat4();
 	uint32_t uid;
 	int numberOfBonds;
 
@@ -75,6 +76,10 @@ struct BondedElement {
 		if(numberOfBonds < 1) {
 			numberOfBonds = 1;
 		}
+	}
+
+	friend bool operator==(const BondedElement &lhs, const BondedElement &rhs) {
+		return lhs.uid == rhs.uid;
 	}
 };
 

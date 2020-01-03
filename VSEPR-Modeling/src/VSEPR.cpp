@@ -3,7 +3,10 @@
 #include <algorithm>
 #include <string>
 #include "VSEPR.h"
+#include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
+#include "glm/gtx/quaternion.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 #include "data.h"
 
 extern std::vector<std::vector<glm::vec3>> configurations;
@@ -288,7 +291,10 @@ Substituent positionAtoms(Substituent structure) {
 	structure.components[0].position = glm::vec3(0.0f);
 	for(int i = 1; i < structure.components.size(); i++) {
 		structure.components[i].position = structure.components[i-1].position;
-		structure.components[i].position += glm::vec3(tetrahedron[0].x, structure.components[i].id % 2 == 1 ? tetrahedron[0].y : -tetrahedron[0].y, 0);
+		structure.components[i].position += glm::vec3(tetrahedron[0].x, structure.components[i].id % 2 == 1 ? tetrahedron[0].y : 0, 0);
+		if(structure.components[i].id % 2 == 0) {
+			structure.components[i].rotation = glm::toMat4(glm::angleAxis(PI, glm::vec3(1.0f, 0.0f, 0.0f)));
+		}
 	}
 
 	return structure;
@@ -386,19 +392,65 @@ vector<Substituent> findSubstituents(string in) {
 }
 
 Substituent fillInHydrogens(Substituent structure) {
-	Element hydrogen = elements["H"];
+	Element rawHydrogen = elements["H"];
 	for(int i = 0; i < structure.components.size(); i++) {
-		
+		BondedElement carbon = structure.components[i];
+		for(int i = carbon.neighbours.size()-1; i < carbon.numberOfBonds; i++) {
+			BondedElement hydrogen = BondedElement(1, 0, rawHydrogen);
+			hydrogen.position = carbon.position;
+			glm::vec3 offset = configurations[carbon.numberOfBonds-1][i+1];
+			hydrogen.position += glm::vec3(glm::vec4(offset, 0.0f) * carbon.rotation);
+			Bond(hydrogen, structure.components[i]);
+			structure.components.push_back(hydrogen);
+		}
 	}
+	return structure;
 }
 
-void interpretOrganic(string in) {
-	vector<Substituent> subs = findSubstituents(in);
-	Substituent central = subs[subs.size()-1];
-	for(int i = 0; i < subs.size()-1; i++) {
-		Bond(subs[i].components[0], central.components[subs[i].connectionPoint-1]);
+Substituent rotateSubstituent(Substituent structure, glm::vec3 dir) {
+	glm::vec3 right = glm::vec3(1.0f, 0.0f, 0.0f);
+	float vDot = glm::dot(right, dir);
+	float nDot = glm::dot(glm::normalize(right), glm::normalize(dir));
+	float angle = acos(vDot/nDot);
+	glm::vec3 axis = glm::cross(right, dir);
+	glm::mat4 rotation = glm::toMat4(glm::angleAxis(angle, axis));
+
+	for(int i = 0; i < structure.components.size(); i++) {
+		structure.components[i].position = glm::vec3(glm::vec4(structure.components[i].position, 0.0f) * rotation);
 	}
 
+	return structure;
+}
+
+vector<BondedElement> interpretOrganic(string in) {
+	vector<Substituent> subs = findSubstituents(in);
+	Substituent central = subs.back();
+	subs.pop_back();
+	for(int i = 0; i < subs.size()-1; i++) {
+		Bond(subs[i].components[0], central.components[subs[i].connectionPoint-1]);
+		subs[i] = fillInHydrogens(subs[i]);
+	}
+	central = fillInHydrogens(central);
+	for(int i = 0; i < subs.size()-1; i++) {
+		vector<BondedElement>::iterator pos = find(central.components[subs[i].connectionPoint - 1].neighbours.begin(), central.components[subs[i].connectionPoint - 1].neighbours.end(), subs[i].components[0]);
+		int index = distance(central.components[subs[i].connectionPoint - 1].neighbours.begin(), pos);
+		if (index < configurations[central.components[subs[i].connectionPoint - 1].numberOfBonds-1].size()) {
+			glm::vec3 dir = configurations[central.components[subs[i].connectionPoint - 1].numberOfBonds-1][index];
+			subs[i] = rotateSubstituent(subs[i], dir);
+		}
+	}
+	
+	vector<BondedElement> returnVec;
+	int reserveNum;
+	for(int i = 0; i < subs.size(); i++) {
+		reserveNum+=subs[i].components.size();
+	}
+	returnVec.reserve(reserveNum + central.components.size());
+	for(int i = 1; i < subs.size(); i++) {
+		returnVec.insert(returnVec.end(), subs[i].components.begin(), subs[i].components.end());
+	}
+
+	return returnVec;
 } 
 
 void setUpMap() {
@@ -425,7 +477,7 @@ vector<BondedElement> VSEPRMain() {
 	setUpMap();
 	parseCSV("periodicTableData.csv");
 
-	tetrahedron = {glm::vec3(1, 0, -1/sqrt(2)), glm::vec3(-1, 0, -1/sqrt(2)), glm::vec3(0, 1, 1/sqrt(2)), glm::vec3(0, -1, 1/sqrt(2))};
+	tetrahedron = {glm::vec3(-1, 0, -1/sqrt(2)), glm::vec3(0, 1, 1/sqrt(2)), glm::vec3(0, -1, 1/sqrt(2)), glm::vec3(1, 0, -1/sqrt(2))};
 	//glm::quat shift = glm::angleAxis((float)((PI/2)-atan(sqrt(2))), glm::vec3(1.0f, 0.0f, 0.0f));
 	glm::quat shift = glm::angleAxis((float)(PI/2), glm::vec3(1.0f, 0.0f, 0.0f));
 	for(int i = 0; i < tetrahedron.size(); i++) {
