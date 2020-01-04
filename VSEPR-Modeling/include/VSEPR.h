@@ -19,6 +19,7 @@
 #define smoothingConstant 0.2f
 
 static std::map <std::string, int> numberTerms;
+static bool organic;
 
 struct Element{
 	int atomicNumber;

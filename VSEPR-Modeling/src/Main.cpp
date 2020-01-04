@@ -14,6 +14,7 @@
 #include "VSEPR.h"
 #include "Sphere.h"
 #include "cylinder.h"
+#include "render.h"
 
 #include <vector>
 #include <thread>
@@ -197,6 +198,9 @@ glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, in
 	float distance = atomDistance;
 	float y = distance * cos((float)(glfwGetTime() - xOffset) * (electronSpeed / 2)) + distance / 2;
 
+	if(modelIndex-1 >= configurations[configIndex].size() || configIndex >= configurations.size()) {
+		return glm::vec3(0.0f);
+	}
 	glm::vec3 direction = configurations[configIndex][modelIndex - 1];
 	glm::mat4 transform;
 	glm::vec4 v = glm::vec4(x, y, 0.0f, 0.0f);
@@ -478,6 +482,21 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, diffMap);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, specMap);
+
+		if (organic || VSEPRModel.size() > 6) {
+			setMat4(lightingShader, "model", model);
+			setMat4(lightingShader, "view", view);
+			setMat4(lightingShader, "projection", projection);
+			setVec3(lightingShader, "viewPos", camera.Position);
+
+			RenderOrganic(VSEPRModel, lightingShader, rotationModel, representation);
+
+			//Swap buffer and poll IO events
+			glfwSwapBuffers(window);
+			glfwPollEvents();
+
+			continue;
+		}
 
 		if(representation == 0) {
 			glUseProgram(lampProgram);
