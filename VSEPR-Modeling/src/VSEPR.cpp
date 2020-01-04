@@ -397,11 +397,7 @@ Substituent fillInHydrogens(Substituent structure) {
 	int numberOfCarbons = structure.components.size();
 	for(int c = 0; c < numberOfCarbons; c++) {
 		BondedElement carbon = structure.components[c];
-<<<<<<< HEAD
 		for(int i = carbon.neighbours.size(); i < carbon.numberOfBonds; i++) {
-=======
-		for(int i = carbon.neighbours.size()-1; i < carbon.numberOfBonds; i++) {
->>>>>>> 0a07fb363e2511523f1c70b53f61a403ab4bff70
 			BondedElement hydrogen = BondedElement(1, 0, rawHydrogen);
 			hydrogen.position = carbon.position;
 			glm::vec3 offset = configurations[carbon.numberOfBonds-1][i+1];
@@ -509,10 +505,7 @@ vector<BondedElement> VSEPRMain() {
 		getline(cin, inFormula);
 		vector<BondedElement> structure;
 		if (checkStringComponent(inFormula, "ane") || checkStringComponent(inFormula, "ene") || checkStringComponent(inFormula, "yne")) {
-<<<<<<< HEAD
 			organic = true;
-=======
->>>>>>> 0a07fb363e2511523f1c70b53f61a403ab4bff70
 			structure = interpretOrganic(inFormula);
 			int longestName = 0;
 			for(int i = 0; i < structure.size(); i++) {
@@ -535,10 +528,7 @@ vector<BondedElement> VSEPRMain() {
 					printf("%s%s|%d%s|%d   |%d   |%d   |%d   |\n", structure[i].base.name.c_str(), string(rName, ' ').c_str(), e.atomicNumber, string(rAN, ' ').c_str(), e.valenceNumber, structure[i].bondedElectrons/2, structure[i].loneElectrons/2, abs(formalCharge));
 				}
 			}
-<<<<<<< HEAD
 			VSEPRModel = structure;
-=======
->>>>>>> 0a07fb363e2511523f1c70b53f61a403ab4bff70
 			continue;
 		}
 
