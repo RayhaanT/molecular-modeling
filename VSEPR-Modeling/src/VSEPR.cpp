@@ -358,13 +358,13 @@ vector<Substituent> findSubstituents(string in) {
 				current += 'y';
 				current += 'l';
 				splitIn.push_back(current);
-				current = " ";
+				current = "";
 				i += 2;
 			}
 		}
 		if(in[i]=='-') {
 			splitIn.push_back(current);
-			current = " ";
+			current = "";
 		}
 		else {
 			current+=in[i];
@@ -384,23 +384,24 @@ vector<Substituent> findSubstituents(string in) {
 				std::cout << b.base.name << " " << b.id << std::endl;
 			}
 		}
-		returnVec.insert(returnVec.begin(), newSubGroup.begin(), newSubGroup.end());
+		returnVec.insert(returnVec.end(), newSubGroup.begin(), newSubGroup.end());
 	}
-	newSubGroup = interpretSubstituent(splitIn[splitIn.size()-1], "-1");
-	returnVec.insert(returnVec.begin(), newSubGroup.begin(), newSubGroup.end());
+	newSubGroup = interpretSubstituent(splitIn.back(), "-1");
+	returnVec.insert(returnVec.end(), newSubGroup.begin(), newSubGroup.end());
 	return returnVec;
 }
 
 Substituent fillInHydrogens(Substituent structure) {
 	Element rawHydrogen = elements["H"];
-	for(int i = 0; i < structure.components.size(); i++) {
-		BondedElement carbon = structure.components[i];
+	int numberOfCarbons = structure.components.size();
+	for(int c = 0; c < numberOfCarbons; c++) {
+		BondedElement carbon = structure.components[c];
 		for(int i = carbon.neighbours.size()-1; i < carbon.numberOfBonds; i++) {
 			BondedElement hydrogen = BondedElement(1, 0, rawHydrogen);
 			hydrogen.position = carbon.position;
 			glm::vec3 offset = configurations[carbon.numberOfBonds-1][i+1];
 			hydrogen.position += glm::vec3(glm::vec4(offset, 0.0f) * carbon.rotation);
-			Bond(hydrogen, structure.components[i]);
+			Bond(hydrogen, structure.components[c]);
 			structure.components.push_back(hydrogen);
 		}
 	}
@@ -426,12 +427,15 @@ vector<BondedElement> interpretOrganic(string in) {
 	vector<Substituent> subs = findSubstituents(in);
 	Substituent central = subs.back();
 	subs.pop_back();
-	for(int i = 0; i < subs.size()-1; i++) {
-		Bond(subs[i].components[0], central.components[subs[i].connectionPoint-1]);
-		subs[i] = fillInHydrogens(subs[i]);
+	if(subs.size() > 0) {
+		for (int i = 0; i < subs.size(); i++)
+		{
+			Bond(subs[i].components[0], central.components[subs[i].connectionPoint - 1]);
+			subs[i] = fillInHydrogens(subs[i]);
+		}
 	}
 	central = fillInHydrogens(central);
-	for(int i = 0; i < subs.size()-1; i++) {
+	for(int i = 0; i < subs.size(); i++) {
 		vector<BondedElement>::iterator pos = find(central.components[subs[i].connectionPoint - 1].neighbours.begin(), central.components[subs[i].connectionPoint - 1].neighbours.end(), subs[i].components[0]);
 		int index = distance(central.components[subs[i].connectionPoint - 1].neighbours.begin(), pos);
 		if (index < configurations[central.components[subs[i].connectionPoint - 1].numberOfBonds-1].size()) {
@@ -439,16 +443,17 @@ vector<BondedElement> interpretOrganic(string in) {
 			subs[i] = rotateSubstituent(subs[i], dir);
 		}
 	}
-	
+
 	vector<BondedElement> returnVec;
-	int reserveNum;
+	int reserveNum = 0;
 	for(int i = 0; i < subs.size(); i++) {
 		reserveNum+=subs[i].components.size();
 	}
 	returnVec.reserve(reserveNum + central.components.size());
-	for(int i = 1; i < subs.size(); i++) {
+	for(int i = 0; i < subs.size(); i++) {
 		returnVec.insert(returnVec.end(), subs[i].components.begin(), subs[i].components.end());
 	}
+	returnVec.insert(returnVec.end(), central.components.begin(), central.components.end());
 
 	return returnVec;
 } 
@@ -483,7 +488,6 @@ vector<BondedElement> VSEPRMain() {
 	for(int i = 0; i < tetrahedron.size(); i++) {
 		glm::vec4 temp = glm::vec4(tetrahedron[i], 1.0f);
 		tetrahedron[i] = glm::normalize(glm::vec3(temp * shift));
-		cout << tetrahedron[i].x << " " << tetrahedron[i].y << " " << tetrahedron[i].z << endl;
 	} 
 
 	string inFormula;
@@ -498,8 +502,31 @@ vector<BondedElement> VSEPRMain() {
 
 	while (1) {
 		getline(cin, inFormula);
+		vector<BondedElement> structure;
 		if (checkStringComponent(inFormula, "ane") || checkStringComponent(inFormula, "ene") || checkStringComponent(inFormula, "yne")) {
-			interpretOrganic(inFormula);
+			structure = interpretOrganic(inFormula);
+			int longestName = 0;
+			for(int i = 0; i < structure.size(); i++) {
+				if(structure[i].base.name.length() > longestName) {
+					longestName = structure[i].base.name.length();
+				}
+			}
+			printf(string(longestName + 2, ' ').c_str());
+			printf("| AN | VN | BP | LP | FC |\n");
+			for (int i = 0; i < structure.size(); i++) {
+				Element e = structure[i].base;
+				int formalCharge = getFormalCharge(structure[i]);
+				int rName = longestName + 2 - structure[i].base.name.length();
+				int rAN = e.atomicNumber < 10 ? 3 : e.atomicNumber < 100 ? 2 : 1;
+				char sign = formalCharge < 0 ? '-' : '+';
+				if(formalCharge != 0) {
+					printf("%s%s|%d%s|%d   |%d   |%d   |%c%d  |\n", structure[i].base.name.c_str(), string(rName, ' ').c_str(), e.atomicNumber, string(rAN, ' ').c_str(), e.valenceNumber, structure[i].bondedElectrons/2, structure[i].loneElectrons/2, sign, abs(formalCharge));
+				}
+				else {
+					printf("%s%s|%d%s|%d   |%d   |%d   |%d   |\n", structure[i].base.name.c_str(), string(rName, ' ').c_str(), e.atomicNumber, string(rAN, ' ').c_str(), e.valenceNumber, structure[i].bondedElectrons/2, structure[i].loneElectrons/2, abs(formalCharge));
+				}
+			}
+			continue;
 		}
 
 		vector<Element> comp;
@@ -510,7 +537,7 @@ vector<BondedElement> VSEPRMain() {
 		if(comp.size() < 1) {
 			continue;
 		}
-		vector<BondedElement> structure = constructLewisStructure(comp);
+		structure = constructLewisStructure(comp);
 
 		if (structure.size() < 1) {
 			cout << "Lewis structure not possible" << endl;
