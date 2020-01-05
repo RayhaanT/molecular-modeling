@@ -442,19 +442,34 @@ Substituent fillInHydrogens(Substituent structure) {
 }
 
 Substituent rotateSubstituent(Substituent structure, glm::vec3 dir, BondedElement parent) {
+	if(structure.components.size() < 1) {
+		return Substituent();
+	}
+
 	glm::vec3 right = glm::vec3(1.0f, 0.0f, 0.0f);
-	float vDot = glm::dot(right, dir);
+	right = glm::vec3(glm::vec4(right, 0.0f) * parent.rotation);
+	glm::vec3 newDir = glm::cross(right, glm::vec3(0.0f, 1.0f, 0.0f));
+	float vDot = glm::dot(right, newDir);
 	float mag = 1.0f;
 	float angle = acos(vDot/mag);
-	glm::vec3 axis = glm::cross(right, dir);
-	glm::mat4 rotation = glm::toMat4(glm::angleAxis(angle, axis));
+	glm::mat4 perpendicularRotation = glm::toMat4(glm::angleAxis(angle, glm::vec3(0.0f, 1.0f, 0.0f)));
+	vDot = glm::dot(newDir, dir);
+	angle = acos(vDot/mag);
+	glm::mat4 finalRotation = glm::toMat4(glm::angleAxis(angle, right));
+	finalRotation *= perpendicularRotation;
+
+	// float vDot = glm::dot(right, dir);
+	// float mag = 1.0f;
+	// float angle = acos(vDot/mag);
+	// glm::vec3 axis = glm::cross(dir, right);
+	// glm::mat4 rotation = glm::toMat4(glm::angleAxis(angle, axis));
 
 	for(int i = 0; i < structure.components.size(); i++) {
-		structure.components[i].position = glm::vec3(glm::vec4(structure.components[i].position, 0.0f) * rotation);
+		structure.components[i].position = glm::vec3(glm::vec4(structure.components[i].position, 0.0f) * finalRotation);
 		structure.components[i].position += parent.position;
 		structure.components[i].position += dir;
 
-		structure.components[i].vanDerWaalsPosition = glm::vec3(glm::vec4(structure.components[i].vanDerWaalsPosition, 0.0f) * rotation);
+		structure.components[i].vanDerWaalsPosition = glm::vec3(glm::vec4(structure.components[i].vanDerWaalsPosition, 0.0f) * finalRotation);
 		structure.components[i].vanDerWaalsPosition += parent.vanDerWaalsPosition;
 		structure.components[i].vanDerWaalsPosition += dir * getSphereDistance(structure.components[i], parent, findInstances(structure.components[i].neighbours, parent));
 	}
@@ -478,7 +493,7 @@ vector<BondedElement> interpretOrganic(string in) {
 		vector<BondedElement>::iterator pos = find(central.components[subs[i].connectionPoint - 1].neighbours.begin(), central.components[subs[i].connectionPoint - 1].neighbours.end(), subs[i].components[0]);
 		int index = distance(central.components[subs[i].connectionPoint - 1].neighbours.begin(), pos);
 		if (index < configurations[central.components[subs[i].connectionPoint - 1].numberOfBonds-1].size()) {
-			glm::vec3 dir = configurations[central.components[subs[i].connectionPoint - 1].numberOfBonds-1][index];
+			glm::vec3 dir = glm::vec3(glm::vec4(configurations[central.components[subs[i].connectionPoint - 1].numberOfBonds-1][index], 0.0f)*central.components[subs[i].connectionPoint - 1].rotation);
 			subs[i] = rotateSubstituent(subs[i], dir, central.components[subs[i].connectionPoint - 1]);
 		}
 	}
