@@ -13,7 +13,7 @@ struct Light {
 
     vec3 ambient;
     vec3 diffuse;
-    vec3 specular;
+    // vec3 specular;
 };
 
 in vec3 Normal;
@@ -36,11 +36,11 @@ void main()
     vec3 diffuse = light.diffuse * diff * color;
 
     //Specular
-    vec3 viewPos = vec3(0.0, 0.0, 0.0);
-    vec3 viewDir = normalize(viewPos - FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    vec3 specular = light.specular * spec * color;
+    // vec3 viewPos = vec3(0.0, 0.0, 0.0);
+    // vec3 viewDir = normalize(viewPos - FragPos);
+    // vec3 reflectDir = reflect(-lightDir, norm);
+    // float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    // vec3 specular = light.specular * spec * color;
 
-    FragColour = vec4(ambient + diffuse + specular, 1);
+    FragColour = vec4(ambient + diffuse, 1);
 }
