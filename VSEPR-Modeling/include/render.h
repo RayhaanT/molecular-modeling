@@ -12,6 +12,10 @@ extern unsigned int sphereVAO;
 extern unsigned int sphereVBO;
 extern unsigned int cylinderVAO;
 extern unsigned int cylinderVBO;
+extern unsigned int fastSphereVAO;
+extern unsigned int fastSphereVBO;
+extern unsigned int fastCylinderVAO;
+extern unsigned int fastCylinderVBO;
 
 // Cylinder rendering
 glm::mat4 getCylinderOffset(std::pair<int, int> bondOrder, glm::mat4 rotationModel, glm::vec3 direction, glm::mat4 cylinderModel);
