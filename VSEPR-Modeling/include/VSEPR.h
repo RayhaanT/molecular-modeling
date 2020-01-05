@@ -65,7 +65,7 @@ public:
 	int numberOfBonds;
 
 	BondedElement(int _loneElectrons, int _bondedElectrons, Element _base) {
-		uid = getUID();
+		uid = generateUID();
 		base = _base;
 		loneElectrons = _loneElectrons;
 		bondedElectrons = _bondedElectrons;
@@ -80,6 +80,12 @@ public:
 		}
 	}
 
+	BondedElement() {}
+
+	uint32_t getUID() {
+		return uid;
+	}
+
 	friend bool operator==(const BondedElement &lhs, const BondedElement &rhs) {
 		return lhs.uid == rhs.uid;
 	}
@@ -88,7 +94,7 @@ private:
 	static uint32_t maxUID;
 	uint32_t uid;
 
-	uint32_t getUID() {
+	uint32_t generateUID() {
 		maxUID++;
 		return maxUID;
 	}

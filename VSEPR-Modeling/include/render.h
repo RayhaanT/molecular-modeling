@@ -1,3 +1,5 @@
+#pragma once
+
 #include "VSEPR.h"
 #include "data.h"
 #include <vector>
@@ -5,6 +7,11 @@
 #include "glm/gtx/norm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+
+extern unsigned int sphereVAO;
+extern unsigned int sphereVBO;
+extern unsigned int cylinderVAO;
+extern unsigned int cylinderVBO;
 
 // Cylinder rendering
 glm::mat4 getCylinderOffset(std::pair<int, int> bondOrder, glm::mat4 rotationModel, glm::vec3 direction, glm::mat4 cylinderModel);

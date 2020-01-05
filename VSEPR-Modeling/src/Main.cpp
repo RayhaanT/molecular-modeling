@@ -53,8 +53,14 @@ const float atomDistance = 3.5f;
 const float electronSpeed = 3;
 float lineColor[] = {0.2f, 0.2f, 0.2f, 1};
 
+//Declarations of extern variables
 std::vector<BondedElement> VSEPRModel;
 std::vector<std::vector<glm::vec3>> configurations;
+unsigned int sphereVAO;
+unsigned int sphereVBO;
+unsigned int cylinderVAO;
+unsigned int cylinderVBO;
+
 //Define offset variables
 float lastX = W / 2;
 float lastY = H / 2;
@@ -384,11 +390,9 @@ int main()
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 	//Create a Vertex Array Object
-	unsigned int VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
+	glGenVertexArrays(1, &sphereVAO);
+	glBindVertexArray(sphereVAO);
 
-	unsigned int sphereVBO;
 	glGenBuffers(1, &sphereVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
 	glBufferData(GL_ARRAY_BUFFER, sphere.getInterleavedVertexSize(), sphere.getInterleavedVertices(), GL_STATIC_DRAW);
@@ -400,11 +404,9 @@ int main()
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sphere.getInterleavedStride(), (void *)(sizeof(float)*6));
 	glEnableVertexAttribArray(2);
 
-	unsigned int cylinderVAO;
 	glGenVertexArrays(1, &cylinderVAO);
 	glBindVertexArray(cylinderVAO);
 
-	unsigned int cylinderVBO;
 	glGenBuffers(1, &cylinderVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, cylinderVBO);
 	glBufferData(GL_ARRAY_BUFFER, cylinder.getInterleavedVertexSize(), cylinder.getInterleavedVertices(), GL_STATIC_DRAW);
@@ -463,10 +465,10 @@ int main()
 
 		camera.ProcessKeyboard(window, deltaTime, false);
 
-		glClearColor(0, 0, 0, 1);
+		glClearColor(1, 1, 1, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glBindVertexArray(VAO);
+		glBindVertexArray(sphereVAO);
 		glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
 
 		if(!clicked) {
@@ -570,7 +572,7 @@ int main()
 							glBindBuffer(GL_ARRAY_BUFFER, cylinderVBO);
 							cylinder.draw();
 						}
-						glBindVertexArray(VAO);
+						glBindVertexArray(sphereVAO);
 						glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
 						setMat4(lightingShader, "model", model);
 					}
