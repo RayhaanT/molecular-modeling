@@ -35,9 +35,9 @@ void Cylinder::drawLines(const float lineColor[4]) const
     glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_2D);
     glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, vertices.data());
+    glVertexPointer(3, GL_FLOAT, 0, this->vertices.data());
 
-    glDrawElements(GL_LINES, (unsigned int)lineIndices.size(), GL_UNSIGNED_INT, lineIndices.data());
+    glDrawElements(GL_LINES, (unsigned int)this->lineIndices.size(), GL_UNSIGNED_INT, this->lineIndices.data());
 
     glDisableClientState(GL_VERTEX_ARRAY);
     glEnable(GL_LIGHTING);
@@ -45,29 +45,29 @@ void Cylinder::drawLines(const float lineColor[4]) const
 }
 
 void Cylinder::clearArrays() {
-    std::vector<glm::vec3>().swap(vertices);
-    std::vector<glm::vec3>().swap(normals);
-    std::vector<glm::vec2>().swap(texCoords);
-    std::vector<unsigned int>().swap(indices);
-    std::vector<unsigned int>().swap(lineIndices);
+    std::vector<glm::vec3>().swap(this->vertices);
+    std::vector<glm::vec3>().swap(this->normals);
+    std::vector<glm::vec2>().swap(this->texCoords);
+    std::vector<unsigned int>().swap(this->indices);
+    std::vector<unsigned int>().swap(this->lineIndices);
 }
 
 void Cylinder::addVertex(float x, float y, float z) {
-    vertices.push_back(glm::vec3(x, y, z));
+    this->vertices.push_back(glm::vec3(x, y, z));
 }
 
 void Cylinder::addNormal(float x, float y, float z) {
-    normals.push_back(glm::vec3(x, y, z));
+    this->normals.push_back(glm::vec3(x, y, z));
 }
 
 void Cylinder::addTexCoord(float x, float y) {
-    texCoords.push_back(glm::vec2(x, y));
+    this->texCoords.push_back(glm::vec2(x, y));
 }
 
 void Cylinder::addIndices(unsigned int i1, unsigned int i2, unsigned int i3) {
-    indices.push_back(i1);
-    indices.push_back(i2);
-    indices.push_back(i3);
+    this->indices.push_back(i1);
+    this->indices.push_back(i2);
+    this->indices.push_back(i3);
 }
 
 /*void Cylinder::buildVertices()
@@ -155,40 +155,40 @@ void Cylinder::buildVertices()
     glm::vec3 centerPoint(0.0f, yOffset, 0.0f);
     glm::vec3 centerPointNormal(0.0f, 1.0f, 0.0f);
     glm::vec2 centerPointTex(0.0f, 0.0f);
-    texCoords.push_back(centerPointTex);
-    vertices.push_back(centerPoint);
-    normals.push_back(centerPointNormal);
-    
+    this->texCoords.push_back(centerPointTex);
+    this->vertices.push_back(centerPoint);
+    this->normals.push_back(centerPointNormal);
+
     //2 Circular bases
     for(int a = 0; a < 2; a++) {
         for (int i = 0; i < edgeCount; i++)
         {
             z = cos(edgeStep*i)*radius;
             x = sin(edgeStep*i)*radius;
-            addVertex(x, yOffset, z);
-            addNormal(0.0f, yOffset > 0 ? 1.0f : -1.0f, 0.0f);
-            addTexCoord(x, z);
+            this->addVertex(x, yOffset, z);
+            this->addNormal(0.0f, yOffset > 0 ? 1.0f : -1.0f, 0.0f);
+            this->addTexCoord(x, z);
             if(i > 0) {
                 if(a == 0) {
-                    addIndices(0, i, i+1);
+                    this->addIndices(0, i, i + 1);
                 }
                 else {
-                    addIndices(edgeCount+1, edgeCount+i+1, edgeCount+2+i);
+                    this->addIndices(edgeCount + 1, edgeCount + i + 1, edgeCount + 2 + i);
                 }
             }
         }
 
         if(a == 0) {
-            addIndices(0, 1, edgeCount);
+            this->addIndices(0, 1, edgeCount);
             yOffset = 0.0f;
             centerPoint.y = yOffset;
             centerPointNormal.y = -1.0f;
-            vertices.push_back(centerPoint);
-            normals.push_back(centerPointNormal);
-            texCoords.push_back(centerPointTex);
+            this->vertices.push_back(centerPoint);
+            this->normals.push_back(centerPointNormal);
+            this->texCoords.push_back(centerPointTex);
         }
         else {
-            addIndices(edgeCount+1, edgeCount+2, edgeCount*2+1);
+            this->addIndices(edgeCount + 1, edgeCount + 2, edgeCount * 2 + 1);
         }
     }
 
@@ -197,9 +197,9 @@ void Cylinder::buildVertices()
     int max = vertices.size();
     for(int i = 1; i < max; i++) {
         if(i == edgeCount+1) {continue;}
-        vertices.push_back(vertices[i]);
-        texCoords.push_back(texCoords[i]);
-        normals.push_back(glm::normalize(glm::vec3(vertices[i].x, 0.0f, vertices[i].z)));
+        this->vertices.push_back(this->vertices[i]);
+        this->texCoords.push_back(this->texCoords[i]);
+        this->normals.push_back(glm::normalize(glm::vec3(this->vertices[i].x, 0.0f, this->vertices[i].z)));
     }
 
     //Rectangular side panels
@@ -207,35 +207,35 @@ void Cylinder::buildVertices()
     for (int i = 0; i < edgeCount; i++)
     {
         int newI = i+baseOffset;
-        addIndices(newI, newI+1, newI+edgeCount);
-        addIndices(newI + edgeCount, newI + edgeCount + 1, newI + 1);
+        this->addIndices(newI, newI + 1, newI + edgeCount);
+        this->addIndices(newI + edgeCount, newI + edgeCount + 1, newI + 1);
     }
 
-    addIndices(baseOffset, baseOffset+edgeCount-1, baseOffset+edgeCount);
-    addIndices(baseOffset+edgeCount, vertices.size()-1, baseOffset+edgeCount-1);
+    this->addIndices(baseOffset, baseOffset + edgeCount - 1, baseOffset + edgeCount);
+    this->addIndices(baseOffset + edgeCount, vertices.size() - 1, baseOffset + edgeCount - 1);
 
     //generate interleaved vertex array
-    buildInterleavedVertices();
+    this->buildInterleavedVertices();
 }
 
 void Cylinder::buildInterleavedVertices()
 {
-    std::vector<float>().swap(interleavedVertices);
+    std::vector<float>().swap(this->interleavedVertices);
 
     std::size_t i;
-    std::size_t count = vertices.size();
+    std::size_t count = this->vertices.size();
     for (i = 0; i < count; i ++)
     {
-        interleavedVertices.push_back(vertices[i].x);
-        interleavedVertices.push_back(vertices[i].y);
-        interleavedVertices.push_back(vertices[i].z);
+        this->interleavedVertices.push_back(this->vertices[i].x);
+        this->interleavedVertices.push_back(this->vertices[i].y);
+        this->interleavedVertices.push_back(this->vertices[i].z);
 
-        interleavedVertices.push_back(normals[i].x);
-        interleavedVertices.push_back(normals[i].y);
-        interleavedVertices.push_back(normals[i].z);
+        this->interleavedVertices.push_back(this->normals[i].x);
+        this->interleavedVertices.push_back(this->normals[i].y);
+        this->interleavedVertices.push_back(this->normals[i].z);
 
-        interleavedVertices.push_back(texCoords[i].x);
-        interleavedVertices.push_back(texCoords[i].y);
+        this->interleavedVertices.push_back(this->texCoords[i].x);
+        this->interleavedVertices.push_back(this->texCoords[i].y);
     }
 }
 

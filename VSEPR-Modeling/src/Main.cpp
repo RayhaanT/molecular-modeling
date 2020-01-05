@@ -60,6 +60,10 @@ unsigned int sphereVAO;
 unsigned int sphereVBO;
 unsigned int cylinderVAO;
 unsigned int cylinderVBO;
+unsigned int fastSphereVAO;
+unsigned int fastSphereVBO;
+unsigned int fastCylinderVAO;
+unsigned int fastCylinderVBO;
 
 //Define offset variables
 float lastX = W / 2;
@@ -71,7 +75,9 @@ float fov = 45.0f;
 Camera camera(glm::vec3(0.0f, 0.0f, CAMERA_DISTANCE), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
 // const Sphere sphere(1.0f, 36, 18, false); //Blocky
 const Sphere sphere(1.0f, 36, 18, true); //Smooth
-const Cylinder cylinder(0.125f, atomDistance/2, 64);
+const Sphere sphere_fast(1.0f, 18, 9, true);
+const Cylinder cylinder(0.125f, atomDistance / 2, 64);
+const Cylinder cylinder_fast(0.125f, atomDistance, 32);
 unsigned int lightingShader = 0;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -416,6 +422,35 @@ int main()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, cylinder.getInterleavedStride(), (void *)(sizeof(float) * 3));
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, cylinder.getInterleavedStride(), (void *)(sizeof(float) * 6));
+	glEnableVertexAttribArray(2);
+
+	//VAO and VBOs for low-poly sphere and cylinder
+	glGenVertexArrays(1, &fastSphereVAO);
+	glBindVertexArray(fastSphereVAO);
+
+	glGenBuffers(1, &fastSphereVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, fastSphereVBO);
+	glBufferData(GL_ARRAY_BUFFER, sphere_fast.getInterleavedVertexSize(), sphere_fast.getInterleavedVertices(), GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sphere_fast.getInterleavedStride(), (void *)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sphere_fast.getInterleavedStride(), (void *)(sizeof(float) * 3));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sphere_fast.getInterleavedStride(), (void *)(sizeof(float) * 6));
+	glEnableVertexAttribArray(2);
+
+	glGenVertexArrays(1, &fastCylinderVAO);
+	glBindVertexArray(fastCylinderVAO);
+
+	glGenBuffers(1, &fastCylinderVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, fastCylinderVBO);
+	glBufferData(GL_ARRAY_BUFFER, cylinder_fast.getInterleavedVertexSize(), cylinder_fast.getInterleavedVertices(), GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, cylinder_fast.getInterleavedStride(), (void *)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, cylinder_fast.getInterleavedStride(), (void *)(sizeof(float) * 3));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, cylinder_fast.getInterleavedStride(), (void *)(sizeof(float) * 6));
 	glEnableVertexAttribArray(2);
 
 	//Create light cube VAO
