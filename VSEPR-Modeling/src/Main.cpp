@@ -332,7 +332,11 @@ float getSphereDistance(std::vector<BondedElement> model, int index, int order) 
 	return (model[0].base.covalentRadii[order-1] + model[index].base.covalentRadii[order-1])/100;
 }
 
-float getStickDistance(std::vector<BondedElement> model, int index) {
+float getSphereDistance(BondedElement a, BondedElement b, int order) {
+	return (a.base.covalentRadii[order-1] + b.base.covalentRadii[order-1])/100;
+}
+
+float getStickDistance() {
 	return atomDistance;
 }
 
@@ -483,7 +487,7 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, specMap);
 
-		if (organic || VSEPRModel.size() > 6) {
+		if (organic || VSEPRModel.size() > 7) {
 			setMat4(lightingShader, "model", model);
 			setMat4(lightingShader, "view", view);
 			setMat4(lightingShader, "projection", projection);
@@ -528,7 +532,7 @@ int main()
 					bondDistance = representation == 1 ? getSphereDistance(VSEPRModel, i, VSEPRModel[i].bondedElectrons/2) : atomDistance;
 				}
 				else if(representation == 0) {
-					bondDistance = getStickDistance(VSEPRModel, 0);
+					bondDistance = getStickDistance();
 				}
 				else  {continue;}
 				glm::vec4 v = glm::vec4(configurations[configIndex][i - 1] * bondDistance, 1.0f);

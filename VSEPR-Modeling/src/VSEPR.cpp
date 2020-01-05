@@ -8,8 +8,10 @@
 #include "glm/gtx/quaternion.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "data.h"
+#include "render.h"
 
 extern std::vector<std::vector<glm::vec3>> configurations;
+uint32_t BondedElement::maxUID = 0;
 
 int bondingElectrons;
 
@@ -283,17 +285,40 @@ void Bond(BondedElement &a, BondedElement &b) {
 	b.loneElectrons--;
 }
 
+int findInstances(vector<BondedElement> v, BondedElement key) {
+	int count = 0;
+	for(BondedElement b : v) {
+		if(b == key) {
+			count++;
+		}
+	}
+	return count;
+}
+
 Substituent positionAtoms(Substituent structure) {
 	if(structure.components.size() < 1) {
 		return Substituent();
 	}
 	
 	structure.components[0].position = glm::vec3(0.0f);
+	structure.components[0].vanDerWaalsPosition = glm::vec3(0.0f);
+	structure.components[0].rotation = glm::toMat4(glm::angleAxis(PI, glm::vec3(1.0f, 0.0f, 0.0f)));
 	for(int i = 1; i < structure.components.size(); i++) {
+		glm::vec3 offset = glm::vec3(tetrahedron[0].x, structure.components[i].id % 2 == 1 ? tetrahedron[0].y : -tetrahedron[0].y, 0);
+		//Regular position
 		structure.components[i].position = structure.components[i-1].position;
-		structure.components[i].position += glm::vec3(tetrahedron[0].x, structure.components[i].id % 2 == 1 ? tetrahedron[0].y : 0, 0);
-		if(structure.components[i].id % 2 == 0) {
-			structure.components[i].rotation = glm::toMat4(glm::angleAxis(PI, glm::vec3(1.0f, 0.0f, 0.0f)));
+		structure.components[i].position += offset;
+
+		//VanDerWaals position
+		structure.components[i].vanDerWaalsPosition = structure.components[i-1].vanDerWaalsPosition;
+		int bondOrder = findInstances(structure.components[i].neighbours, structure.components[i].neighbours[0]);
+		structure.components[i].vanDerWaalsPosition += offset*getSphereDistance(structure.components[i], structure.components[i].neighbours[0], bondOrder);
+
+		if(i == structure.components.size()-1) {
+			structure.components[i].rotation *= glm::toMat4(glm::angleAxis(PI, glm::vec3(0.0f, 1.0f, 0.0f)));
+		}
+		if (structure.components[i].id % 2 == 1) {
+			structure.components[i].rotation *= glm::toMat4(glm::angleAxis(PI, glm::vec3(1.0f, 0.0f, 0.0f)));
 		}
 	}
 
@@ -399,9 +424,16 @@ Substituent fillInHydrogens(Substituent structure) {
 		BondedElement carbon = structure.components[c];
 		for(int i = carbon.neighbours.size(); i < carbon.numberOfBonds; i++) {
 			BondedElement hydrogen = BondedElement(1, 0, rawHydrogen);
+			//Regular position
 			hydrogen.position = carbon.position;
-			glm::vec3 offset = configurations[carbon.numberOfBonds-1][i+1];
-			hydrogen.position += glm::vec3(glm::vec4(offset, 0.0f) * carbon.rotation);
+			glm::vec3 offset = configurations[carbon.numberOfBonds-1][i];
+			offset = glm::vec3(glm::vec4(offset, 0.0f) * carbon.rotation);
+			hydrogen.position += offset;
+
+			//VanDerWaals Position
+			hydrogen.vanDerWaalsPosition = carbon.vanDerWaalsPosition;
+			hydrogen.vanDerWaalsPosition += offset*getSphereDistance(hydrogen, carbon, 1);
+
 			Bond(hydrogen, structure.components[c]);
 			structure.components.push_back(hydrogen);
 		}
@@ -409,16 +441,22 @@ Substituent fillInHydrogens(Substituent structure) {
 	return structure;
 }
 
-Substituent rotateSubstituent(Substituent structure, glm::vec3 dir) {
+Substituent rotateSubstituent(Substituent structure, glm::vec3 dir, BondedElement parent) {
 	glm::vec3 right = glm::vec3(1.0f, 0.0f, 0.0f);
 	float vDot = glm::dot(right, dir);
-	float nDot = glm::dot(glm::normalize(right), glm::normalize(dir));
-	float angle = acos(vDot/nDot);
+	float mag = 1.0f;
+	float angle = acos(vDot/mag);
 	glm::vec3 axis = glm::cross(right, dir);
 	glm::mat4 rotation = glm::toMat4(glm::angleAxis(angle, axis));
 
 	for(int i = 0; i < structure.components.size(); i++) {
 		structure.components[i].position = glm::vec3(glm::vec4(structure.components[i].position, 0.0f) * rotation);
+		structure.components[i].position += parent.position;
+		structure.components[i].position += dir;
+
+		structure.components[i].vanDerWaalsPosition = glm::vec3(glm::vec4(structure.components[i].vanDerWaalsPosition, 0.0f) * rotation);
+		structure.components[i].vanDerWaalsPosition += parent.vanDerWaalsPosition;
+		structure.components[i].vanDerWaalsPosition += dir * getSphereDistance(structure.components[i], parent, findInstances(structure.components[i].neighbours, parent));
 	}
 
 	return structure;
@@ -441,7 +479,7 @@ vector<BondedElement> interpretOrganic(string in) {
 		int index = distance(central.components[subs[i].connectionPoint - 1].neighbours.begin(), pos);
 		if (index < configurations[central.components[subs[i].connectionPoint - 1].numberOfBonds-1].size()) {
 			glm::vec3 dir = configurations[central.components[subs[i].connectionPoint - 1].numberOfBonds-1][index];
-			subs[i] = rotateSubstituent(subs[i], dir);
+			subs[i] = rotateSubstituent(subs[i], dir, central.components[subs[i].connectionPoint - 1]);
 		}
 	}
 
@@ -483,7 +521,7 @@ vector<BondedElement> VSEPRMain() {
 	setUpMap();
 	parseCSV("periodicTableData.csv");
 
-	tetrahedron = {glm::vec3(-1, 0, -1/sqrt(2)), glm::vec3(0, 1, 1/sqrt(2)), glm::vec3(0, -1, 1/sqrt(2)), glm::vec3(1, 0, -1/sqrt(2))};
+	tetrahedron = {glm::vec3(1, 0, -1 / sqrt(2)), glm::vec3(-1, 0, -1 / sqrt(2)), glm::vec3(0, 1, 1 / sqrt(2)), glm::vec3(0, -1, 1 / sqrt(2))};
 	//glm::quat shift = glm::angleAxis((float)((PI/2)-atan(sqrt(2))), glm::vec3(1.0f, 0.0f, 0.0f));
 	glm::quat shift = glm::angleAxis((float)(PI/2), glm::vec3(1.0f, 0.0f, 0.0f));
 	for(int i = 0; i < tetrahedron.size(); i++) {

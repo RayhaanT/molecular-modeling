@@ -53,18 +53,19 @@ struct Element{
 };
 
 struct BondedElement {
+public:
 	Element base;
 	int loneElectrons;
 	int bondedElectrons;
 	int id = 0;
 	std::vector<BondedElement> neighbours;
 	glm::vec3 position;
+	glm::vec3 vanDerWaalsPosition;
 	glm::mat4 rotation = glm::mat4();
-	uint32_t uid;
 	int numberOfBonds;
 
 	BondedElement(int _loneElectrons, int _bondedElectrons, Element _base) {
-		uid = reinterpret_cast<uint32_t>(&_base);
+		uid = getUID();
 		base = _base;
 		loneElectrons = _loneElectrons;
 		bondedElectrons = _bondedElectrons;
@@ -81,6 +82,15 @@ struct BondedElement {
 
 	friend bool operator==(const BondedElement &lhs, const BondedElement &rhs) {
 		return lhs.uid == rhs.uid;
+	}
+
+private:
+	static uint32_t maxUID;
+	uint32_t uid;
+
+	uint32_t getUID() {
+		maxUID++;
+		return maxUID;
 	}
 };
 

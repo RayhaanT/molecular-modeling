@@ -29,7 +29,7 @@ void RenderOrganic(std::vector<BondedElement> structure, unsigned int shader, gl
     if(rep == 1) {
         for(BondedElement b : structure) {
             glm::mat4 model;
-            glm::vec3 pos = b.position;
+            glm::vec3 pos = b.vanDerWaalsPosition;
             pos = glm::vec3(glm::vec4(pos, 0.0f)*rotationModel);
             model = glm::translate(model, pos);
             model = glm::scale(model, glm::vec3(b.base.vanDerWaalsRadius));
@@ -39,6 +39,14 @@ void RenderOrganic(std::vector<BondedElement> structure, unsigned int shader, gl
         }
     }
     if(rep == 2) {
-        
+        for(BondedElement b : structure) {
+            glm::mat4 model;
+            glm::vec3 pos = b.position*getStickDistance();
+            pos = glm::vec3(glm::vec4(pos, 0.0f) * rotationModel);
+            model = glm::translate(model, pos);
+            setMat4(shader, "model", model);
+            setVec3(shader, "color", b.base.color);
+            sphere.draw();
+        }
     }
 }

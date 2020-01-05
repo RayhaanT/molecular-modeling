@@ -12,7 +12,8 @@ glm::mat4 getCylinderRotation(int configIndex, int modelIndex, std::pair<int, in
 
 // Get atom distances
 float getSphereDistance(std::vector<BondedElement> model, int index, int order);
-float getStickDistance(std::vector<BondedElement> model, int index);
+float getSphereDistance(BondedElement a, BondedElement b, int order);
+float getStickDistance();
 
 // Master render functions
 void RenderOrganic(std::vector<BondedElement> structure, unsigned int shader, glm::mat4 rotationModel, int rep);
