@@ -52,6 +52,7 @@ bool restrictY = true;
 const float atomDistance = 3.5f;
 const float electronSpeed = 3;
 float lineColor[] = {0.2f, 0.2f, 0.2f, 1};
+bool black = true;
 
 //Declarations of extern variables
 std::vector<BondedElement> VSEPRModel;
@@ -79,6 +80,7 @@ const Sphere sphere_fast(1.0f, 18, 9, true);
 const Cylinder cylinder(0.125f, atomDistance / 2, 64);
 const Cylinder cylinder_fast(0.125f, atomDistance, 32);
 unsigned int lightingShader = 0;
+unsigned int lampProgram = 0;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -130,6 +132,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 			setInt(lightingShader, "material.specular", 1);
 			setFloat(lightingShader, "material.shininess", 32.0f);
 		}
+	}
+	if (glfwGetKey(window, GLFW_KEY_C)) {
+		black = !black;
 	}
 }
 
@@ -470,7 +475,6 @@ int main()
 	setFloat(lightingShader, "material.shininess", 32.0f);
 	setUpPointLights(2, lightingShader);
 
-	unsigned int lampProgram = 0;
 	Shader("Shaders/VeShColors.vs", "Shaders/FrShLight.fs", lampProgram);
 
 	unsigned int diffMap;
@@ -500,7 +504,12 @@ int main()
 
 		camera.ProcessKeyboard(window, deltaTime, false);
 
-		glClearColor(1, 1, 1, 0);
+		if(black) {
+			glClearColor(0, 0, 0, 1);
+		}
+		else {
+			glClearColor(1, 1, 1, 1);
+		}
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glBindVertexArray(sphereVAO);
