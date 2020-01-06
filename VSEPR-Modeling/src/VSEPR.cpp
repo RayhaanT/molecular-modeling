@@ -429,10 +429,16 @@ Substituent fillInHydrogens(Substituent structure) {
 			glm::vec3 offset = configurations[carbon.numberOfBonds-1][i];
 			offset = glm::vec3(glm::vec4(offset, 0.0f) * carbon.rotation);
 			hydrogen.position += offset;
+			if(c == 0 && structure.connectionPoint > 0) {
+				hydrogen.position.x = -hydrogen.position.x;
+			}
 
 			//VanDerWaals Position
 			hydrogen.vanDerWaalsPosition = carbon.vanDerWaalsPosition;
 			hydrogen.vanDerWaalsPosition += offset*getSphereDistance(hydrogen, carbon, 1);
+			if(c == 0 && structure.connectionPoint > 0) {
+				hydrogen.vanDerWaalsPosition.x = -hydrogen.vanDerWaalsPosition.x;
+			}
 
 			Bond(hydrogen, structure.components[c]);
 			structure.components.push_back(hydrogen);
@@ -447,31 +453,25 @@ Substituent rotateSubstituent(Substituent structure, glm::vec3 dir, BondedElemen
 	}
 
 	glm::vec3 right = glm::vec3(1.0f, 0.0f, 0.0f);
-	right = glm::vec3(glm::vec4(right, 0.0f) * parent.rotation);
-	glm::vec3 newDir = glm::cross(right, glm::vec3(0.0f, 1.0f, 0.0f));
-	float vDot = glm::dot(right, newDir);
+	glm::vec3 simpleDir = glm::normalize(glm::vec3(dir.x, 0.0f, dir.z));
+	float vDot = glm::dot(right, simpleDir);
 	float mag = 1.0f;
 	float angle = acos(vDot/mag);
-	glm::mat4 perpendicularRotation = glm::toMat4(glm::angleAxis(angle, glm::vec3(0.0f, 1.0f, 0.0f)));
-	vDot = glm::dot(newDir, dir);
-	angle = acos(vDot/mag);
-	glm::mat4 finalRotation = glm::toMat4(glm::angleAxis(angle, right));
-	finalRotation *= perpendicularRotation;
+	glm::vec3 axis = glm::cross(simpleDir, right);
+	glm::mat4 rotation = glm::mat4();
+	rotation = glm::rotate(rotation, PI, glm::vec3(right));
+	rotation = glm::rotate(rotation, angle, axis);
 
-	// float vDot = glm::dot(right, dir);
-	// float mag = 1.0f;
-	// float angle = acos(vDot/mag);
-	// glm::vec3 axis = glm::cross(dir, right);
-	// glm::mat4 rotation = glm::toMat4(glm::angleAxis(angle, axis));
+	float vanDerWaalsOffset = getSphereDistance(structure.components[0], parent, findInstances(structure.components[0].neighbours, parent));
 
 	for(int i = 0; i < structure.components.size(); i++) {
-		structure.components[i].position = glm::vec3(glm::vec4(structure.components[i].position, 0.0f) * finalRotation);
+		structure.components[i].position = glm::vec3(glm::vec4(structure.components[i].position, 0.0f) * rotation);
 		structure.components[i].position += parent.position;
 		structure.components[i].position += dir;
 
-		structure.components[i].vanDerWaalsPosition = glm::vec3(glm::vec4(structure.components[i].vanDerWaalsPosition, 0.0f) * finalRotation);
-		structure.components[i].vanDerWaalsPosition += parent.vanDerWaalsPosition;
-		structure.components[i].vanDerWaalsPosition += dir * getSphereDistance(structure.components[i], parent, findInstances(structure.components[i].neighbours, parent));
+		structure.components[i].vanDerWaalsPosition = glm::vec3(glm::vec4(structure.components[i].vanDerWaalsPosition, 0.0f) * rotation);
+		structure.components[i].vanDerWaalsPosition += parent.vanDerWaalsPosition;findInstances(structure.components[i].neighbours, parent);
+		structure.components[i].vanDerWaalsPosition += dir * vanDerWaalsOffset;
 	}
 
 	return structure;
