@@ -295,6 +295,45 @@ int findInstances(vector<BondedElement> v, BondedElement key) {
 	return count;
 }
 
+vector<BondedElement> centerPositions(vector<BondedElement> structure) {
+	glm::vec3 lowestExtreme = glm::vec3(0);
+	glm::vec3 greatestExtreme = glm::vec3(0);
+	glm::vec3 lowestExtreme_v = glm::vec3(0);
+	glm::vec3 greatestExtreme_v = glm::vec3(0);
+
+	for(BondedElement e : structure) {
+		// Lowest extreme regular positions
+		if (e.position.x < lowestExtreme.x) { lowestExtreme.x = e.position.x; }
+		if (e.position.y < lowestExtreme.y) { lowestExtreme.y = e.position.y; }
+		if (e.position.z < lowestExtreme.z) { lowestExtreme.z = e.position.z; }
+
+		// Greatest extreme regular positions
+		if (e.position.x > greatestExtreme.x) { greatestExtreme.x = e.position.x; }
+		if (e.position.y > greatestExtreme.y) { greatestExtreme.y = e.position.y; }
+		if (e.position.z > greatestExtreme.z) { greatestExtreme.z = e.position.z; }
+
+		// Lowest extreme van der waals positions
+		if (e.vanDerWaalsPosition.x < lowestExtreme_v.x) { lowestExtreme_v.x = e.vanDerWaalsPosition.x; }
+		if (e.vanDerWaalsPosition.y < lowestExtreme_v.y) { lowestExtreme_v.y = e.vanDerWaalsPosition.y; }
+		if (e.vanDerWaalsPosition.z < lowestExtreme_v.z) { lowestExtreme_v.z = e.vanDerWaalsPosition.z; }
+
+		// Highest extreme van der waals positions
+		if (e.vanDerWaalsPosition.x > greatestExtreme_v.x) { greatestExtreme_v.x = e.vanDerWaalsPosition.x; }
+		if (e.vanDerWaalsPosition.y > greatestExtreme_v.y) { greatestExtreme_v.y = e.vanDerWaalsPosition.y; }
+		if (e.vanDerWaalsPosition.z > greatestExtreme_v.z) { greatestExtreme_v.z = e.vanDerWaalsPosition.z; }
+	}
+
+	glm::vec3 offset = (lowestExtreme + greatestExtreme) * 0.5f;
+	glm::vec3 offset_v = (lowestExtreme_v + greatestExtreme_v) * 0.5f;
+
+	for(int i = 0; i < structure.size(); i++) {
+		structure[i].position -= offset;
+		structure[i].vanDerWaalsPosition -= offset_v;
+	}
+
+	return structure;
+}
+
 Substituent positionAtoms(Substituent structure) {
 	if(structure.components.size() < 1) {
 		return Substituent();
@@ -508,6 +547,7 @@ vector<BondedElement> interpretOrganic(string in) {
 		returnVec.insert(returnVec.end(), subs[i].components.begin(), subs[i].components.end());
 	}
 	returnVec.insert(returnVec.end(), central.components.begin(), central.components.end());
+	returnVec = centerPositions(returnVec);
 
 	return returnVec;
 } 
