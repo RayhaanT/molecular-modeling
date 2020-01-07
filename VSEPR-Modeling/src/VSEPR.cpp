@@ -334,7 +334,24 @@ vector<BondedElement> centerPositions(vector<BondedElement> structure) {
 	return structure;
 }
 
-Substituent positionAtoms(Substituent structure, bool cyclo) {
+vector<BondedElement> averageCenterPositions(vector<BondedElement> structure) {
+	glm::vec3 totalOffset;
+	glm::vec3 totalOffset_v;
+	for(BondedElement e : structure) {
+		totalOffset+=e.position;
+		totalOffset_v+=e.vanDerWaalsPosition;
+	}
+	glm::vec3 offset = totalOffset * (float)(1/structure.size());
+	glm::vec3 offset_v = totalOffset_v * (float)(1/structure.size());
+	for(int i = 0; i < structure.size(); i++) {
+		structure[i].position -= offset;
+		structure[i].vanDerWaalsPosition -= offset_v;
+	}
+	return structure;
+}
+
+Substituent positionAtoms(Substituent structure, bool cyclo)
+{
 	if(structure.components.size() < 1 || (cyclo && structure.components.size() < 3)) {
 		return Substituent();
 	}
@@ -571,7 +588,8 @@ vector<BondedElement> interpretOrganic(string in) {
 		returnVec.insert(returnVec.end(), subs[i].components.begin(), subs[i].components.end());
 	}
 	returnVec.insert(returnVec.end(), central.components.begin(), central.components.end());
-	returnVec = centerPositions(returnVec);
+	// returnVec = centerPositions(returnVec);
+	returnVec = averageCenterPositions(returnVec);
 
 	return returnVec;
 } 
