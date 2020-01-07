@@ -334,9 +334,30 @@ vector<BondedElement> centerPositions(vector<BondedElement> structure) {
 	return structure;
 }
 
-Substituent positionAtoms(Substituent structure) {
-	if(structure.components.size() < 1) {
+Substituent positionAtoms(Substituent structure, bool cyclo) {
+	if(structure.components.size() < 1 || (cyclo && structure.components.size() < 3)) {
 		return Substituent();
+	}
+
+	if(cyclo) {
+		vector<glm::vec3> positions;
+		float angleInterval = (2*PI)/structure.components.size();
+		for(int i = 0; i < structure.components.size(); i++) {
+			float angle = angleInterval * i;
+			positions.push_back(glm::vec3(cos(angle), 0.0f, sin(angle)));
+		}
+		float adjMagnitude = glm::length(positions[0]-positions[1]);
+		float multiplier = 1/adjMagnitude;
+		int adjBondOrder = findInstances(structure.components[0].neighbours, structure.components[0].neighbours[0]);
+		float multiplier_v = getSphereDistance(structure.components[0], structure.components[1], adjBondOrder)/adjMagnitude;
+		for(int i = 0; i < structure.components.size(); i++) {
+			structure.components[i].position = positions[i]*multiplier;
+			structure.components[i].vanDerWaalsPosition = positions[i]*multiplier_v;
+			glm::mat4 rotation = glm::rotate(glm::mat4(), (angleInterval*i)-(PI/2), glm::vec3(0.0f, 1.0f, 0.0f));
+			glm::vec3 secondaryAxis = glm::cross(positions[i], glm::vec3(0.0f, 1.0f, 0.0f));
+			structure.components[i].rotation = glm::rotate(rotation, PI/2, secondaryAxis);
+		}
+		return structure;
 	}
 	
 	structure.components[0].position = glm::vec3(0.0f);
@@ -394,8 +415,11 @@ vector<Substituent> interpretSubstituent(string name, string place) {
 
 	if(checkStringComponent(name, "cyclo")) {
 		Bond(newSub.components[0], newSub.components[newSub.components.size()-1]);
+		newSub = positionAtoms(newSub, true);
 	}
-	newSub = positionAtoms(newSub);
+	else {
+		newSub = positionAtoms(newSub, false);
+	}
 
 	string suffix = name.substr(name.length()-4, 3);
 	if(suffix == "ane" || suffix == "ene" || suffix == "yne") {
