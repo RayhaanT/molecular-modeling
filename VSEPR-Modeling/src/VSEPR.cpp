@@ -341,8 +341,9 @@ vector<BondedElement> averageCenterPositions(vector<BondedElement> structure) {
 		totalOffset+=e.position;
 		totalOffset_v+=e.vanDerWaalsPosition;
 	}
-	glm::vec3 offset = totalOffset * (float)(1/structure.size());
-	glm::vec3 offset_v = totalOffset_v * (float)(1/structure.size());
+	float divisor = 1.0f / (float)(structure.size());
+	glm::vec3 offset = totalOffset * divisor;
+	glm::vec3 offset_v = totalOffset_v * divisor;
 	for(int i = 0; i < structure.size(); i++) {
 		structure[i].position -= offset;
 		structure[i].vanDerWaalsPosition -= offset_v;
