@@ -32,9 +32,9 @@ bool containsUID(uint32_t id, std::vector<uint32_t> list) {
     return false;
 }
 
-BondedElement findNeighbour(BondedElement key, std::vector<BondedElement> group) {
+BondedElement findNeighbour(uint32_t key, std::vector<BondedElement> group) {
     for(BondedElement b : group) {
-        if(key == b) {
+        if(key == b.getUID()) {
             return b;
         }
     }

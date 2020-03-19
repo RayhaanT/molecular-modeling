@@ -261,7 +261,7 @@ glm::mat4 getCylinderOffset(std::pair<int, int> bondOrder, glm::mat4 rotationMod
 
 glm::mat4 getCylinderRotation(int configIndex, int modelIndex, std::pair<int, int> bondOrder, glm::mat4 rotationModel) {
 	glm::vec3 target = configurations[configIndex][modelIndex];
-	glm::vec3 direction = glm::vec3(glm::vec4(target, 0.0f) * rotationModel);
+	glm::vec3 direction = glm::vec3(glm::vec4(target, 0.0f));
 	
 	glm::mat4 rotMatrix;
 	rotMatrix = glm::toMat4(RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f) * atomDistance, direction * atomDistance));
@@ -521,6 +521,7 @@ int main()
 		glm::mat4 model;
 		glm::mat4 rotationModel = camera.GetArcMatrix();
 		rotationModel *= glm::rotate(model, time, glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 basicCylinderRotationModel = camera.GetReverseArcMatrix();
 		glm::mat4 reverseRotationModel = glm::rotate(model, -time, glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::mat4 view;
 		view = camera.GetViewMatrix();
@@ -600,7 +601,9 @@ int main()
 					if(representation == 2) {
 						for(int c = 0; c < VSEPRModel[i].bondedElectrons/2; c++) {
 							//Base cylinder
-							glm::mat4 cylinderModel = getCylinderRotation(configIndex, i - 1, std::make_pair(VSEPRModel[i].bondedElectrons/2, c), rotationModel);
+							glm::mat4 cylinderModel = glm::mat4();
+							cylinderModel *= rotationModel;
+							cylinderModel *= getCylinderRotation(configIndex, i - 1, std::make_pair(VSEPRModel[i].bondedElectrons/2, c), basicCylinderRotationModel);
 							setMat4(lightingShader, "model", cylinderModel);
 							setVec3(lightingShader, "color", VSEPRModel[0].base.color);
 							glBindVertexArray(cylinderVAO);
@@ -609,7 +612,8 @@ int main()
 
 							//Outer cylinder
 							cylinderModel = glm::mat4();
-							cylinderModel = getCylinderRotation(configIndex, i - 1, std::make_pair(VSEPRModel[i].bondedElectrons/2, c), rotationModel);
+							cylinderModel *= rotationModel;
+							cylinderModel *= getCylinderRotation(configIndex, i - 1, std::make_pair(VSEPRModel[i].bondedElectrons / 2, c), basicCylinderRotationModel);
 							cylinderModel = glm::translate(cylinderModel, glm::vec3(0.0f, atomDistance / 2, 0.0f));
 							setMat4(lightingShader, "model", cylinderModel);
 							setVec3(lightingShader, "color", VSEPRModel[i].base.color);

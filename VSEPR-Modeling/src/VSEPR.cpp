@@ -277,17 +277,17 @@ int findNumberTerm(string name) {
 }
 
 void Bond(BondedElement &a, BondedElement &b) {
-	a.neighbours.push_back(b);
+	a.neighbours.push_back(b.getUID());
 	a.bondedElectrons+=2;
 	a.loneElectrons--;
-	b.neighbours.push_back(a);
+	b.neighbours.push_back(a.getUID());
 	b.bondedElectrons+=2;
 	b.loneElectrons--;
 }
 
-int findInstances(vector<BondedElement> v, BondedElement key) {
+int findInstances(vector<uint32_t> v, uint32_t key) {
 	int count = 0;
-	for(BondedElement b : v) {
+	for(uint32_t b : v) {
 		if(b == key) {
 			count++;
 		}
@@ -390,7 +390,8 @@ Substituent positionAtoms(Substituent structure, bool cyclo)
 		//VanDerWaals position
 		structure.components[i].vanDerWaalsPosition = structure.components[i-1].vanDerWaalsPosition;
 		int bondOrder = findInstances(structure.components[i].neighbours, structure.components[i].neighbours[0]);
-		structure.components[i].vanDerWaalsPosition += offset*getSphereDistance(structure.components[i], structure.components[i].neighbours[0], bondOrder);
+		BondedElement neighbour = findNeighbour(structure.components[i].neighbours[0], structure.components);
+		structure.components[i].vanDerWaalsPosition += offset * getSphereDistance(structure.components[i], neighbour, bondOrder);
 
 		if(i == structure.components.size()-1) {
 			structure.components[i].rotation *= glm::toMat4(glm::angleAxis(PI, glm::vec3(0.0f, 1.0f, 0.0f)));
@@ -407,7 +408,7 @@ vector<BondedElement> generateCylinders(vector<BondedElement> structure) {
 	vector<BondedElement> newStruc;
 	for(BondedElement b : structure) {
 		glm::vec3 start = b.position*getStickDistance();
-		for(BondedElement n : b.neighbours) {
+		for(uint32_t n : b.neighbours) {
 			BondedElement updatedNeighbour = findNeighbour(n, structure);
 			glm::vec3 end = updatedNeighbour.position * getStickDistance();
 
@@ -570,7 +571,7 @@ Substituent rotateSubstituent(Substituent structure, glm::vec3 dir, BondedElemen
 	rotation = glm::rotate(rotation, PI, glm::vec3(right));
 	rotation = glm::rotate(rotation, angle, axis);
 
-	float vanDerWaalsOffset = getSphereDistance(structure.components[0], parent, findInstances(structure.components[0].neighbours, parent));
+	float vanDerWaalsOffset = getSphereDistance(structure.components[0], parent, findInstances(structure.components[0].neighbours, parent.getUID()));
 
 	for(int i = 0; i < structure.components.size(); i++) {
 		structure.components[i].position = glm::vec3(glm::vec4(structure.components[i].position, 0.0f) * rotation);
@@ -578,7 +579,7 @@ Substituent rotateSubstituent(Substituent structure, glm::vec3 dir, BondedElemen
 		structure.components[i].position += dir;
 
 		structure.components[i].vanDerWaalsPosition = glm::vec3(glm::vec4(structure.components[i].vanDerWaalsPosition, 0.0f) * rotation);
-		structure.components[i].vanDerWaalsPosition += parent.vanDerWaalsPosition;findInstances(structure.components[i].neighbours, parent);
+		structure.components[i].vanDerWaalsPosition += parent.vanDerWaalsPosition;findInstances(structure.components[i].neighbours, parent.getUID());
 		structure.components[i].vanDerWaalsPosition += dir * vanDerWaalsOffset;
 	}
 
@@ -598,7 +599,7 @@ vector<BondedElement> interpretOrganic(string in) {
 	}
 	central = fillInHydrogens(central);
 	for(int i = 0; i < subs.size(); i++) {
-		vector<BondedElement>::iterator pos = find(central.components[subs[i].connectionPoint - 1].neighbours.begin(), central.components[subs[i].connectionPoint - 1].neighbours.end(), subs[i].components[0]);
+		vector<uint32_t>::iterator pos = find(central.components[subs[i].connectionPoint - 1].neighbours.begin(), central.components[subs[i].connectionPoint - 1].neighbours.end(), subs[i].components[0].getUID());
 		int index = distance(central.components[subs[i].connectionPoint - 1].neighbours.begin(), pos);
 		if (index < configurations[central.components[subs[i].connectionPoint - 1].numberOfBonds-1].size()) {
 			glm::vec3 dir = glm::vec3(glm::vec4(configurations[central.components[subs[i].connectionPoint - 1].numberOfBonds-1][index], 0.0f)*central.components[subs[i].connectionPoint - 1].rotation);

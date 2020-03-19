@@ -58,7 +58,7 @@ public:
 	int loneElectrons;
 	int bondedElectrons;
 	int id = 0;
-	std::vector<BondedElement> neighbours;
+	std::vector<uint32_t> neighbours;
 	glm::vec3 position;
 	glm::vec3 vanDerWaalsPosition;
 	glm::mat4 rotation = glm::mat4();
@@ -110,6 +110,6 @@ struct Substituent {
 extern std::vector<BondedElement> VSEPRModel;
 std::vector<BondedElement> VSEPRMain();
 bool containsUID(uint32_t id, std::vector<uint32_t> list);
-BondedElement findNeighbour(BondedElement key, std::vector<BondedElement> group);
+BondedElement findNeighbour(uint32_t key, std::vector<BondedElement> group);
 
 #endif

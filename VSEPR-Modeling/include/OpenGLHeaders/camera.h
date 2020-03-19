@@ -168,8 +168,8 @@ public:
 		glm::mat4 xMatrix = glm::toMat4(xRotation);
 		glm::mat4 yMatrix = glm::toMat4(yRotation);
 
-		glm::quat xRotationReverse = glm::angleAxis((float)(-xoffset * C_PI) / (sphereRadius * 2), glm::vec3(0.0f, 1.0f, 0.0f));
-		glm::quat yRotationReverse = glm::angleAxis((float)(-yoffset * C_PI) / (sphereRadius * 2), glm::vec3(1.0f, 0.0f, 0.0f));
+		glm::quat xRotationReverse = glm::angleAxis((float)(xoffset * C_PI) / (sphereRadius * 2), glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::quat yRotationReverse = glm::angleAxis((float)(yoffset * C_PI) / (sphereRadius * 2), glm::vec3(1.0f, 0.0f, 0.0f));
 		glm::mat4 xMatrixReverse = glm::toMat4(xRotationReverse);
 		glm::mat4 yMatrixReverse = glm::toMat4(yRotationReverse);
 
