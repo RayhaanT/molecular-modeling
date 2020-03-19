@@ -403,6 +403,34 @@ Substituent positionAtoms(Substituent structure, bool cyclo)
 	return structure;
 }
 
+vector<BondedElement> generateCylinders(vector<BondedElement> structure) {
+	vector<BondedElement> newStruc;
+	for(BondedElement b : structure) {
+		glm::vec3 start = b.position*getStickDistance();
+		for(BondedElement n : b.neighbours) {
+			BondedElement updatedNeighbour = findNeighbour(n, structure);
+			glm::vec3 end = updatedNeighbour.position * getStickDistance();
+
+			//Rotation
+			glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+			glm::vec3 dir = glm::normalize(end - start);
+			float vDot = glm::dot(up, dir);
+			float mag = 1.0f;
+			float angle = acos(vDot / mag);
+			glm::vec3 axis = glm::cross(up, dir);
+			glm::mat4 rotation = glm::toMat4(glm::angleAxis(angle, axis));
+
+			//Cylinder one
+			glm::mat4 model = glm::mat4();
+			model = glm::translate(model, start);
+			model = glm::rotate(model, angle, axis);
+			b.cylinderModels.push_back(model);
+		}
+		newStruc.push_back(b);
+	}
+	return newStruc;
+}
+
 vector<Substituent> interpretSubstituent(string name, string place) {
 	std::vector<int> attachPoints;
 	string num = "";
@@ -418,7 +446,6 @@ vector<Substituent> interpretSubstituent(string name, string place) {
 	attachPoints.push_back(stoi(num));
 
 	int carbonNum = findNumberTerm(name);
-	cout << "C:::" << carbonNum << endl;
 
 	Substituent newSub;
 	Element carbon = elements["C"];
@@ -591,6 +618,7 @@ vector<BondedElement> interpretOrganic(string in) {
 	returnVec.insert(returnVec.end(), central.components.begin(), central.components.end());
 	// returnVec = centerPositions(returnVec);
 	returnVec = averageCenterPositions(returnVec);
+	returnVec = generateCylinders(returnVec);
 
 	return returnVec;
 } 

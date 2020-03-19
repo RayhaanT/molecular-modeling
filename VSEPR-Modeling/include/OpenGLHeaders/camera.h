@@ -163,8 +163,8 @@ public:
 		float xoffset = xPos - lastPos2D.x;
 		float yoffset = yPos - lastPos2D.y;
 
-		glm::quat xRotation = glm::angleAxis((float)(xoffset * C_PI)/(sphereRadius*2), glm::vec3(0.0f, 1.0f, 0.0f));
-		glm::quat yRotation = glm::angleAxis((float)(yoffset * C_PI)/(sphereRadius*2), glm::vec3(1.0f, 0.0f, 0.0f));
+		glm::quat xRotation = glm::angleAxis((float)(-xoffset * C_PI)/(sphereRadius*2), glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::quat yRotation = glm::angleAxis((float)(-yoffset * C_PI)/(sphereRadius*2), glm::vec3(1.0f, 0.0f, 0.0f));
 		glm::mat4 xMatrix = glm::toMat4(xRotation);
 		glm::mat4 yMatrix = glm::toMat4(yRotation);
 

@@ -63,6 +63,7 @@ public:
 	glm::vec3 vanDerWaalsPosition;
 	glm::mat4 rotation = glm::mat4();
 	int numberOfBonds;
+	std::vector<glm::mat4> cylinderModels;
 
 	BondedElement(int _loneElectrons, int _bondedElectrons, Element _base) {
 		uid = generateUID();
@@ -108,5 +109,7 @@ struct Substituent {
 
 extern std::vector<BondedElement> VSEPRModel;
 std::vector<BondedElement> VSEPRMain();
+bool containsUID(uint32_t id, std::vector<uint32_t> list);
+BondedElement findNeighbour(BondedElement key, std::vector<BondedElement> group);
 
 #endif

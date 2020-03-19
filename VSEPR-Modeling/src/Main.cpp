@@ -582,7 +582,8 @@ int main()
 				}
 				else  {continue;}
 				glm::vec4 v = glm::vec4(configurations[configIndex][i - 1] * bondDistance, 1.0f);
-				glm::vec3 v3 = glm::vec3(v * rotationModel);
+				glm::vec3 v3 = glm::vec3(v);
+				model *= rotationModel;
 				model = glm::translate(model, v3);
 				model = glm::rotate(model, -time, glm::vec3(0.0f, 1.0f, 0.0f));
 				if (i < VSEPRModel.size() && representation == 1) {

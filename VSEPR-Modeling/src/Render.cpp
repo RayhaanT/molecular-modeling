@@ -80,9 +80,32 @@ void RenderCylinder(glm::vec3 start, glm::vec3 end, glm::vec3 startColor, glm::v
     cylinder.draw();
 }
 
+void fastRenderCylinder(glm::vec3 color, glm::mat4 transform, glm::mat4 rotation, unsigned int shader, bool fast) {
+    if(fast) {
+        glBindVertexArray(fastCylinderVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, fastCylinderVBO);
+    } else {
+        glBindVertexArray(cylinderVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, cylinderVBO);
+    }
+
+    glm::mat4 model;
+    model *= rotation;
+    model *= transform;
+    setMat4(shader, "model", model);
+    setVec3(shader, "color", color);
+    if (fast) {
+        cylinder_fast.draw();
+        return;
+    }
+    cylinder.draw();
+}
+
 void RenderOrganic(std::vector<BondedElement> structure, unsigned int shader, glm::mat4 rotationModel, int rep) {
+    glm::quat rotationQuat = glm::quat_cast(rotationModel);
     glUseProgram(shader);
-    bool fast = structure.size() > 20 ? true : false;
+    // bool fast = structure.size() > 20 ? true : false;
+    bool fast = false;
     if(fast) {
         glBindVertexArray(fastSphereVAO);
         glBindBuffer(GL_ARRAY_BUFFER, fastSphereVBO);
@@ -98,7 +121,8 @@ void RenderOrganic(std::vector<BondedElement> structure, unsigned int shader, gl
         for(BondedElement b : structure) {
             glm::mat4 model;
             glm::vec3 pos = b.vanDerWaalsPosition;
-            pos = glm::vec3(glm::vec4(pos, 0.0f)*rotationModel);
+            pos = glm::vec3(glm::vec4(pos, 0.0f));
+            model *= rotationModel;
             model = glm::translate(model, pos);
             model = glm::scale(model, glm::vec3(b.base.vanDerWaalsRadius));
             setMat4(shader, "model", model);
@@ -113,13 +137,8 @@ void RenderOrganic(std::vector<BondedElement> structure, unsigned int shader, gl
     if(rep == 2) {
         std::vector<uint32_t> closedSet;
         for(BondedElement b : structure) {
-            for(BondedElement n : b.neighbours) {
-                if(!containsUID(n.getUID(), closedSet)) {
-                    BondedElement updatedNeighbour = findNeighbour(n, structure);
-                    glm::vec3 start = glm::vec3(glm::vec4(b.position*getStickDistance(), 0.0f) * rotationModel);
-                    glm::vec3 end = glm::vec3(glm::vec4(updatedNeighbour.position*getStickDistance(), 0.0f) * rotationModel);
-                    RenderCylinder(start, end, b.base.color, updatedNeighbour.base.color, shader, fast);
-                }
+            for (glm::mat4 m : b.cylinderModels) {
+                fastRenderCylinder(b.base.color, m, rotationModel, shader, fast);
             }
             if(fast) {
                 glBindVertexArray(fastSphereVAO);
@@ -130,7 +149,8 @@ void RenderOrganic(std::vector<BondedElement> structure, unsigned int shader, gl
             }
             glm::mat4 model;
             glm::vec3 pos = b.position*getStickDistance();
-            pos = glm::vec3(glm::vec4(pos, 0.0f) * rotationModel);
+            pos = glm::vec3(glm::vec4(pos, 0.0f));
+            model *= rotationModel;
             model = glm::translate(model, pos);
             model = glm::scale(model, glm::vec3(0.75f));
             setMat4(shader, "model", model);
@@ -140,7 +160,7 @@ void RenderOrganic(std::vector<BondedElement> structure, unsigned int shader, gl
             } else {
                 sphere.draw();
             }
-            closedSet.push_back(b.getUID());
+            //closedSet.push_back(b.getUID());
         }
     }
 }
