@@ -109,6 +109,34 @@ struct Substituent {
 	std::vector<BondedElement> components;
 	Substituent *parent;
 	int connectionPoint;
+
+	Substituent duplicate() {
+		Substituent newSub;
+		std::vector<uint32_t> oldComponentIds;
+		for(BondedElement b : components) {
+			oldComponentIds.push_back(b.getUID());
+		}
+		std::vector<BondedElement> refreshComponents = this->components;
+		newSub.parent = this->parent;
+		newSub.connectionPoint = this->connectionPoint;
+
+		for(int i = 0; i < this->components.size(); i++) {
+			refreshComponents[i].refreshUID();
+			newSub.components.push_back(refreshComponents[i]);
+		}
+
+		for(int i = 0; i < newSub.components.size(); i++) {
+			for(int n = 0; n < newSub.components[i].neighbours.size(); n++) {
+				for(int c = 0; c < oldComponentIds.size(); c++) {
+					if(oldComponentIds[c]==newSub.components[i].neighbours[n]) {
+						newSub.components[i].neighbours[n] = newSub.components[c].getUID();
+					}
+				}
+			}
+		}
+
+		return newSub;
+	}
 };
 
 extern std::vector<BondedElement> VSEPRModel;

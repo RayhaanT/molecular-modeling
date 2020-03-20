@@ -482,10 +482,7 @@ vector<Substituent> interpretSubstituent(string name, string place) {
 		allSubs.push_back(newSub);
 		for(int i = 1; i < attachPoints.size(); i++) {
 			newSub.connectionPoint = attachPoints[i];
-			for(int x = 0; x < newSub.components.size(); x++) {
-				newSub.components[x].refreshUID();
-			}
-			allSubs.push_back(newSub);
+			allSubs.push_back(newSub.duplicate());
 		}
 		return allSubs;
 	}
@@ -523,11 +520,6 @@ vector<Substituent> findSubstituents(string in) {
 			continue;
 		}
 		newSubGroup = interpretSubstituent(splitIn[i], splitIn[i-1]);
-		for(auto s : newSubGroup) {
-			for(auto b : s.components) {
-				std::cout << b.base.name << " " << b.id << std::endl;
-			}
-		}
 		returnVec.insert(returnVec.end(), newSubGroup.begin(), newSubGroup.end());
 	}
 	newSubGroup = interpretSubstituent(splitIn.back(), "-1");
@@ -628,9 +620,6 @@ vector<BondedElement> interpretOrganic(string in) {
 	returnVec.insert(returnVec.end(), central.components.begin(), central.components.end());
 	// returnVec = centerPositions(returnVec);
 	returnVec = averageCenterPositions(returnVec);
-	for(BondedElement b : returnVec) {
-		cout << b.getUID() << endl;
-	}
 	returnVec = generateCylinders(returnVec);
 
 	return returnVec;
