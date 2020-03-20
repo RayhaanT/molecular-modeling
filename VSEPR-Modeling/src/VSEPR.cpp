@@ -369,7 +369,7 @@ Substituent positionAtoms(Substituent structure, bool cyclo)
 		int adjBondOrder = findInstances(structure.components[0].neighbours, structure.components[0].neighbours[0]);
 		float multiplier_v = getSphereDistance(structure.components[0], structure.components[1], adjBondOrder)/adjMagnitude;
 		for(int i = 0; i < structure.components.size(); i++) {
-			structure.components[i].position = positions[i]*multiplier;
+			structure.components[i].position = positions[i]*multiplier * getStickDistance();
 			structure.components[i].vanDerWaalsPosition = positions[i]*multiplier_v;
 			glm::mat4 rotation = glm::rotate(glm::mat4(), (angleInterval*i)-(PI/2), glm::vec3(0.0f, 1.0f, 0.0f));
 			glm::vec3 secondaryAxis = glm::cross(positions[i], glm::vec3(0.0f, 1.0f, 0.0f));
@@ -442,6 +442,7 @@ vector<Substituent> interpretSubstituent(string name, string place) {
 	for(int i = 0; i < place.length(); i++) {
 		if(place[i]==',') {
 			attachPoints.push_back(stoi(num));
+			num = "";
 		}
 		else {
 			num+=place[i];
@@ -477,8 +478,13 @@ vector<Substituent> interpretSubstituent(string name, string place) {
 	}
 	else {
 		vector<Substituent> allSubs;
-		for(int i = 0; i < attachPoints.size(); i++) {
+		newSub.connectionPoint = attachPoints[0];
+		allSubs.push_back(newSub);
+		for(int i = 1; i < attachPoints.size(); i++) {
 			newSub.connectionPoint = attachPoints[i];
+			for(int x = 0; x < newSub.components.size(); x++) {
+				newSub.components[x].refreshUID();
+			}
 			allSubs.push_back(newSub);
 		}
 		return allSubs;
@@ -579,7 +585,7 @@ Substituent rotateSubstituent(Substituent structure, glm::vec3 dir, BondedElemen
 	for(int i = 0; i < structure.components.size(); i++) {
 		structure.components[i].position = glm::vec3(glm::vec4(structure.components[i].position, 0.0f) * rotation);
 		structure.components[i].position += parent.position;
-		structure.components[i].position += dir;
+		structure.components[i].position += dir * getStickDistance();
 
 		structure.components[i].vanDerWaalsPosition = glm::vec3(glm::vec4(structure.components[i].vanDerWaalsPosition, 0.0f) * rotation);
 		structure.components[i].vanDerWaalsPosition += parent.vanDerWaalsPosition;findInstances(structure.components[i].neighbours, parent.getUID());
@@ -622,6 +628,9 @@ vector<BondedElement> interpretOrganic(string in) {
 	returnVec.insert(returnVec.end(), central.components.begin(), central.components.end());
 	// returnVec = centerPositions(returnVec);
 	returnVec = averageCenterPositions(returnVec);
+	for(BondedElement b : returnVec) {
+		cout << b.getUID() << endl;
+	}
 	returnVec = generateCylinders(returnVec);
 
 	return returnVec;

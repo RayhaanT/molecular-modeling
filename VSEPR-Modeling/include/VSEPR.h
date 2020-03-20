@@ -87,6 +87,10 @@ public:
 		return uid;
 	}
 
+	void refreshUID() {
+		uid = generateUID();
+	}
+
 	friend bool operator==(const BondedElement &lhs, const BondedElement &rhs) {
 		return lhs.uid == rhs.uid;
 	}
