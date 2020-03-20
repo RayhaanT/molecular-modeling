@@ -385,7 +385,7 @@ Substituent positionAtoms(Substituent structure, bool cyclo)
 		glm::vec3 offset = glm::vec3(tetrahedron[0].x, structure.components[i].id % 2 == 1 ? tetrahedron[0].y : -tetrahedron[0].y, 0);
 		//Regular position
 		structure.components[i].position = structure.components[i-1].position;
-		structure.components[i].position += offset;
+		structure.components[i].position += offset*getStickDistance();
 
 		//VanDerWaals position
 		structure.components[i].vanDerWaalsPosition = structure.components[i-1].vanDerWaalsPosition;
@@ -407,10 +407,10 @@ Substituent positionAtoms(Substituent structure, bool cyclo)
 vector<BondedElement> generateCylinders(vector<BondedElement> structure) {
 	vector<BondedElement> newStruc;
 	for(BondedElement b : structure) {
-		glm::vec3 start = b.position*getStickDistance();
+		glm::vec3 start = b.position;
 		for(uint32_t n : b.neighbours) {
 			BondedElement updatedNeighbour = findNeighbour(n, structure);
-			glm::vec3 end = updatedNeighbour.position * getStickDistance();
+			glm::vec3 end = updatedNeighbour.position;
 
 			//Rotation
 			glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -425,6 +425,9 @@ vector<BondedElement> generateCylinders(vector<BondedElement> structure) {
 			glm::mat4 model = glm::mat4();
 			model = glm::translate(model, start);
 			model = glm::rotate(model, angle, axis);
+			if (updatedNeighbour.base.name == "hydrogen" || b.base.name == "hydrogen") {
+				model = glm::scale(model, glm::vec3(1.0f, 0.7f, 1.0f));
+			}
 			b.cylinderModels.push_back(model);
 		}
 		newStruc.push_back(b);
@@ -537,7 +540,7 @@ Substituent fillInHydrogens(Substituent structure) {
 			hydrogen.position = carbon.position;
 			glm::vec3 offset = configurations[carbon.numberOfBonds-1][i];
 			offset = glm::vec3(glm::vec4(offset, 0.0f) * carbon.rotation);
-			hydrogen.position += offset;
+			hydrogen.position += offset*getStickDistance() * 0.7f;
 			if(c == 0 && structure.connectionPoint > 0) {
 				hydrogen.position.x = -hydrogen.position.x;
 			}

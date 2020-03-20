@@ -22,6 +22,7 @@ const Sphere sphere(1.0f, 36, 18, true); //Smooth
 const Sphere sphere_fast(1.0f, 18, 9, true);
 const Cylinder cylinder(0.125f, getStickDistance() / 2, 64);
 const Cylinder cylinder_fast(0.125f, getStickDistance(), 32);
+const Cylinder hydrogenCylinder(0.125f, getStickDistance() / 4, 64);
 
 bool containsUID(uint32_t id, std::vector<uint32_t> list) {
     for(uint32_t i : list) {
@@ -148,11 +149,15 @@ void RenderOrganic(std::vector<BondedElement> structure, unsigned int shader, gl
                 glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
             }
             glm::mat4 model;
-            glm::vec3 pos = b.position*getStickDistance();
-            pos = glm::vec3(glm::vec4(pos, 0.0f));
             model *= rotationModel;
-            model = glm::translate(model, pos);
-            model = glm::scale(model, glm::vec3(0.75f));
+            if(b.base.name == "hydrogen") {
+                model = glm::translate(model, b.position);
+                model = glm::scale(model, glm::vec3(0.75f));
+            }
+            else {
+                model = glm::translate(model, b.position);
+                model = glm::scale(model, glm::vec3(1.0f)); 
+            }
             setMat4(shader, "model", model);
             setVec3(shader, "color", b.base.color);
             if(fast) {
@@ -160,7 +165,6 @@ void RenderOrganic(std::vector<BondedElement> structure, unsigned int shader, gl
             } else {
                 sphere.draw();
             }
-            //closedSet.push_back(b.getUID());
         }
     }
 }
