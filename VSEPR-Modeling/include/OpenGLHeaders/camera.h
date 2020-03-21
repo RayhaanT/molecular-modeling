@@ -173,8 +173,12 @@ public:
 		glm::mat4 xMatrixReverse = glm::toMat4(xRotationReverse);
 		glm::mat4 yMatrixReverse = glm::toMat4(yRotationReverse);
 
-		reverseArcMatrix *= yMatrixReverse * xMatrixReverse;
-		arcMatrix *= yMatrix * xMatrix;
+		yMatrixReverse *= xMatrixReverse;
+		yMatrixReverse *= reverseArcMatrix;
+		reverseArcMatrix = yMatrixReverse;
+		yMatrix *= xMatrix;
+		yMatrix *= arcMatrix;
+		arcMatrix = yMatrix;
 		lastPos2D = glm::vec2(xPos, yPos);
 	}
 

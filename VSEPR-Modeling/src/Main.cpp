@@ -519,8 +519,8 @@ int main()
 			time += deltaTime * camera.RotationSpeed;
 		}
 		glm::mat4 model;
-		glm::mat4 rotationModel = camera.GetArcMatrix();
-		rotationModel *= glm::rotate(model, time, glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 rotationModel = glm::rotate(glm::mat4(), time, glm::vec3(0.0f, 1.0f, 0.0f));
+		rotationModel *= camera.GetArcMatrix();
 		glm::mat4 basicCylinderRotationModel = camera.GetReverseArcMatrix();
 		glm::mat4 reverseRotationModel = glm::rotate(model, -time, glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::mat4 view;
