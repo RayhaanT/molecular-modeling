@@ -199,7 +199,7 @@ glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest)
 		rotationAxis.z * invs);
 }
 
-glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, int configIndex, int modelIndex, int offset, int offsetTotal, bool pair, glm::mat4 rotationModel) {
+glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, int configIndex, int modelIndex, int offset, int offsetTotal, bool pair) {
 	float largerAR = central.base.atomicRadius;
 	float smallerAR = bonded.base.atomicRadius;
 	if(largerAR < smallerAR) {
@@ -230,7 +230,6 @@ glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, in
 	transform = glm::toMat4(RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f) * distance, direction * distance));
 	transform = glm::rotate(transform, 180.0f * (PI/ 180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	v = v * transform;
-	v = v * rotationModel;
 
 	return glm::vec3(v.x, v.y, v.z);
 }
@@ -299,9 +298,10 @@ void renderElectrons(unsigned int program, unsigned int &atomProgram, std::vecto
 			for (int x = 0; x < VSEPRModel[i].bondedElectrons/2; x++)
 			{
 				lightModel = glm::mat4();
-				glm::vec3 newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedElectrons/2, false, rotationModel);
+				glm::vec3 newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedElectrons/2, false);
 				setPointLightPosition(lightIndex, atomProgram, newLightPos);
 				glUseProgram(program);
+				lightModel *= rotationModel;
 				lightModel = glm::translate(lightModel, newLightPos);
 				lightModel = glm::scale(lightModel, glm::vec3(0.1f));
 				setMat4(program, "model", lightModel);
@@ -310,9 +310,10 @@ void renderElectrons(unsigned int program, unsigned int &atomProgram, std::vecto
 
 				//Draw complimentary
 				lightModel = glm::mat4();
-				newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedElectrons/2, true, rotationModel);
+				newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedElectrons/2, true);
 				setPointLightPosition(lightIndex, atomProgram, newLightPos);
 				glUseProgram(program);
+				lightModel *= rotationModel;
 				lightModel = glm::translate(lightModel, newLightPos);
 				lightModel = glm::scale(lightModel, glm::vec3(0.1f));
 				setMat4(program, "model", lightModel);
