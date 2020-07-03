@@ -8,7 +8,7 @@
 #include <GL/gl.h>
 #endif
 
-#include "OpenGLHeaders/Shader.h"
+#include "OpenGLHeaders/ShaderClass.h"
 #include "GLFW/glfw3.h"
 #include "glad/glad.h"
 #include <iostream>
@@ -41,7 +41,9 @@ BondedElement findNeighbour(BondedElement key, std::vector<BondedElement> group)
     return BondedElement();
 }
 
-void RenderCylinder(glm::vec3 start, glm::vec3 end, glm::vec3 startColor, glm::vec3 endColor, unsigned int shader, bool fast) {
+void RenderCylinder(glm::vec3 start, glm::vec3 end, glm::vec3 startColor, glm::vec3 endColor, Shader shader, bool fast) {
+    shader.use();
+
     //Rotation
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec3 dir = glm::normalize(end-start);
@@ -62,8 +64,8 @@ void RenderCylinder(glm::vec3 start, glm::vec3 end, glm::vec3 startColor, glm::v
     glm::mat4 model = glm::mat4();
     model = glm::translate(model, start);
     model = glm::rotate(model, angle, axis);
-    setMat4(shader, "model", model);
-    setVec3(shader, "color", startColor);
+    shader.setMat4("model", model);
+    shader.setVec3("color", startColor);
     if(fast) {
         cylinder_fast.draw();
         return;
@@ -75,13 +77,13 @@ void RenderCylinder(glm::vec3 start, glm::vec3 end, glm::vec3 startColor, glm::v
     model = glm::translate(model, start);
     model = glm::rotate(model, angle, axis);
     model = glm::translate(model, glm::vec3(0.0f, getStickDistance() / 2, 0.0f));
-    setMat4(shader, "model", model);
-    setVec3(shader, "color", endColor);
+    shader.setMat4("model", model);
+    shader.setVec3("color", endColor);
     cylinder.draw();
 }
 
-void RenderOrganic(std::vector<BondedElement> structure, unsigned int shader, glm::mat4 rotationModel, int rep) {
-    glUseProgram(shader);
+void RenderOrganic(std::vector<BondedElement> structure, Shader shader, glm::mat4 rotationModel, int rep) {
+    shader.use();
     bool fast = structure.size() > 20 ? true : false;
     if(fast) {
         glBindVertexArray(fastSphereVAO);
@@ -101,8 +103,8 @@ void RenderOrganic(std::vector<BondedElement> structure, unsigned int shader, gl
             pos = glm::vec3(glm::vec4(pos, 0.0f)*rotationModel);
             model = glm::translate(model, pos);
             model = glm::scale(model, glm::vec3(b.base.vanDerWaalsRadius));
-            setMat4(shader, "model", model);
-            setVec3(shader, "color", b.base.color);
+            shader.setMat4("model", model);
+            shader.setVec3("color", b.base.color);
             if(fast) {
                 sphere_fast.draw();
             } else {
@@ -133,8 +135,8 @@ void RenderOrganic(std::vector<BondedElement> structure, unsigned int shader, gl
             pos = glm::vec3(glm::vec4(pos, 0.0f) * rotationModel);
             model = glm::translate(model, pos);
             model = glm::scale(model, glm::vec3(0.75f));
-            setMat4(shader, "model", model);
-            setVec3(shader, "color", b.base.color);
+            shader.setMat4("model", model);
+            shader.setVec3("color", b.base.color);
             if(fast) {
                 sphere_fast.draw();
             } else {

@@ -10,7 +10,7 @@
 #define STB_IMAGE_IMPLEMENTATION //Needed for headers to compile
 #include "OpenGLHeaders/Camera.h"
 #include "OpenGLHeaders/Texture.h"
-#include "OpenGLHeaders/Shader.h"
+#include "OpenGLHeaders/ShaderClass.h"
 #include "VSEPR.h"
 #include "Sphere.h"
 #include "cylinder.h"
@@ -79,8 +79,8 @@ const Sphere sphere(1.0f, 36, 18, true); //Smooth
 const Sphere sphere_fast(1.0f, 18, 9, true);
 const Cylinder cylinder(0.125f, atomDistance / 2, 64);
 const Cylinder cylinder_fast(0.125f, atomDistance, 32);
-unsigned int lightingShader = 0;
-unsigned int lampProgram = 0;
+Shader lightingShader;
+Shader lampProgram;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -115,22 +115,32 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 		representation = representation % 3;
 
 		if (representation != 0) {
-			Shader("Shaders/VeShMap.vs", "Shaders/FrShDirectional.fs", lightingShader);
-			glUseProgram(lightingShader);
-			setVec3(lightingShader, "light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-			setVec3(lightingShader, "light.ambient", glm::vec3(0.4, 0.4, 0.4));
-			setVec3(lightingShader, "light.diffuse", glm::vec3(0.5, 0.5, 0.5));
-			setVec3(lightingShader, "light.specular", glm::vec3(0.5, 0.5, 0.5));
-			setInt(lightingShader, "material.diffuse", 0);
-			setInt(lightingShader, "material.specular", 1);
-			setFloat(lightingShader, "material.shininess", 32.0f);
+			// Shader("shaders/VeShMap.vs", "shaders/FrShDirectional.fs", lightingShader);
+			// glUseProgram(lightingShader);
+			// setVec3(lightingShader, "light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+			// setVec3(lightingShader, "light.ambient", glm::vec3(0.4, 0.4, 0.4));
+			// setVec3(lightingShader, "light.diffuse", glm::vec3(0.5, 0.5, 0.5));
+			// setVec3(lightingShader, "light.specular", glm::vec3(0.5, 0.5, 0.5));
+			// setInt(lightingShader, "material.diffuse", 0);
+			// setInt(lightingShader, "material.specular", 1);
+			// setFloat(lightingShader, "material.shininess", 32.0f);
+
+			lightingShader = Shader("shaders/VeShMap.vs", "shaders/FrShDirectional.fs");
+			lightingShader.use();
+			lightingShader.setVec3("light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+			lightingShader.setVec3("light.ambient", glm::vec3(0.4, 0.4, 0.4));
+			lightingShader.setVec3("light.diffuse", glm::vec3(0.5, 0.5, 0.5));
+			lightingShader.setVec3("light.specular", glm::vec3(0.5, 0.5, 0.5));
+			lightingShader.setInt("material.diffuse", 0);
+			lightingShader.setInt("material.specular", 1);
+			lightingShader.setFloat("material.shininess", 32.0f);
 		}
 		else {
-			Shader("Shaders/VeShMap.vs", "Shaders/FrShMap.fs", lightingShader);
-			glUseProgram(lightingShader);
-			setInt(lightingShader, "material.diffuse", 0);
-			setInt(lightingShader, "material.specular", 1);
-			setFloat(lightingShader, "material.shininess", 32.0f);
+			// Shader("shaders/VeShMap.vs", "shaders/FrShMap.fs", lightingShader);
+			// glUseProgram(lightingShader);
+			// setInt(lightingShader, "material.diffuse", 0);
+			// setInt(lightingShader, "material.specular", 1);
+			// setFloat(lightingShader, "material.shininess", 32.0f);
 		}
 	}
 	if (glfwGetKey(window, GLFW_KEY_C)) {
@@ -143,27 +153,27 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 	camera.ProcessMouseScroll(window, yoffset);
 }
 
-void setUpPointLights(int num, unsigned int &program) {
-	glUseProgram(program);
+void setUpPointLights(int num, Shader &program) {
+	program.use();
 
 	for(int i = 0; i < num; i++) {
-		setVec3(program, ("pointLights[" + std::to_string(i) + "].ambient").c_str(), glm::vec3(0.05, 0.05, 0.05));
-		setVec3(program, ("pointLights[" + std::to_string(i) + "].diffuse").c_str(), glm::vec3(0.3, 0.3, 0.3));
-		setVec3(program, ("pointLights[" + std::to_string(i) + "].specular").c_str(), glm::vec3(0.7, 0.7, 0.7));
-		setFloat(program, ("pointLights[" + std::to_string(i) + "].constant").c_str(), 1.0f);
-		setFloat(program, ("pointLights[" + std::to_string(i) + "].linear").c_str(), 0.09f);
-		setFloat(program, ("pointLights[" + std::to_string(i) + "].quadratic").c_str(), 0.032f);
+		program.setVec3(("pointLights[" + std::to_string(i) + "].ambient").c_str(), glm::vec3(0.05, 0.05, 0.05));
+		program.setVec3(("pointLights[" + std::to_string(i) + "].diffuse").c_str(), glm::vec3(0.3, 0.3, 0.3));
+		program.setVec3(("pointLights[" + std::to_string(i) + "].specular").c_str(), glm::vec3(0.7, 0.7, 0.7));
+		program.setFloat(("pointLights[" + std::to_string(i) + "].constant").c_str(), 1.0f);
+		program.setFloat(("pointLights[" + std::to_string(i) + "].linear").c_str(), 0.09f);
+		program.setFloat(("pointLights[" + std::to_string(i) + "].quadratic").c_str(), 0.032f);
 	}
 	for(int i = num; i < MAX_POINT_LIGHTS; i++) {
-		setVec3(program, ("pointLights[" + std::to_string(i) + "].ambient").c_str(), glm::vec3(0.0f));
-		setVec3(program, ("pointLights[" + std::to_string(i) + "].diffuse").c_str(), glm::vec3(0.0f));
-		setVec3(program, ("pointLights[" + std::to_string(i) + "].specular").c_str(), glm::vec3(0.0f));
+		program.setVec3(("pointLights[" + std::to_string(i) + "].ambient").c_str(), glm::vec3(0.0f));
+		program.setVec3(("pointLights[" + std::to_string(i) + "].diffuse").c_str(), glm::vec3(0.0f));
+		program.setVec3(("pointLights[" + std::to_string(i) + "].specular").c_str(), glm::vec3(0.0f));
 	}
 }
 
-void setPointLightPosition(int index, unsigned int &program, glm::vec3 pos) {
-	glUseProgram(program);
-	setVec3(program, ("pointLights[" + std::to_string(index) + "].position").c_str(), pos);
+void setPointLightPosition(int index, Shader &program, glm::vec3 pos) {
+	program.use();
+	program.setVec3(("pointLights[" + std::to_string(index) + "].position").c_str(), pos);
 }
 
 glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest)
@@ -270,13 +280,13 @@ glm::mat4 getCylinderRotation(int configIndex, int modelIndex, std::pair<int, in
 	return rotMatrix;
 }
 
-void renderElectrons(unsigned int program, unsigned int &atomProgram, std::vector<BondedElement> model, glm::mat4 rotationModel) {
-	glUseProgram(program);
+void renderElectrons(Shader program, Shader &atomProgram, std::vector<BondedElement> model, glm::mat4 rotationModel) {
+	program.use();
 	//glBindVertexArray(lightVAO);
 
 	glm::mat4 lightModel;
 
-	setMat4(program, "model", lightModel);
+	program.setMat4("model", lightModel);	
 	//glDrawArrays(GL_TRIANGLES, 0, ARRAY_SIZE(vertices));
 
 	glm::vec3 lightVec3;
@@ -301,10 +311,10 @@ void renderElectrons(unsigned int program, unsigned int &atomProgram, std::vecto
 				lightModel = glm::mat4();
 				glm::vec3 newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedElectrons/2, false, rotationModel);
 				setPointLightPosition(lightIndex, atomProgram, newLightPos);
-				glUseProgram(program);
+				program.use();
 				lightModel = glm::translate(lightModel, newLightPos);
 				lightModel = glm::scale(lightModel, glm::vec3(0.1f));
-				setMat4(program, "model", lightModel);
+				program.setMat4("model", lightModel);
 				sphere.drawLines(lineColor);
 				lightIndex++;
 
@@ -312,10 +322,10 @@ void renderElectrons(unsigned int program, unsigned int &atomProgram, std::vecto
 				lightModel = glm::mat4();
 				newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedElectrons/2, true, rotationModel);
 				setPointLightPosition(lightIndex, atomProgram, newLightPos);
-				glUseProgram(program);
+				program.use();
 				lightModel = glm::translate(lightModel, newLightPos);
 				lightModel = glm::scale(lightModel, glm::vec3(0.1f));
-				setMat4(program, "model", lightModel);
+				program.setMat4("model", lightModel);
 				sphere.drawLines(lineColor);
 				lightIndex++;
 			}
@@ -328,15 +338,15 @@ void renderElectrons(unsigned int program, unsigned int &atomProgram, std::vecto
 		light2Vec3 = glm::vec3(1.5 * sin((float)(glfwGetTime())), 1.5 * cos((float)(glfwGetTime())), 0.0f);
 		setPointLightPosition(0, atomProgram, lightVec3);
 		setPointLightPosition(1, atomProgram, light2Vec3);
-		glUseProgram(program);
+		program.use();
 		lightModel = glm::translate(lightModel, lightVec3);
 		lightModel = glm::scale(lightModel, glm::vec3(0.1f));
-		setMat4(program, "model", lightModel);
+		program.setMat4("model", lightModel);
 		sphere.draw();
 		lightModel = glm::mat4();
 		lightModel = glm::translate(lightModel, light2Vec3);
 		lightModel = glm::scale(lightModel, glm::vec3(0.1f));
-		setMat4(program, "model", lightModel);
+		program.setMat4("model", lightModel);
 		sphere.draw();
 	}
 }
@@ -468,14 +478,14 @@ int main()
 	glm::vec3 objectColour = glm::vec3(1.0f, 0.5f, 0.31f);
 	glm::vec3 lightColour = glm::vec3(1.0f, 1.0f, 1.0f);
 
-	Shader("Shaders/VeShMap.vs", "Shaders/FrShMap.fs", lightingShader);
-	glUseProgram(lightingShader);
-	setInt(lightingShader, "material.diffuse", 0);
-	setInt(lightingShader, "material.specular", 1);
-	setFloat(lightingShader, "material.shininess", 32.0f);
+	lightingShader = Shader("shaders/VeShMap.vs", "shaders/FrShMap.fs");
+	lightingShader.use();
+	lightingShader.setInt("material.diffuse", 0);
+	lightingShader.setInt("material.specular", 1);
+	lightingShader.setFloat("material.shininess", 32.0f);
 	setUpPointLights(2, lightingShader);
 
-	Shader("Shaders/VeShColors.vs", "Shaders/FrShLight.fs", lampProgram);
+	lampProgram = Shader("shaders/VeShColors.vs", "shaders/FrShLight.fs");
 
 	unsigned int diffMap;
 	glActiveTexture(GL_TEXTURE0);
@@ -527,17 +537,17 @@ int main()
 		glm::mat4 projection;
 		projection = glm::perspective(glm::radians(fov), W / H, 0.1f, 100.0f);
 
-		glUseProgram(lightingShader);
+		lightingShader.use();
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, diffMap);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, specMap);
 
 		if (organic || VSEPRModel.size() > 7) {
-			setMat4(lightingShader, "model", model);
-			setMat4(lightingShader, "view", view);
-			setMat4(lightingShader, "projection", projection);
-			setVec3(lightingShader, "viewPos", camera.Position);
+			lightingShader.setMat4("model", model);
+			lightingShader.setMat4("view", view);
+			lightingShader.setMat4("projection", projection);
+			lightingShader.setVec3("viewPos", camera.Position);
 
 			RenderOrganic(VSEPRModel, lightingShader, rotationModel, representation);
 
@@ -549,17 +559,17 @@ int main()
 		}
 
 		if(representation == 0) {
-			glUseProgram(lampProgram);
-			setMat4(lampProgram, "view", view);
-			setMat4(lampProgram, "projection", projection);
+			lampProgram.use();
+			lampProgram.setMat4("view", view);
+			lampProgram.setMat4("projection", projection);
 			renderElectrons(lampProgram, lightingShader, VSEPRModel, rotationModel);
 		}
 
 		//Pass our matrices to the shader through a uniform
-		setMat4(lightingShader, "model", model);
-		setMat4(lightingShader, "view", view);
-		setMat4(lightingShader, "projection", projection);
-		setVec3(lightingShader, "viewPos", camera.Position);
+		lightingShader.setMat4("model", model);
+		lightingShader.setMat4("view", view);
+		lightingShader.setMat4("projection", projection);
+		lightingShader.setVec3("viewPos", camera.Position);
 
 		//Draw spheres
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -594,14 +604,14 @@ int main()
 				else if (i < VSEPRModel.size() && representation == 2) {
 					model = glm::scale(model, glm::vec3(0.75f));
 				}
-				setMat4(lightingShader, "model", model);
+				lightingShader.setMat4("model", model);
 				if(i < VSEPRModel.size()) {
 					if(representation == 2) {
 						for(int c = 0; c < VSEPRModel[i].bondedElectrons/2; c++) {
 							//Base cylinder
 							glm::mat4 cylinderModel = getCylinderRotation(configIndex, i - 1, std::make_pair(VSEPRModel[i].bondedElectrons/2, c), rotationModel);
-							setMat4(lightingShader, "model", cylinderModel);
-							setVec3(lightingShader, "color", VSEPRModel[0].base.color);
+							lightingShader.setMat4("model", cylinderModel);
+							lightingShader.setVec3("color", VSEPRModel[0].base.color);
 							glBindVertexArray(cylinderVAO);
 							glBindBuffer(GL_ARRAY_BUFFER, cylinderVBO);
 							cylinder.draw();
@@ -610,17 +620,17 @@ int main()
 							cylinderModel = glm::mat4();
 							cylinderModel = getCylinderRotation(configIndex, i - 1, std::make_pair(VSEPRModel[i].bondedElectrons/2, c), rotationModel);
 							cylinderModel = glm::translate(cylinderModel, glm::vec3(0.0f, atomDistance / 2, 0.0f));
-							setMat4(lightingShader, "model", cylinderModel);
-							setVec3(lightingShader, "color", VSEPRModel[i].base.color);
+							lightingShader.setMat4("model", cylinderModel);
+							lightingShader.setVec3("color", VSEPRModel[i].base.color);
 							glBindVertexArray(cylinderVAO);
 							glBindBuffer(GL_ARRAY_BUFFER, cylinderVBO);
 							cylinder.draw();
 						}
 						glBindVertexArray(sphereVAO);
 						glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
-						setMat4(lightingShader, "model", model);
+						lightingShader.setMat4("model", model);
 					}
-					setVec3(lightingShader, "color", VSEPRModel[i].base.color);
+					lightingShader.setVec3("color", VSEPRModel[i].base.color);
 					sphere.draw();
 				}
 				else if(VSEPRModel.size() > 2) {
@@ -634,13 +644,13 @@ int main()
 			else {
 				model = glm::scale(model, glm::vec3(0.75f));
 			}
-			setMat4(lightingShader, "model", model);
-			setVec3(lightingShader, "color", VSEPRModel[0].base.color);
+			lightingShader.setMat4("model", model);
+			lightingShader.setVec3("color", VSEPRModel[0].base.color);
 			sphere.draw();
 		}
 		else {
 			model = glm::mat4();
-			setMat4(lightingShader, "model", model);
+			lightingShader.setMat4("model", model);
 			sphere.draw();
 		}
 

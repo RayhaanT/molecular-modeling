@@ -11,9 +11,10 @@
 class Shader
 {
 public:
-	unsigned int ID;
+	// Null constructor for globals
+	Shader() {}
 
-	Shader(const GLchar* vertexPath, const GLchar* fragmentPath, unsigned int &Program)
+	Shader(const GLchar* vertexPath, const GLchar* fragmentPath)
 	{
 		// 1.Retrieve vertex/frag source code from file path
 		std::string vertexCode;
@@ -76,54 +77,52 @@ public:
 		}
 
 		//Shader Program
-		Program = glCreateProgram();
-		glAttachShader(Program, vertex);
-		glAttachShader(Program, fragment);
-		glLinkProgram(Program);
-		//Linking error check
-		glGetShaderiv(Program, GL_LINK_STATUS, &success);
-		if (!success)
-		{
-			glGetShaderInfoLog(Program, 512, NULL, infoLog);
-			std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-		}
-
 		ID = glCreateProgram();
 		glAttachShader(ID, vertex);
 		glAttachShader(ID, fragment);
 		glLinkProgram(ID);
+		//Linking error check
+		glGetShaderiv(ID, GL_LINK_STATUS, &success);
+		if (!success)
+		{
+			glGetShaderInfoLog(ID, 512, NULL, infoLog);
+			std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+		}
 
 		//Delete shaders
 		glDeleteShader(vertex);
 		glDeleteShader(fragment);
 	}
 
-	void setVec3(unsigned int &program, const GLchar* name, glm::vec3 value)
+	void setVec3(const GLchar* name, glm::vec3 value)
 	{
-		unsigned int loc = glGetUniformLocation(program, name);
+		unsigned int loc = glGetUniformLocation(ID, name);
 		glUniform3f(loc, value.x, value.y, value.z);
 	}
 
-	void setMat4(unsigned int &program, const GLchar* name, glm::mat4 value)
+	void setMat4(const GLchar* name, glm::mat4 value)
 	{
-		unsigned int loc = glGetUniformLocation(program, name);
+		unsigned int loc = glGetUniformLocation(ID, name);
 		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(value));
 	}
 
-	void setFloat(unsigned int &program, const GLchar* name, float value)
+	void setFloat(const GLchar* name, float value)
 	{
-		unsigned int loc = glGetUniformLocation(program, name);
+		unsigned int loc = glGetUniformLocation(ID, name);
 		glUniform1f(loc, value);
 	}
 
-	void setInt(unsigned int &program, const GLchar* name, int value)
+	void setInt(const GLchar* name, int value)
 	{
-		unsigned int loc = glGetUniformLocation(program, name);
+		unsigned int loc = glGetUniformLocation(ID, name);
 		glUniform1i(loc, value);
 	}
 
-	void setUse()
+	void use()
 	{
 		glUseProgram(ID);
 	}
+
+private:
+	unsigned int ID;
 };
