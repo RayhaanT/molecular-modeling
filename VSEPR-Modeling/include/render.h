@@ -7,6 +7,7 @@
 #include "glm/gtx/norm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include "OpenGLHeaders/ShaderClass.h"
 
 extern unsigned int sphereVAO;
 extern unsigned int sphereVBO;
@@ -27,4 +28,4 @@ float getSphereDistance(BondedElement a, BondedElement b, int order);
 float getStickDistance();
 
 // Master render functions
-void RenderOrganic(std::vector<BondedElement> structure, unsigned int shader, glm::mat4 rotationModel, int rep);
+void RenderOrganic(std::vector<BondedElement> structure, Shader shader, glm::mat4 rotationModel, int rep);
