@@ -107,11 +107,7 @@ void fastRenderCylinder(glm::vec3 color, glm::mat4 transform, glm::mat4 rotation
 void RenderOrganic(std::vector<BondedElement> structure, Shader shader, glm::mat4 rotationModel, int rep) {
     glm::quat rotationQuat = glm::quat_cast(rotationModel);
     shader.use();
-    // bool fast = structure.size() > 20 ? true : false;
     bool fast = false;
-    if(fast) {
-        glBindVertexArray(fastSphereVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, fastSphereVBO);
     } else {
         glBindVertexArray(sphereVAO);
         glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
