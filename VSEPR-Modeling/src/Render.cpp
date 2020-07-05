@@ -108,6 +108,9 @@ void RenderOrganic(std::vector<BondedElement> structure, Shader shader, glm::mat
     glm::quat rotationQuat = glm::quat_cast(rotationModel);
     shader.use();
     bool fast = false;
+    if(fast) {
+        glBindVertexArray(fastSphereVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, fastSphereVBO);
     } else {
         glBindVertexArray(sphereVAO);
         glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
