@@ -19,6 +19,7 @@ using namespace std;
 map<string, Element> elements;
 extern vector<BondedElement> VSEPRModel;
 std::vector<glm::vec3> tetrahedron;
+std::map<std::string, int> numberTerms;
 
 Element searchElements(string symbol) {
 	int size  = elements.size();
@@ -276,13 +277,36 @@ int findNumberTerm(string name) {
 	return lastTerm;
 }
 
-void Bond(BondedElement &a, BondedElement &b) {
+bool checkBondedElementValidity(BondedElement e) {
+	if(e.bondedElectrons < 0 || e.loneElectrons < 0) {return false;}
+	if(e.base.periodNumber == 1 && e.bondedElectrons + e.loneElectrons > 2) {return false;}
+	if(e.base.periodNumber == 2 && e.bondedElectrons + e.loneElectrons > 8) {return false;}
+	return true;
+}
+
+bool bond(BondedElement &a, BondedElement &b) {
 	a.neighbours.push_back(b.getUID());
 	a.bondedElectrons+=2;
 	a.loneElectrons--;
 	b.neighbours.push_back(a.getUID());
 	b.bondedElectrons+=2;
 	b.loneElectrons--;
+
+	return checkBondedElementValidity(a) && checkBondedElementValidity(b);
+}
+
+void bondSafe(BondedElement &a, BondedElement &b) {
+	if(!bond(a, b)) {
+		vector<string> errors;
+		string errorMessage = "Bond error: ";
+		if(a.loneElectrons < 0 || checkStability(a) < 0) {
+			errorMessage += (a.base.name + " overbonded");
+		}
+		else if(b.loneElectrons < 0 || checkStability(b) < 0) {
+			errorMessage += (b.base.name + " overbonded");
+		}
+		throw errorMessage.c_str();
+	}
 }
 
 int findInstances(vector<uint32_t> v, uint32_t key) {
@@ -458,13 +482,13 @@ vector<Substituent> interpretSubstituent(string name, string place) {
 		BondedElement newCarbon = BondedElement(4, 0, carbon);
 		newCarbon.id = i+1;
 		if(i > 0) {
-			Bond(newCarbon, newSub.components[i-1]);
+			bondSafe(newCarbon, newSub.components[i-1]);
 		}
 		newSub.components.push_back(newCarbon);
 	}
 
 	if(checkStringComponent(name, "cyclo")) {
-		Bond(newSub.components[0], newSub.components[newSub.components.size()-1]);
+		bondSafe(newSub.components[0], newSub.components[newSub.components.size()-1]);
 		newSub = positionAtoms(newSub, true);
 	}
 	else {
@@ -550,7 +574,7 @@ Substituent fillInHydrogens(Substituent structure) {
 				hydrogen.vanDerWaalsPosition.x = -hydrogen.vanDerWaalsPosition.x;
 			}
 
-			Bond(hydrogen, structure.components[c]);
+			bondSafe(hydrogen, structure.components[c]);
 			structure.components.push_back(hydrogen);
 		}
 	}
@@ -594,7 +618,7 @@ vector<BondedElement> interpretOrganic(string in) {
 	if(subs.size() > 0) {
 		for (int i = 0; i < subs.size(); i++)
 		{
-			Bond(subs[i].components[0], central.components[subs[i].connectionPoint - 1]);
+			bondSafe(subs[i].components[0], central.components[subs[i].connectionPoint - 1]);
 			subs[i] = fillInHydrogens(subs[i]);
 		}
 	}
@@ -625,26 +649,6 @@ vector<BondedElement> interpretOrganic(string in) {
 	return returnVec;
 } 
 
-void setUpMap() {
-	numberTerms["meth"] = 1;
-	numberTerms["eth"] = 2;
-	numberTerms["prop"] = 3;
-	numberTerms["but"] = 4;
-	numberTerms["pent"] = 5;
-	numberTerms["hex"] = 6;
-	numberTerms["hept"] = 7;
-	numberTerms["oct"] = 8;
-	numberTerms["non"] = 9;
-	numberTerms["dec"] = 10;
-	numberTerms["di"] = 2;
-	numberTerms["tri"] = 3;
-	numberTerms["tetr"] = 4;
-	numberTerms["bis"] = 2;
-	numberTerms["tris"] = 3;
-	numberTerms["tetrakis"] = 4;
-	numberTerms["pentakis"] = 5;
-}
-
 vector<BondedElement> VSEPRMain() {
 	setUpMap();
 	parseCSV("periodicTableData.csv");
@@ -672,7 +676,13 @@ vector<BondedElement> VSEPRMain() {
 		vector<BondedElement> structure;
 		if (checkStringComponent(inFormula, "ane") || checkStringComponent(inFormula, "ene") || checkStringComponent(inFormula, "yne")) {
 			organic = true;
-			structure = interpretOrganic(inFormula);
+			try	{
+				structure = interpretOrganic(inFormula);
+			}
+			catch(const char* errMsg) {
+				cout << errMsg << endl;
+				continue;
+			}
 			int longestName = 0;
 			for(int i = 0; i < structure.size(); i++) {
 				if(structure[i].base.name.length() > longestName) {

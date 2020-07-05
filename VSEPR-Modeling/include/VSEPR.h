@@ -18,10 +18,18 @@
 #define MAX_POINT_LIGHTS 36
 #define smoothingConstant 0.2f
 
-static std::map <std::string, int> numberTerms;
+extern std::map <std::string, int> numberTerms;
 static bool organic;
 
-struct Element{
+struct BondedElement;
+struct Element;
+struct Substituent;
+struct BondingOrbital;
+struct FunctionalGroup;
+struct RGroupConnection;
+
+struct Element
+{
 	int atomicNumber;
 	int valenceNumber;
 	int periodNumber;
@@ -139,9 +147,22 @@ struct Substituent {
 	}
 };
 
+struct RGroupConnection {
+	bool primary;
+	std::vector<uint32_t> bondingAtoms;
+};
+
+struct FunctionalGroup {
+	std::vector<BondedElement> components;
+	std::vector<RGroupConnection> rPorts;
+};
+
 extern std::vector<BondedElement> VSEPRModel;
 std::vector<BondedElement> VSEPRMain();
 bool containsUID(uint32_t id, std::vector<uint32_t> list);
 BondedElement findNeighbour(uint32_t key, std::vector<BondedElement> group);
+void setUpMap();
+
+static std::map<std::string, Substituent> functionalGroups;
 
 #endif
