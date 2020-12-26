@@ -147,14 +147,16 @@ struct Substituent {
 	}
 };
 
-struct RGroupConnection {
-	bool primary;
-	std::vector<uint32_t> bondingAtoms;
-};
-
 struct FunctionalGroup {
 	std::vector<BondedElement> components;
 	std::vector<RGroupConnection> rPorts;
+
+	struct RGroupConnection {
+		bool primary;
+		std::vector<uint32_t> bondingAtoms;
+	};
+
+	
 };
 
 extern std::vector<BondedElement> VSEPRModel;

@@ -44,7 +44,7 @@
 ///Depth information stored in Z buffer, depth testing done automatically, must be enabled
 ///Depth buffer must also be cleared in the clear function
 
-int representation = 0; //0 = electron, 1 = sphere, 2 = ball and stick
+int representation = 1; //0 = electron, 1 = sphere, 2 = ball and stick
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -113,6 +113,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 	{
 		representation++;
 		representation = representation % 3;
+		if (VSEPRModel.size() > 7 && representation == 0) {
+			representation++;
+		}
 
 		if (representation != 0) {
 			// Shader("shaders/VeShMap.vs", "shaders/FrShDirectional.fs", lightingShader);
@@ -141,6 +144,12 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 			// setInt(lightingShader, "material.diffuse", 0);
 			// setInt(lightingShader, "material.specular", 1);
 			// setFloat(lightingShader, "material.shininess", 32.0f);
+
+			lightingShader = Shader("shaders/VeShMap.vs", "Shaders/FrShMap.fs");
+			lightingShader.use();
+			lightingShader.setInt("material.diffuse", 0);
+			lightingShader.setInt("material.specular", 1);
+			lightingShader.setFloat("material.shininess", 32.0f);
 		}
 	}
 	if (glfwGetKey(window, GLFW_KEY_C)) {
@@ -479,12 +488,22 @@ int main()
 	glm::vec3 objectColour = glm::vec3(1.0f, 0.5f, 0.31f);
 	glm::vec3 lightColour = glm::vec3(1.0f, 1.0f, 1.0f);
 
-	lightingShader = Shader("shaders/VeShMap.vs", "shaders/FrShMap.fs");
+	// lightingShader = Shader("shaders/VeShMap.vs", "shaders/FrShMap.fs");
+	// lightingShader.use();
+	// lightingShader.setInt("material.diffuse", 0);
+	// lightingShader.setInt("material.specular", 1);
+	// lightingShader.setFloat("material.shininess", 32.0f);
+	// setUpPointLights(2, lightingShader);
+
+	lightingShader = Shader("shaders/VeShMap.vs", "shaders/FrShDirectional.fs");
 	lightingShader.use();
+	lightingShader.setVec3("light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+	lightingShader.setVec3("light.ambient", glm::vec3(0.4, 0.4, 0.4));
+	lightingShader.setVec3("light.diffuse", glm::vec3(0.5, 0.5, 0.5));
+	lightingShader.setVec3("light.specular", glm::vec3(0.5, 0.5, 0.5));
 	lightingShader.setInt("material.diffuse", 0);
 	lightingShader.setInt("material.specular", 1);
 	lightingShader.setFloat("material.shininess", 32.0f);
-	setUpPointLights(2, lightingShader);
 
 	lampProgram = Shader("shaders/VeShColors.vs", "shaders/FrShLight.fs");
 

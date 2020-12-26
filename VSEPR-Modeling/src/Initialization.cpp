@@ -2,7 +2,8 @@
 
 using namespace std;
 
-extern std::map<std::string, int> numberTerms;
+extern map<string, int> numberTerms;
+extern map<string, Element> elements;
 
 void setUpMap()
 {
@@ -24,9 +25,9 @@ void setUpMap()
     numberTerms["tetrakis"] = 4;
     numberTerms["pentakis"] = 5;
 
-    // // Alkyl halides
-    // Substituent bromo;
-    // bromo.components.push_back(BondedElement(6, 2, elements["bromine"]));
-    // Substituent chloro;
-    // chloro.components.push_back(BondedElement(6, 2, ))
+    // Alkyl halides
+    Substituent bromo;
+    bromo.components.push_back(BondedElement(6, 2, elements["bromine"]));
+    Substituent chloro;
+    chloro.components.push_back(BondedElement(6, 2, elements["chlorine"]));
 }
