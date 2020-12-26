@@ -5,6 +5,11 @@ Formulae or chemical names can be typed into the console window, and a breakdown
 Click and drag on the screen to rotate the model, and use the W/S keys or the scrollwheel to zoom. Holding E/Q will cause the model to start rotating automatically.
 There are 3 available representations of the chemical: ball-and-stick, van der Waals spheres, and a custom electron orbit model. Representations are cycled with the R key.
 
+## Tech
+- [OpenGL](https://www.opengl.org/) - Graphics pipeline to render models
+- [GLFW](https://www.glfw.org/) - OpenGL function library
+- [GLAD](https://github.com/Dav1dde/glad) - OpenGL loading library, loads function pointers at runtime
+- [GLM](https://glm.g-truc.net/0.9.8/index.html) - Math library
 
 ## Building
 Using the GNU's C++ compiler (g++), the following command can be used to compile the source:
