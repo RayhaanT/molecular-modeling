@@ -7,9 +7,9 @@ There are 3 available representations of the chemical: ball-and-stick, van der W
 
 
 ## Building
-Using the GNU's C++ compiler (g++), the following command can be used to compile the source:
-```g++ -g src/*.cpp src/*.c -static -Iinclude -iquote include -Llib -lopengl32 -lglfw3 -lgdi32 -o VSEPR```
-Or, run buildAndRun.bat to compile and launch the executable
+Using the GNU's C++ compiler (g++), the following command can be used to compile the source:  
+```g++ -g src/*.cpp src/*.c -static -Iinclude -iquote include -Llib -lopengl32 -lglfw3 -lgdi32 -o VSEPR```  
+Or, run buildAndRun.bat to compile and launch the executable  
 ```VSEPR-Modeling/buildAndRun.bat```
 
 ## Acknowledgements
