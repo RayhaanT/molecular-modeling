@@ -1,0 +1,42 @@
+// {
+//     "version": "2.0.0",
+//     "tasks": [
+//         {
+//             "label": "build",
+//             "type": "shell",
+//             "command": "g++",
+//             "args": [
+//                 "-g",
+//                 "src/*.cpp",
+//                 "src/*.c",
+//                 "-static",
+//                 "-Iinclude",
+//                 "-iquote include",
+//                 "-Llib",
+//                 "-lopengl32",
+//                 "-lglfw3",
+//                 "-lgdi32",
+//                 "-o",
+//                 "VSEPR"
+//             ],
+//             "group": {
+//                 "kind": "build",
+//                 "isDefault": true
+//             }
+//         }
+//     ]
+// }
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build and run",
+            "type": "shell",
+            "command": "./buildAndRun.bat",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
