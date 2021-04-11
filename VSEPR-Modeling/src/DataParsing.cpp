@@ -6,6 +6,7 @@
 #include "VSEPR.h"
 #include <map>
 #include <iterator>
+#include <exception>
 
 using namespace std;
 
@@ -20,8 +21,7 @@ void parseCSV(std::string path)
     fstream inFile;
     inFile.open(path);
     if(!inFile) {
-        cerr << "Unable to open " << path;
-        exit(1);
+        throw std::runtime_error("Unable to open " + path);
     }
 
     while(inFile.good()) {

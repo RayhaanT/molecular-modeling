@@ -651,7 +651,15 @@ vector<BondedElement> interpretOrganic(string in) {
 
 vector<BondedElement> VSEPRMain() {
 	setUpMap();
-	parseCSV("periodicTableData.csv");
+
+	try {
+		parseCSV("periodicTableData.csv");
+	}
+	catch(const std::exception& err) {
+		std::cerr << err.what() << '\n';
+		exit(1);
+	}
+	cout << "Periodic table data loaded" << endl << endl;
 
 	tetrahedron = {glm::vec3(1, 0, -1 / sqrt(2)), glm::vec3(-1, 0, -1 / sqrt(2)), glm::vec3(0, 1, 1 / sqrt(2)), glm::vec3(0, -1, 1 / sqrt(2))};
 	//glm::quat shift = glm::angleAxis((float)((PI/2)-atan(sqrt(2))), glm::vec3(1.0f, 0.0f, 0.0f));

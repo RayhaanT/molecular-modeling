@@ -7,7 +7,7 @@
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtx/norm.hpp"
 
-#define STB_IMAGE_IMPLEMENTATION //Needed for headers to compile
+#define STB_IMAGE_IMPLEMENTATION // Needed for headers to compile
 #include "OpenGLHeaders/Camera.h"
 #include "OpenGLHeaders/Texture.h"
 #include "OpenGLHeaders/ShaderClass.h"
@@ -25,26 +25,7 @@
 
 #define ARRAY_SIZE(array) (sizeof((array)) / sizeof((array[0])))
 
-///VBOs Vertex Buffer Objects contain vertex data that is sent to memory in the GPU, vertex attrib calls config bound VBO
-///VAOs Vertex Array Objects when bound, any vertex attribute calls and attribute configs are stored in VAO
-///Having multiple VAOs allow storage of multiple VBO configs, before drawing, binding VAO with right config applies to draw
-///Vertex attributes are simply inputs of the vertex shader, configured so vertex shader knows how to interpret data
-///EBOs Element Buffer Objects stores indices used for OpenGL to know which vertices to draw
-///EBOs used when needing multiple triangles to render but triangles have overlapping points
-///E.G. rectangle made with 2 triangles have 2 overlapping vertices
-///Vertex shader changes 3D coords of vertices
-///Fragment shader sets color of pixels
-///OpenGL objects are used to reference pieces of OpenGL state machine
-///E.G. when creating a shader program,  a program is created in the state machine and its ID
-///is passed to the program object
-///Similarly, with the VBO, the real VBO is stored in the background state machine, the
-///object holds the ID of the real object and its value is bound to the real object
-///With ALL (or most) OpenGL objects, they must be bound so that any function calls for that object type configures the
-///ID you created
-///Depth information stored in Z buffer, depth testing done automatically, must be enabled
-///Depth buffer must also be cleared in the clear function
-
-int representation = 1; //0 = electron, 1 = sphere, 2 = ball and stick
+int representation = 1; // 0 = electron, 1 = sphere, 2 = ball and stick
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -54,7 +35,7 @@ const float electronSpeed = 3;
 float lineColor[] = {0.2f, 0.2f, 0.2f, 1};
 bool black = true;
 
-//Declarations of extern variables
+// Definitions of extern variables
 std::vector<BondedElement> VSEPRModel;
 std::vector<std::vector<glm::vec3>> configurations;
 unsigned int sphereVAO;
@@ -66,7 +47,7 @@ unsigned int fastSphereVBO;
 unsigned int fastCylinderVAO;
 unsigned int fastCylinderVBO;
 
-//Define offset variables
+// Define offset variables
 float lastX = W / 2;
 float lastY = H / 2;
 float yaw = -90; float pitch = 0;
