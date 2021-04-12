@@ -21,6 +21,13 @@ extern vector<BondedElement> VSEPRModel;
 std::vector<glm::vec3> tetrahedron;
 std::map<std::string, int> numberTerms;
 
+/**
+ * Find an element by its abbreviated symbol
+ * E.g. He = helium, Br = bromine
+ * 
+ * @param symbol the element's symbol
+ * @return the appropriate element object if found, an empty one otherwise
+ */
 Element searchElements(string symbol) {
 	int size  = elements.size();
 	Element e = elements[symbol];
@@ -31,6 +38,12 @@ Element searchElements(string symbol) {
 	return Element(-1);
 }
 
+/**
+ * Find the elements in a chemical formula
+ * 
+ * @param formulaFull the chemical formula as a string
+ * @return a list of the contained elements
+ */
 vector<Element> readFormula(string formulaFull) {
 	string formula;
 	int charge = 0;
@@ -108,10 +121,23 @@ vector<Element> readFormula(string formulaFull) {
 	}
 }
 
+/**
+ * Get the formal charge on a bonded atom
+ * 
+ * @param b the atom
+ * @return the formal charge
+ */
 int getFormalCharge(BondedElement b) {
 	return b.base.valenceNumber - (b.bondedElectrons/2) - b.loneElectrons;
 }
 
+/**
+ * Check if an atom is stable, or how far it is from stability
+ * 
+ * @param b the atom to check
+ * @return the number of electrons away from stability
+ *         >0 means missing electrons, 0 = stable
+ */
 int checkStability(BondedElement b) {
 	if (b.base.periodNumber == 1) {
 		return 2 - b.bondedElectrons - b.loneElectrons;
@@ -123,7 +149,12 @@ int checkStability(BondedElement b) {
 }
 
 
-//Used to create double and triple bonds
+/**
+ * Create double/triple bonds until if necessary
+ * 
+ * @param structure the chemical structure
+ * @return the updated structure with higher order bonds
+ */
 vector<BondedElement> rebond(vector<BondedElement> structure) {
 	for (int i = 1; i < structure.size(); i++)
 	{
@@ -144,6 +175,13 @@ vector<BondedElement> rebond(vector<BondedElement> structure) {
 	return structure;
 }
 
+/**
+ * Predict the lewis structure of a compound given
+ * a list of atoms that compose it
+ * 
+ * @param formula the list of atoms
+ * @return the final compound structure
+ */
 vector<BondedElement> constructLewisStructure(vector<Element> formula) {
 	int eTotal = 0;
 	for(int i = 0; i < formula.size(); i++) {
@@ -194,6 +232,12 @@ vector<BondedElement> constructLewisStructure(vector<Element> formula) {
 	return lewisStructure;
 }
 
+/**
+ * Find the total formal charge on a compound
+ * 
+ * @param structure the compound's structure
+ * @return the total formal charge
+ */
 int getTotalFormalCharge(vector<BondedElement> structure) {
 	int totalCharge = 0;
 	for (int i = 0; i < structure.size(); i++) {
@@ -202,6 +246,13 @@ int getTotalFormalCharge(vector<BondedElement> structure) {
 	return totalCharge;
 }
 
+/**
+ * Test different variations of bonding to minimize
+ * the total formal charge on the structure
+ * 
+ * @param structure the original structure
+ * @return the optimized structure
+ */
 vector<BondedElement> optimizeFormalCharge(vector<BondedElement> structure) {
 	vector<BondedElement> returnVector = structure;
 	int totalCharge = getTotalFormalCharge(structure);
@@ -223,11 +274,24 @@ vector<BondedElement> optimizeFormalCharge(vector<BondedElement> structure) {
 	return returnVector;
 }
 
+/**
+ * Check if a string contains a substring
+ * 
+ * @param main the base string
+ * @param check the substring
+ * @return true if the substring is found, false otherwise
+ */
 bool checkStringComponent(string main, string check) {
 	size_t pos = main.find(check);
 	return pos != std::string::npos;
 }
 
+/**
+ * Check if a string contains any numbers
+ * 
+ * @param main the base string
+ * @return true if theres a number, false otherwise
+ */
 bool checkForDigits(string main) {
 	for(auto i : main) {
 		if(isdigit(i)) {
@@ -237,6 +301,13 @@ bool checkForDigits(string main) {
 	return false;
 }
 
+/**
+ * Find the last instance of a substring
+ * 
+ * @param main the base string
+ * @param check the substring
+ * @return the starting index of the last appearance of the substring
+ */
 int findLastComponent(string main, string check) {
 	if(check.length() > main.length()) {
 		return -1;
@@ -258,6 +329,12 @@ int findLastComponent(string main, string check) {
 	return compIndex;
 }
 
+/**
+ * Find the length of a substituent
+ * 
+ * @param name the substituent name
+ * @return the length according to the prefix
+ */
 int findNumberTerm(string name) {
 	vector<string> keys;
 	int diIndex;
@@ -277,6 +354,12 @@ int findNumberTerm(string name) {
 	return lastTerm;
 }
 
+/**
+ * Check if an atom has a valid number of electrons
+ * 
+ * @param e the atom
+ * @return true if its valid, false otherwise
+ */
 bool checkBondedElementValidity(BondedElement e) {
 	if(e.bondedElectrons < 0 || e.loneElectrons < 0) {return false;}
 	if(e.base.periodNumber == 1 && e.bondedElectrons + e.loneElectrons > 2) {return false;}
@@ -284,6 +367,13 @@ bool checkBondedElementValidity(BondedElement e) {
 	return true;
 }
 
+/**
+ * Bond two atoms together and check if the bond is valid
+ * 
+ * @param a the first atom
+ * @param b the second atom
+ * @return whether the two atoms still have a valid # of electrons
+ */
 bool bond(BondedElement &a, BondedElement &b) {
 	a.neighbours.push_back(b.getUID());
 	a.bondedElectrons+=2;
@@ -295,6 +385,12 @@ bool bond(BondedElement &a, BondedElement &b) {
 	return checkBondedElementValidity(a) && checkBondedElementValidity(b);
 }
 
+/**
+ * Bond two atoms and throw an exception if it fails
+ * 
+ * @param a the first element
+ * @param b the second element
+ */
 void bondSafe(BondedElement &a, BondedElement &b) {
 	if(!bond(a, b)) {
 		vector<string> errors;
@@ -309,6 +405,13 @@ void bondSafe(BondedElement &a, BondedElement &b) {
 	}
 }
 
+/**
+ * Find how many times a key value occurs in a list
+ * 
+ * @param v the list
+ * @param key the key value
+ * @return the number of occurrences
+ */
 int findInstances(vector<uint32_t> v, uint32_t key) {
 	int count = 0;
 	for(uint32_t b : v) {
@@ -319,6 +422,14 @@ int findInstances(vector<uint32_t> v, uint32_t key) {
 	return count;
 }
 
+/**
+ * Shift all the atoms to center their positions on screen
+ * This function's method involves centering the structure between
+ * its most extreme points
+ * 
+ * @param structure the compound's structure
+ * @return the newly centered structure
+ */
 vector<BondedElement> centerPositions(vector<BondedElement> structure) {
 	glm::vec3 lowestExtreme = glm::vec3(0);
 	glm::vec3 greatestExtreme = glm::vec3(0);
@@ -358,6 +469,14 @@ vector<BondedElement> centerPositions(vector<BondedElement> structure) {
 	return structure;
 }
 
+/**
+ * Shift all the atoms to center their positions on screen
+ * This function's method involves shifting the structure
+ * by the average of all the atoms' positions
+ * 
+ * @param structure the compound's structure
+ * @return the newly centered structure
+ */
 vector<BondedElement> averageCenterPositions(vector<BondedElement> structure) {
 	glm::vec3 totalOffset;
 	glm::vec3 totalOffset_v;
@@ -375,8 +494,15 @@ vector<BondedElement> averageCenterPositions(vector<BondedElement> structure) {
 	return structure;
 }
 
-Substituent positionAtoms(Substituent structure, bool cyclo)
-{
+/**
+ * Predict the positions of each atom in a substituent
+ * of a compound that has already been bonded
+ * 
+ * @param structure the structure of the substituent
+ * @param cyclo whether the substituent is a cyclo group
+ * @return the substituent with predicted positions
+ */
+Substituent positionAtoms(Substituent structure, bool cyclo) {
 	if(structure.components.size() < 1 || (cyclo && structure.components.size() < 3)) {
 		return Substituent();
 	}
@@ -428,6 +554,13 @@ Substituent positionAtoms(Substituent structure, bool cyclo)
 	return structure;
 }
 
+/**
+ * Generate the transformation matrices required to
+ * render cylinders for ball-and-stick models
+ * 
+ * @param structure the compound's structure
+ * @return the structure updated with cylinder models
+ */
 vector<BondedElement> generateCylinders(vector<BondedElement> structure) {
 	vector<BondedElement> newStruc;
 	for(BondedElement b : structure) {
@@ -459,6 +592,15 @@ vector<BondedElement> generateCylinders(vector<BondedElement> structure) {
 	return newStruc;
 }
 
+/**
+ * Construct a group of substituents of an organic compound
+ * given its name and position on the base chain
+ * All substituents on a given base atom will be calculated here
+ * 
+ * @param name the name of substituent
+ * @param place the position on the base chain
+ * @return a list of the substituents
+ */
 vector<Substituent> interpretSubstituent(string name, string place) {
 	std::vector<int> attachPoints;
 	string num = "";
@@ -512,6 +654,12 @@ vector<Substituent> interpretSubstituent(string name, string place) {
 	}
 }
 
+/**
+ * Construct all the constituents in an organic compound
+ * 
+ * @param in the name of the compound
+ * @return a list of substituents
+ */
 vector<Substituent> findSubstituents(string in) {
 	transform(in.begin(), in.end(), in.begin(), ::tolower); //Make string lowercase
 	
@@ -551,6 +699,12 @@ vector<Substituent> findSubstituents(string in) {
 	return returnVec;
 }
 
+/**
+ * Add hydrogens to a substituent to satisfy all carbons
+ * 
+ * @param structure the substituent to fill
+ * @return the filled hydrogen
+ */
 Substituent fillInHydrogens(Substituent structure) {
 	Element rawHydrogen = elements["H"];
 	int numberOfCarbons = structure.components.size();
@@ -581,6 +735,15 @@ Substituent fillInHydrogens(Substituent structure) {
 	return structure;
 }
 
+/**
+ * Rotate all atoms in a substituent to align
+ * with the atom in the base structure
+ * 
+ * @param structure the substituent to rotate
+ * @param dir the direction to rotate towards
+ * @param parent the base atom
+ * @return the rotated substituent 
+ */
 Substituent rotateSubstituent(Substituent structure, glm::vec3 dir, BondedElement parent) {
 	if(structure.components.size() < 1) {
 		return Substituent();
@@ -611,6 +774,12 @@ Substituent rotateSubstituent(Substituent structure, glm::vec3 dir, BondedElemen
 	return structure;
 }
 
+/**
+ * Predict the structure of an organic compound
+ * 
+ * @param in the name of the compound
+ * @return a list of atoms representing the structure
+ */
 vector<BondedElement> interpretOrganic(string in) {
 	vector<Substituent> subs = findSubstituents(in);
 	Substituent central = subs.back();
@@ -649,6 +818,12 @@ vector<BondedElement> interpretOrganic(string in) {
 	return returnVec;
 } 
 
+/**
+ * The main function for predicting structures
+ * Runs in a seperate thread from main
+ * 
+ * @return nothing because of while(1)
+ */
 vector<BondedElement> VSEPRMain() {
 	setUpMap();
 

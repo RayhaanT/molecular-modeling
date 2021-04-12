@@ -14,19 +14,25 @@
 #include "cylinder.h"
 
 /*
-Interleaved vertices areis the combined set of vertex data
+Interleaved vertices are the combined set of vertex data
 Similar to the hand-made vertices array used for the cube, with position followed by normal then texture coords
 When setting up properties, OpenGL needs them in one big array with a specified stride length to know where the data is
 The interleaved vector is constructed to fulfill this
 */
 
-void Cylinder::draw() const
-{
+/**
+ * Render the cylinder to the screen 
+ */
+void Cylinder::draw() const {
     glDrawElements(GL_TRIANGLES, (unsigned int)indices.size(), GL_UNSIGNED_INT, indices.data());
 }
 
-void Cylinder::drawLines(const float lineColor[4]) const
-{
+/**
+ * Render the cylinder as a wireframe
+ * 
+ * @param lineColor the color of the lines
+ */
+void Cylinder::drawLines(const float lineColor[4]) const {
     // set line colour
     glColor4fv(lineColor);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, lineColor);
@@ -44,6 +50,9 @@ void Cylinder::drawLines(const float lineColor[4]) const
     glEnable(GL_TEXTURE_2D);
 }
 
+/**
+ * Wipe geometry data
+ */
 void Cylinder::clearArrays() {
     std::vector<glm::vec3>().swap(this->vertices);
     std::vector<glm::vec3>().swap(this->normals);
@@ -52,34 +61,63 @@ void Cylinder::clearArrays() {
     std::vector<unsigned int>().swap(this->lineIndices);
 }
 
+/**
+ * Add a vertex
+ * 
+ * @param x the x coord
+ * @param y the y coord
+ * @param z the z coord
+ */
 void Cylinder::addVertex(float x, float y, float z) {
     this->vertices.push_back(glm::vec3(x, y, z));
 }
 
+/**
+ * Add a normal vector
+ * 
+ * @param x the x coord
+ * @param y the y coord
+ * @param z the z coord
+ */
 void Cylinder::addNormal(float x, float y, float z) {
     this->normals.push_back(glm::vec3(x, y, z));
 }
 
+/**
+ * Add a texture coordinate
+ * 
+ * @param x the x coord
+ * @param y the y coord
+ */
 void Cylinder::addTexCoord(float x, float y) {
     this->texCoords.push_back(glm::vec2(x, y));
 }
 
+/**
+ * Add a set of indices describing a triangle
+ * 
+ * @param i1 the first index
+ * @param i2 the second index
+ * @param i3 the third index
+ */
 void Cylinder::addIndices(unsigned int i1, unsigned int i2, unsigned int i3) {
     this->indices.push_back(i1);
     this->indices.push_back(i2);
     this->indices.push_back(i3);
 }
 
-void Cylinder::buildVertices()
-{
+/**
+ * Generate vertex/normal/element/texture data for the cylinder
+ */
+void Cylinder::buildVertices() {
     const float PI = 3.1415926f;
 
     // clear memory of prev arrays
     clearArrays();
 
-    float x, y, z;                           // vertex position
-    float nx, ny, nz, lengthInv = 1.0f / radius; // normal
-    float s, t;                                  // texCoord
+    float x, y, z;    // vertex position
+    float nx, ny, nz; // normal
+    float s, t;       // texCoord
 
     float edgeStep = 2*PI/edgeCount;
 
@@ -150,8 +188,11 @@ void Cylinder::buildVertices()
     this->buildInterleavedVertices();
 }
 
-void Cylinder::buildInterleavedVertices()
-{
+/**
+ * Interleave vertex, normal, and texture data
+ * into one array so OpenGL can render it properly
+ */
+void Cylinder::buildInterleavedVertices() {
     std::vector<float>().swap(this->interleavedVertices);
 
     std::size_t i;
@@ -171,8 +212,14 @@ void Cylinder::buildInterleavedVertices()
     }
 }
 
-Cylinder::Cylinder(float radius, float length, int edgeCount) : interleavedStride(32)
-{
+/**
+ * @brief Construct a new Cylinder object
+ * 
+ * @param radius the radius of the base
+ * @param length the length
+ * @param edgeCount the number of edges (more = smoother but slower)
+ */
+Cylinder::Cylinder(float radius, float length, int edgeCount) : interleavedStride(32) {
     this->radius = radius;
     this->length = length;
     this->edgeCount = edgeCount;

@@ -5,8 +5,10 @@ using namespace std;
 extern map<string, int> numberTerms;
 extern map<string, Element> elements;
 
-void setUpMap()
-{
+/**
+ * Set up the prefix map and others
+ */
+void setUpMap() {
     numberTerms["meth"] = 1;
     numberTerms["eth"] = 2;
     numberTerms["prop"] = 3;
@@ -25,7 +27,7 @@ void setUpMap()
     numberTerms["tetrakis"] = 4;
     numberTerms["pentakis"] = 5;
 
-    // Alkyl halides
+    // Alkyl halides - WIP
     Substituent bromo;
     bromo.components.push_back(BondedElement(6, 2, elements["bromine"]));
     Substituent chloro;

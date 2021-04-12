@@ -45,6 +45,14 @@ struct Element
 
 	Element(int _atomicNumber) {atomicNumber = _atomicNumber;}
 
+	/**
+	 * Construct a new Element object
+	 * 
+	 * @param _atomicNumber the atomic number
+	 * @param _valenceNumber the valence number
+	 * @param _periodNumber the period number
+	 * @param _name the element's full name
+	 */
 	Element(int _atomicNumber, int _valenceNumber, int _periodNumber, std::string _name) {
 		atomicNumber = _atomicNumber;
 		valenceNumber = _valenceNumber;
@@ -52,6 +60,15 @@ struct Element
 		name = _name;
 	}
 
+	/**
+	 * Construct a new Element object
+	 * 
+	 * @param _atomicNumber the atomic number
+	 * @param _valenceNumber the valence number
+	 * @param _periodNumber the period number
+	 * @param _name the element's full name
+	 * @param _exception whether its valence shells are an exception to the octet stability rule
+	 */
 	Element(int _atomicNumber, int _valenceNumber, int _periodNumber, std::string _name, bool _exception) {
 		exception = _exception;
 		valenceNumber = _valenceNumber;
@@ -73,6 +90,13 @@ public:
 	int numberOfBonds;
 	std::vector<glm::mat4> cylinderModels;
 
+	/**
+	 * Construct a new BondedElement (represents an atom)
+	 * 
+	 * @param _loneElectrons the number of lone electrons
+	 * @param _bondedElectrons the number of bonded electrons
+	 * @param _base the element of the atom
+	 */
 	BondedElement(int _loneElectrons, int _bondedElectrons, Element _base) {
 		uid = generateUID();
 		base = _base;
@@ -95,6 +119,9 @@ public:
 		return uid;
 	}
 
+	/**
+	 * Generate a new unique id for cloning purposes
+	 */
 	void refreshUID() {
 		uid = generateUID();
 	}
@@ -107,6 +134,11 @@ private:
 	static uint32_t maxUID;
 	uint32_t uid;
 
+	/**
+	 * Generate a new unique id for atoms
+	 * 
+	 * @return the new id
+	 */
 	uint32_t generateUID() {
 		maxUID++;
 		return maxUID;
@@ -118,6 +150,12 @@ struct Substituent {
 	Substituent *parent;
 	int connectionPoint;
 
+	/**
+	 * Copy this substituent while generating new unique ids
+	 * for the atoms
+	 * 
+	 * @return the cloned substituent 
+	 */
 	Substituent duplicate() {
 		Substituent newSub;
 		std::vector<uint32_t> oldComponentIds;

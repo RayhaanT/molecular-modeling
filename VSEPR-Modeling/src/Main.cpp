@@ -1,3 +1,4 @@
+// Library headers
 #include "GLFW/glfw3.h"
 #include "glad/glad.h"
 #include "glm/glm.hpp"
@@ -7,6 +8,7 @@
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtx/norm.hpp"
 
+// Custom headers
 #define STB_IMAGE_IMPLEMENTATION // Needed for headers to compile
 #include "OpenGLHeaders/Camera.h"
 #include "OpenGLHeaders/Texture.h"
@@ -16,6 +18,7 @@
 #include "cylinder.h"
 #include "render.h"
 
+// STD headers
 #include <vector>
 #include <thread>
 #include <iostream>
@@ -27,13 +30,16 @@
 
 int representation = 1; // 0 = electron, 1 = sphere, 2 = ball and stick
 
+// State variables
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 bool restrictY = true;
+bool black = true;
+
+// Rendering constants
 const float atomDistance = 3.5f;
 const float electronSpeed = 3;
-float lineColor[] = {0.2f, 0.2f, 0.2f, 1};
-bool black = true;
+const float lineColor[] = {0.2f, 0.2f, 0.2f, 1};
 
 // Definitions of extern variables
 std::vector<BondedElement> VSEPRModel;
@@ -54,6 +60,7 @@ float yaw = -90; float pitch = 0;
 bool firstMouse = true;
 float fov = 45.0f;
 
+// Major class definitions
 Camera camera(glm::vec3(0.0f, 0.0f, CAMERA_DISTANCE), glm::vec3(0.0f, 1.0f, 0.0f), yaw, pitch);
 // const Sphere sphere(1.0f, 36, 18, false); //Blocky
 const Sphere sphere(1.0f, 36, 18, true); //Smooth
@@ -63,13 +70,25 @@ const Cylinder cylinder_fast(0.125f, atomDistance, 32);
 Shader lightingShader;
 Shader lampProgram;
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
+/**
+ * Sets the size of the framebuffer
+ * 
+ * @param window the GLFW window to get the framebuffer for
+ * @param width the window width
+ * @param height the window height
+*/
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
 }
 
-void mouse_callback(GLFWwindow *window, double xpos, double ypos)
-{
+/**
+ * Process mouse movements
+ * 
+ * @param window the GLFW window where the event occurred
+ * @param xpos the cursor x coord
+ * @param ypos the cursor y coord
+*/
+void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
 	if (firstMouse)
 	{
 		lastX = xpos;
@@ -88,8 +107,16 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 	}
 }
 
-void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
-{
+/**
+ * Process keyboard input
+ * 
+ * @param window the GLFW window where the event occurred
+ * @param key integer keycode (translated scancode)
+ * @param scancode key scancode (raw input, system-specific)
+ * @param action press/release
+ * @param mods bitfield for modifier keys (e.g. shift)
+*/
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
 	if (glfwGetKey(window, GLFW_KEY_R))
 	{
 		representation++;
@@ -99,16 +126,6 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 		}
 
 		if (representation != 0) {
-			// Shader("shaders/VeShMap.vs", "shaders/FrShDirectional.fs", lightingShader);
-			// glUseProgram(lightingShader);
-			// setVec3(lightingShader, "light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-			// setVec3(lightingShader, "light.ambient", glm::vec3(0.4, 0.4, 0.4));
-			// setVec3(lightingShader, "light.diffuse", glm::vec3(0.5, 0.5, 0.5));
-			// setVec3(lightingShader, "light.specular", glm::vec3(0.5, 0.5, 0.5));
-			// setInt(lightingShader, "material.diffuse", 0);
-			// setInt(lightingShader, "material.specular", 1);
-			// setFloat(lightingShader, "material.shininess", 32.0f);
-
 			lightingShader = Shader("shaders/VeShMap.vs", "shaders/FrShDirectional.fs");
 			lightingShader.use();
 			lightingShader.setVec3("light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
@@ -120,12 +137,6 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 			lightingShader.setFloat("material.shininess", 32.0f);
 		}
 		else {
-			// Shader("shaders/VeShMap.vs", "shaders/FrShMap.fs", lightingShader);
-			// glUseProgram(lightingShader);
-			// setInt(lightingShader, "material.diffuse", 0);
-			// setInt(lightingShader, "material.specular", 1);
-			// setFloat(lightingShader, "material.shininess", 32.0f);
-
 			lightingShader = Shader("shaders/VeShMap.vs", "Shaders/FrShMap.fs");
 			lightingShader.use();
 			lightingShader.setInt("material.diffuse", 0);
@@ -138,11 +149,23 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 	}
 }
 
+/**
+ * Process scroll wheel events
+ * 
+ * @param window the GLFW window where the event occurred
+ * @param xoffset the horizontal scroll (most mice cannot do this)
+ * @param yoffset the vertical scroll
+*/
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-	//camera.RotationSpeed += yoffset * smoothingConstant;
 	camera.ProcessMouseScroll(window, yoffset);
 }
 
+/**
+ * Set up a given number of electron lights in the shader
+ * 
+ * @param num the number of electron lights
+ * @param program a reference to the shader program
+*/
 void setUpPointLights(int num, Shader &program) {
 	program.use();
 
@@ -161,11 +184,26 @@ void setUpPointLights(int num, Shader &program) {
 	}
 }
 
+/**
+ * Update the position of an electron point light
+ * 
+ * @param index the index of the electron to move
+ * @param program a reference to the shader program
+ * @param pos the new position for the light
+*/
 void setPointLightPosition(int index, Shader &program, glm::vec3 pos) {
 	program.use();
 	program.setVec3(("pointLights[" + std::to_string(index) + "].position").c_str(), pos);
 }
 
+/**
+ * Get a quaternion that would rotate the initial vector
+ * to the target vector's direction
+ * 
+ * @param start the intial vector
+ * @param dest the target vector
+ * @return a quaternion describing the rotation
+*/
 glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest)
 {
 	start = normalize(start);
@@ -199,6 +237,19 @@ glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest)
 		rotationAxis.z * invs);
 }
 
+/**
+ * Calculate the position of an electron point light traveling
+ * its' figure-8 pattern
+ * 
+ * @param central the central atom of the compound
+ * @param bonded the peripheral atom also in the bond
+ * @param configIndex the index of the VSEPR configuration
+ * @param modelIndex the index of the bond within the VSEPR config
+ * @param offset which bond within the total order the elctron belongs to
+ * @param offsetTotal the total bond order
+ * @param pair whether its the first or second electron in a pair
+ * @return the current position of the described electron
+*/
 glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, int configIndex, int modelIndex, int offset, int offsetTotal, bool pair) {
 	float largerAR = central.base.atomicRadius;
 	float smallerAR = bonded.base.atomicRadius;
@@ -234,6 +285,18 @@ glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, in
 	return glm::vec3(v.x, v.y, v.z);
 }
 
+/**
+ * Get a matrix describing the required translation
+ * to render a cylinder for ball-and-stick models
+ * 
+ * @param bondOrder a pair describing bond orders
+ *                  [0] = total bond order
+ *                  [1] = the bond this cylinder is for
+ * @param rotationModel the rotation of the system at large
+ * @param direction the direction the cylinder is facing
+ * @param cylinderModel the existing model to apply the translation to
+ * @return the translated transformation matrix
+*/
 glm::mat4 getCylinderOffset(std::pair<int, int> bondOrder, glm::mat4 rotationModel, glm::vec3 direction, glm::mat4 cylinderModel) {
 	if(bondOrder.first == 1 || (bondOrder.first == 3 && bondOrder.second == 2)) {
 		return cylinderModel;
@@ -257,7 +320,18 @@ glm::mat4 getCylinderOffset(std::pair<int, int> bondOrder, glm::mat4 rotationMod
 	return finalMat;
 }
 
-
+/**
+ * Get the matrix to properly position a cylinder
+ * for ball-and-stick models
+ * 
+ * @param configIndex the VSEPR configuration index
+ * @param modelIndex the bond index within the VSEPR config
+ * @param bondOrder a pair describing bond orders
+ *                  [0] = total bond order
+ *                  [1] = the bond this cylinder is for
+ * @param rotationModel the rotation of the system at large
+ * @return the final transformation for the described cylinder
+ */
 glm::mat4 getCylinderRotation(int configIndex, int modelIndex, std::pair<int, int> bondOrder, glm::mat4 rotationModel) {
 	glm::vec3 target = configurations[configIndex][modelIndex];
 	glm::vec3 direction = glm::vec3(glm::vec4(target, 0.0f));
@@ -269,6 +343,15 @@ glm::mat4 getCylinderRotation(int configIndex, int modelIndex, std::pair<int, in
 	return rotMatrix;
 }
 
+/**
+ * Render all the electron point lights in the electron orbit model
+ * 
+ * @param program the electron shader program
+ * @param atomProgram a reference to the atom shader program
+ *                    needed to update point light positions
+ * @param model the compound structure
+ * @param rotationModel the camera rotation
+ */
 void renderElectrons(Shader program, Shader &atomProgram, std::vector<BondedElement> model, glm::mat4 rotationModel) {
 	program.use();
 	//glBindVertexArray(lightVAO);
@@ -342,24 +425,52 @@ void renderElectrons(Shader program, Shader &atomProgram, std::vector<BondedElem
 	}
 }
 
+/**
+ * Get the bond distance between two atoms
+ * 
+ * @param model the compound structure
+ * @param index the index of the peripheral atom
+ * @param order the bond order
+ * @return the bond distance
+ */
 float getSphereDistance(std::vector<BondedElement> model, int index, int order) {
-	//Schomaker and Stevenson formula for bond length
+	// Schomaker and Stevenson formula for bond length (not used with current data)
 	// return model[0].base.covalentRadius + model[index].base.covalentRadius - 0.09 * abs(model[0].base.electronegativity - model[index].base.electronegativity);
 
-	//Sum of covalent radii based on bond order
+	// Sum of covalent radii based on bond order
 	return (model[0].base.covalentRadii[order-1] + model[index].base.covalentRadii[order-1])/100;
 }
 
+/**
+ * Get the bond distance between two atoms
+ * 
+ * @param a the first element
+ * @param b the second element
+ * @param order the bond order
+ * @return the bond distance
+ */
 float getSphereDistance(BondedElement a, BondedElement b, int order) {
 	return (a.base.covalentRadii[order-1] + b.base.covalentRadii[order-1])/100;
 }
 
+/**
+ * Get the atomic distance for ball-and-stick models
+ * 
+ * @return the distance
+ */
 float getStickDistance() {
 	return atomDistance;
 }
 
-void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
-{
+/**
+ * Handle mouse clicks
+ * 
+ * @param window the GLFW window where the event occurred
+ * @param button the code for the button that was pressed
+ * @param action press/release
+ * @param mods bitfield for modifier keys (e.g. shift, alt)
+ */
+void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
 	if (button == GLFW_MOUSE_BUTTON_LEFT)
 	{
 		if (action == GLFW_PRESS) {
@@ -468,13 +579,6 @@ int main()
 
 	glm::vec3 objectColour = glm::vec3(1.0f, 0.5f, 0.31f);
 	glm::vec3 lightColour = glm::vec3(1.0f, 1.0f, 1.0f);
-
-	// lightingShader = Shader("shaders/VeShMap.vs", "shaders/FrShMap.fs");
-	// lightingShader.use();
-	// lightingShader.setInt("material.diffuse", 0);
-	// lightingShader.setInt("material.specular", 1);
-	// lightingShader.setFloat("material.shininess", 32.0f);
-	// setUpPointLights(2, lightingShader);
 
 	lightingShader = Shader("shaders/VeShMap.vs", "shaders/FrShDirectional.fs");
 	lightingShader.use();

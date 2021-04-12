@@ -73,23 +73,42 @@ public:
 		updateCameraVectors();
 	}
 
-	// Returns the view matrix calculated using Eular Angles and the LookAt Matrix
-	glm::mat4 GetViewMatrix()
-	{
+	/**
+	 * Get the view matrix calculated using Euler Angles and the LookAt Matrix
+	 * 
+	 * @returns view matrix
+	*/
+	glm::mat4 GetViewMatrix() {
 		return glm::lookAt(Position, Position + Front, Up);
 	}
 
+	/**
+	 * Get the matrix calculated using the arc ball view method
+	 * 
+	 * @return matrix
+	 */
 	glm::mat4 GetArcMatrix() {
 		return arcMatrix;
 	}
 
+	/**
+	 * Get a reverse of the arc ball matrix
+	 * 
+	 * @return reversed matrix
+	 */
 	glm::mat4 GetReverseArcMatrix() {
 		return reverseArcMatrix;
 	}
 
-	// Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-	void ProcessKeyboard(GLFWwindow *window, float deltaTime, bool restrictY)
-	{
+	/**
+	 * Processes input received from any keyboard-like input system
+	 * Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
+	 * 
+	 * @param window the GLFW window where the event occurred
+	 * @param deltaTime the change in time bewteen frames
+	 * @param restrictY whether to limit movement in the y axis
+	 */
+	void ProcessKeyboard(GLFWwindow *window, float deltaTime, bool restrictY) {
 		float camspeed = 7 * deltaTime;
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE))
 		{
@@ -118,9 +137,16 @@ public:
 		}
 	}
 
-	// Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
-	void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
-	{
+	//
+	/**
+	 * Processes input received from a mouse input system
+	 * Expects the offset value in both the x and y direction
+	 * 
+	 * @param xoffset the change in x pos of the mouse
+	 * @param yoffset the change in y pos of the mouse
+	 * @param constrainPitch whether to constrain rotation within a 90 degree zone
+	 */
+	void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true) {
 		xoffset *= MouseSensitivity;
 		yoffset *= MouseSensitivity;
 
@@ -140,6 +166,13 @@ public:
 		updateCameraVectors();
 	}
 
+	/**
+	 * Set the radius of the arc ball sphere depending
+	 * on where the user clicked the screen
+	 * 
+	 * @param xPos the x coord of the click
+	 * @param yPos the y coord of the click
+	 */
 	void SetRadius(double xPos, double yPos) {
 		// Adjust for origin at top-left corner
 		xPos -= W / 2;
@@ -152,6 +185,12 @@ public:
 		lastPos2D = glm::vec2(xPos, yPos);
 	}
 
+	/**
+	 * Rotate the view based on mouse movement using the arc ball method
+	 * 
+	 * @param xPos the x position of the mouse
+	 * @param yPos the y position of the mouse
+	 */
 	void ProcessArcBall(float xPos, float yPos) {
 		// Adjust for origin at top-left corner
 		xPos -= W / 2;
@@ -182,7 +221,13 @@ public:
 		lastPos2D = glm::vec2(xPos, yPos);
 	}
 
-	// Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
+	/**
+	 * Process mouse scroll events to zoom in/out
+	 * Only uses vertical scrolls
+	 * 
+	 * @param window the GLFW window where the event covered
+	 * @param yoffset the change in vertical scroll
+	 */
 	void ProcessMouseScroll(GLFWwindow *window, float yoffset)
 	{
 		if (Zoom >= 1.0f && Zoom <= 45.0f)
@@ -203,7 +248,13 @@ private:
 	glm::vec2 lastPos2D = glm::vec2(0.0f);
 	const float zoomSense = 0.75f;
 
-	// Code used to find point on a sphere from a given point (pythagoras method)
+	/**
+	 * Finds point on a sphere from a given point on screen (pythagoras method)
+	 * 
+	 * @param x the x screen coordinate
+	 * @param y the y screen coordinate
+	 * @return the point on the 3D sphere
+	 */
 	glm::vec3 GetSurfacePoint(float x, float y) {
 		glm::vec3 newPos;
 		float xySquare = x * x + y * y;
@@ -255,11 +306,23 @@ private:
 		return newPos;
 	}
 
+	/**
+	 * Get the magnitude of a vector
+	 * 
+	 * @param v the vector
+	 * @return the magnitude
+	 */
 	float GetMagnitude(glm::vec3 v) {
 		return sqrt((v.x*v.x) + (v.y*v.y) + (v.z*v.z));
 	}
 
-	//Modulus of floating points
+	/**
+	 * Get the modulus of 2 floats
+	 * 
+	 * @param base the base number
+	 * @param divisor the divisor
+	 * @return base % divisor
+	 */
 	float GetModulus(float base, float divisor) {
 		float mod;
 		// Handle negatives
@@ -279,7 +342,9 @@ private:
 		return mod;
 	}
 
-	// Calculates the front vector from the Camera's (updated) Eular Angles
+	/**
+	 * Calculates the front vector from the Camera's (updated) Eular Angles
+	 */
 	void updateCameraVectors()
 	{
 		// Calculate the new Front vector
@@ -293,6 +358,9 @@ private:
 		Up = glm::normalize(glm::cross(Right, Front));
 	}
 
+	/**
+	 * Update the direction vectors for the arc ball camera model
+	 */
 	void updateArcVectors() {
 		Right = glm::normalize(glm::cross(glm::normalize(Position-origin), WorldUp)); // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
 		//float simpleAngle = abs(GetModulus(lat*180/C_PI, 360));

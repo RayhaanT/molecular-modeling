@@ -16,6 +16,12 @@ float stofSafe(string s);
 
 extern std::map<std::string, Element> elements;
 
+/**
+ * Read periodic table data from the csv file
+ * Data is stored in the global elements list
+ * 
+ * @param path the path to the file
+ */
 void parseCSV(std::string path)
 {
     fstream inFile;
@@ -136,7 +142,13 @@ void parseCSV(std::string path)
     elements.insert(pair<string, Element>("LP", lonePair));
 }
 
-//stoi and stof cause errors if the string is empty
+/**
+ * Check if string is empty before converting
+ * to avoid type exceptions
+ * 
+ * @param s the string to convert
+ * @return the integer contained in the string
+ */
 int stoiSafe(string s) {
     if(isdigit(s[0])) {
         return stoi(s);
@@ -144,6 +156,13 @@ int stoiSafe(string s) {
     return 0;
 }
 
+/**
+ * Check if string is empty before converting
+ * to avoid type exceptions
+ * 
+ * @param s the string to convert
+ * @return the float contained in the string
+ */
 float stofSafe(string s) {
     if (isdigit(s[0])) {
         return stof(s);
@@ -151,6 +170,12 @@ float stofSafe(string s) {
     return 0;
 }
 
+/**
+ * Split a line in the csv into a vector of strings
+ * 
+ * @param in the csv line
+ * @return the list of elements as strings 
+ */
 vector<string> csvStringToVector(string in) {
     vector<string> result;
     stringstream lineStream(in);

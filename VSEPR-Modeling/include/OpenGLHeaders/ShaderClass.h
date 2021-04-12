@@ -14,8 +14,13 @@ public:
 	// Null constructor for globals
 	Shader() {}
 
-	Shader(const GLchar* vertexPath, const GLchar* fragmentPath)
-	{
+	/**
+	 * Construct a new shader program class
+	 * 
+	 * @param vertexPath the path to the vertex shader
+	 * @param fragmentPath the path to the fragment shader
+	 */
+	Shader(const GLchar* vertexPath, const GLchar* fragmentPath) {
 		// 1.Retrieve vertex/frag source code from file path
 		std::string vertexCode;
 		std::string fragmentCode;
@@ -94,32 +99,54 @@ public:
 		glDeleteShader(fragment);
 	}
 
-	void setVec3(const GLchar* name, glm::vec3 value)
-	{
+	/**
+	 * Set a vec3 uniform on the shader program
+	 * 
+	 * @param name the name of the uniform
+	 * @param value the value to pass
+	 */
+	void setVec3(const GLchar* name, glm::vec3 value) {
 		unsigned int loc = glGetUniformLocation(ID, name);
 		glUniform3f(loc, value.x, value.y, value.z);
 	}
 
-	void setMat4(const GLchar* name, glm::mat4 value)
-	{
+	/**
+	 * Set a mat4 uniform on the shader program
+	 * 
+	 * @param name the name of the uniform
+	 * @param value the value to pass
+	 */
+	void setMat4(const GLchar* name, glm::mat4 value) {
 		unsigned int loc = glGetUniformLocation(ID, name);
 		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(value));
 	}
 
-	void setFloat(const GLchar* name, float value)
-	{
+	/**
+	 * Set a float uniform on the shader program
+	 * 
+	 * @param name the name of the uniform
+	 * @param value the value to pass
+	 */
+	void setFloat(const GLchar* name, float value) {
 		unsigned int loc = glGetUniformLocation(ID, name);
 		glUniform1f(loc, value);
 	}
 
-	void setInt(const GLchar* name, int value)
-	{
+	/**
+	 * Set an int uniform on the shader program
+	 * 
+	 * @param name the name of the uniform
+	 * @param value the value to pass
+	 */
+	void setInt(const GLchar* name, int value) {
 		unsigned int loc = glGetUniformLocation(ID, name);
 		glUniform1i(loc, value);
 	}
 
-	void use()
-	{
+	/**
+	 * Use this shader program
+	 */
+	void use() {
 		glUseProgram(ID);
 	}
 
