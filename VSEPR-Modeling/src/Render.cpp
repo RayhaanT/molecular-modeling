@@ -72,7 +72,7 @@ BondedElement findNeighbour(uint32_t key, std::vector<BondedElement> group) {
  * @param shader the shader program for cylinders
  * @param fast whether to use the low-poly models
  */
-void RenderCylinder(glm::vec3 start, glm::vec3 end, glm::vec3 startColor, glm::vec3 endColor, Shader shader, bool fast) {
+void renderCylinder(glm::vec3 start, glm::vec3 end, glm::vec3 startColor, glm::vec3 endColor, Shader shader, bool fast) {
     shader.use();
 
     //Rotation
@@ -114,7 +114,7 @@ void RenderCylinder(glm::vec3 start, glm::vec3 end, glm::vec3 startColor, glm::v
 }
 
 /**
- * Render a cylinder to the screen for ball-and-stick models
+ * Renders cylinders to the screen for ball-and-stick models
  * Replaces RenderCylinder() by using the pre-calculated
  * transformation matrices to improve performance
  * 
@@ -146,6 +146,92 @@ void fastRenderCylinder(glm::vec3 color, glm::mat4 transform, glm::mat4 rotation
 }
 
 /**
+ * Renders simple covalent compounds.
+ * Compounds with single central atoms including
+ * polyatomic ions are currently supported
+ * 
+ * @param structure the compound's structure
+ * @param rotationModel the camera rotation model
+ * @param shader the shader for atoms
+ * @param rep which representation to render
+ */
+void renderSimpleCompound(std::vector<BondedElement> structure, glm::mat4 rotationModel, Shader shader, int rep) {
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	int configIndex;
+
+	// Determine VSEPR config
+	if(structure.size() > 2) {
+		configIndex = structure.size() - 2 + (structure[0].loneElectrons/2);
+	}
+	else {
+		configIndex = structure.size() - 2;
+	}
+
+    if(rep == 0) {
+        for (int i = 0; i < structure.size() + (structure[0].loneElectrons/2); i++) {
+            glm::mat4 model;
+            // Check if drawing an atom or lone pair
+            if(i < structure.size()) {
+                BondedElement b = structure[i];
+                glm::vec3 pos = b.position;
+                if (b.base.name == "hydrogen") {
+                    pos /= 0.7;
+                }
+                model *= rotationModel;
+                model = glm::translate(model, pos);
+                model = glm::scale(model, glm::vec3(b.base.atomicRadius > 0 ? structure[i].base.atomicRadius : 0.8f));
+                shader.setVec3("color", b.base.color);
+                shader.setMat4("model", model);
+                sphere.draw();
+            }
+            else {
+                glm::vec3 lonePairPos = configurations[configIndex][i - 1] * getStickDistance();
+                model *= rotationModel;
+                model = glm::translate(model, lonePairPos);
+                model = glm::scale(model, glm::vec3(structure[0].base.atomicRadius > 0 ? structure[0].base.atomicRadius : 0.8f));
+                shader.setVec3("color", structure[0].base.color);
+                shader.setMat4("model", model);
+                sphere.drawLines(lineColor);
+            }
+        }
+    }
+    if(rep == 1) {
+        for(BondedElement b : structure) {
+            glm::mat4 model;
+            glm::vec3 pos = b.vanDerWaalsPosition;
+            model *= rotationModel;
+            model = glm::translate(model, pos);
+            model = glm::scale(model, glm::vec3(b.base.vanDerWaalsRadius));
+            shader.setMat4("model", model);
+            shader.setVec3("color", b.base.color);
+            sphere.draw();
+        }
+    }
+    if(rep == 2) {
+        for(BondedElement b : structure) {
+            for (glm::mat4 m : b.cylinderModels) {
+                fastRenderCylinder(b.base.color, m, rotationModel, shader, false);
+            }
+            glBindVertexArray(sphereVAO);
+            glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+            glm::mat4 model;
+            model *= rotationModel;
+            if(b.base.name == "hydrogen") {
+                model = glm::translate(model, b.position);
+                model = glm::scale(model, glm::vec3(0.75f));
+            }
+            else {
+                model = glm::translate(model, b.position);
+                model = glm::scale(model, glm::vec3(1.0f)); 
+            }
+            shader.setMat4("model", model);
+            shader.setVec3("color", b.base.color);
+            sphere.draw();
+        }
+    }
+}
+
+/**
  * Renders an organic compound (so far only saturated hydrocarbons)
  * 
  * @param structure the compound's structure as a vector of compounds
@@ -153,7 +239,7 @@ void fastRenderCylinder(glm::vec3 color, glm::mat4 transform, glm::mat4 rotation
  * @param rotationModel the camera rotation model
  * @param rep which representation to render
  */
-void RenderOrganic(std::vector<BondedElement> structure, Shader shader, glm::mat4 rotationModel, int rep) {
+void renderOrganic(std::vector<BondedElement> structure, Shader shader, glm::mat4 rotationModel, int rep) {
     glm::quat rotationQuat = glm::quat_cast(rotationModel);
     shader.use();
     bool fast = false;
@@ -172,7 +258,6 @@ void RenderOrganic(std::vector<BondedElement> structure, Shader shader, glm::mat
         for(BondedElement b : structure) {
             glm::mat4 model;
             glm::vec3 pos = b.vanDerWaalsPosition;
-            pos = glm::vec3(glm::vec4(pos, 0.0f));
             model *= rotationModel;
             model = glm::translate(model, pos);
             model = glm::scale(model, glm::vec3(b.base.vanDerWaalsRadius));
@@ -186,7 +271,6 @@ void RenderOrganic(std::vector<BondedElement> structure, Shader shader, glm::mat
         }
     }
     if(rep == 2) {
-        std::vector<uint32_t> closedSet;
         for(BondedElement b : structure) {
             for (glm::mat4 m : b.cylinderModels) {
                 fastRenderCylinder(b.base.color, m, rotationModel, shader, fast);

@@ -10,16 +10,18 @@
 #include "data.h"
 #include "render.h"
 
-extern std::vector<std::vector<glm::vec3>> configurations;
+std::vector<std::vector<glm::vec3>> configurations;
 uint32_t BondedElement::maxUID = 0;
-
-int bondingElectrons;
 
 using namespace std;
 map<string, Element> elements;
-extern vector<BondedElement> VSEPRModel;
+vector<BondedElement> VSEPRModel;
 std::vector<glm::vec3> tetrahedron;
 std::map<std::string, int> numberTerms;
+
+vector<BondedElement> generateCylinders(vector<BondedElement> structure);
+void bondSafe(BondedElement &a, BondedElement &b);
+int findInstances(vector<uint32_t> v, uint32_t key);
 
 /**
  * Find an element by its abbreviated symbol
@@ -148,6 +150,20 @@ int checkStability(BondedElement b) {
 	return 8 - b.bondedElectrons - b.loneElectrons;
 }
 
+/**
+ * Counts the number of electrons in a structure.
+ * Used to ensure electrons aren't lost/created.
+ * 
+ * @param structure the atom structure
+ * @return the total number of electrons
+ */
+int countElectrons(vector<BondedElement> structure) {
+	int total = 0;
+	for(BondedElement b : structure) {
+		total += b.loneElectrons + (b.bondedElectrons / 2);
+	}
+	return total;
+}
 
 /**
  * Create double/triple bonds until if necessary
@@ -155,23 +171,48 @@ int checkStability(BondedElement b) {
  * @param structure the chemical structure
  * @return the updated structure with higher order bonds
  */
-vector<BondedElement> rebond(vector<BondedElement> structure) {
+vector<BondedElement> rebond(vector<BondedElement> structure, int eTotal) {
 	for (int i = 1; i < structure.size(); i++)
 	{
-		if (structure[i].loneElectrons < 1 || structure[0].loneElectrons < 1)
-		{
+		if (structure[i].loneElectrons < 1)
 			continue;
-		}
-		structure[i].loneElectrons-=2;
-		structure[i].bondedElectrons+=2;
-		structure[0].loneElectrons-=2;
-		structure[0].bondedElectrons+=2;
-		bondingElectrons+=2;
-		if (bondingElectrons == 0)
-		{
+		structure[0].loneElectrons--;
+		structure[i].loneElectrons--;
+		bondSafe(structure[i], structure[0]);
+		if (countElectrons(structure) == eTotal || structure[0].loneElectrons < 1)
 			break;
+	}
+	return structure;
+}
+
+/**
+ * Predicts the positions of atoms in a simple
+ * covalent compound using periodic table data
+ * 
+ * @param structure the compound's structure
+ * @return the structure with updated position information
+ */
+vector<BondedElement> positionSimpleAtoms(vector<BondedElement> structure) {
+	int configIndex = configIndex = structure.size() - 2;
+	if (structure.size() > 2) {
+		configIndex += structure[0].loneElectrons / 2;
+	}
+
+	structure[0].position = glm::vec3(0);
+	structure[0].vanDerWaalsPosition = glm::vec3(0);
+	BondedElement center = structure[0];
+
+	for(int i = 1; i < structure.size(); i++) {
+		glm::vec3 dir = glm::normalize(configurations[configIndex][i - 1]);
+
+		int bondOrder = findInstances(structure[i].neighbours, structure[i].neighbours[0]);
+		structure[i].vanDerWaalsPosition = dir * getSphereDistance(structure[i], center, bondOrder);
+		structure[i].position = dir * getStickDistance();
+		if(structure[i].base.name == "hydrogen") {
+			structure[i].position *= 0.7;
 		}
 	}
+
 	return structure;
 }
 
@@ -187,48 +228,47 @@ vector<BondedElement> constructLewisStructure(vector<Element> formula) {
 	for(int i = 0; i < formula.size(); i++) {
 		eTotal += formula[i].valenceNumber;
 	}
-	bondingElectrons = eTotal;
 
+	// Bond central to peripheral once
 	vector<BondedElement> lewisStructure;
-	lewisStructure.push_back(BondedElement(0, 0, formula[0]));
+	lewisStructure.push_back(BondedElement(formula[0].valenceNumber, 0, formula[0]));
 	for (int i = 1; i < formula.size(); i++) {
 		if(formula[i].name != "") {
-			lewisStructure[0].bondedElectrons+=2;
-			lewisStructure.push_back(BondedElement(0, 2, formula[i]));
-			bondingElectrons-=2;
+			lewisStructure.push_back(BondedElement(formula[i].valenceNumber, 0, formula[i]));
+			bondSafe(lewisStructure[0], lewisStructure.back()); // One bond between central and outer is necessary
 		}
 	}
 
-	for (int i = 1; i < lewisStructure.size(); i++) {
+	// Fill in lone electrons until all atoms are stable
+	for (int i = 0; i < lewisStructure.size(); i++) {
 		int missingElectrons = checkStability(lewisStructure[i]);
-		if (missingElectrons > 0) {
-			for (int x = 0; x < missingElectrons / 2; x++) {
-				lewisStructure[i].loneElectrons+=2;
-				bondingElectrons-=2;
-			}
+		if (missingElectrons >= 0) {
+			lewisStructure[i].loneElectrons += missingElectrons;
 		}
-	}
-	int missingElectrons = checkStability(lewisStructure[0]);
-	if (missingElectrons > 0) {
-		for (int x = 0; x < missingElectrons / 2; x++) {
-			lewisStructure[0].loneElectrons+=2;
-			bondingElectrons-=2;
+		else if(formula[0].periodNumber < 3) {
+			string errorMessage = "Bond error: ";
+			errorMessage += lewisStructure[i].base.name + " overbonded";
+			throw errorMessage.c_str();
 		}
-	}
-	if (bondingElectrons < 0) {
-		lewisStructure = rebond(lewisStructure);
-		if(bondingElectrons < 0) {
-			lewisStructure = rebond(lewisStructure);
-		}
-	}
-	if(bondingElectrons > 0 && lewisStructure[0].base.periodNumber >= 3) {
-		lewisStructure[0].loneElectrons+=bondingElectrons;
-		bondingElectrons = 0;
 	}
 
-	if ((checkStability(lewisStructure[0]) != 0 && lewisStructure[0].base.periodNumber < 3) || bondingElectrons != 0) {
+	if (countElectrons(lewisStructure) > eTotal) {
+		lewisStructure = rebond(lewisStructure, eTotal);
+		if(countElectrons(lewisStructure) > eTotal) {
+			lewisStructure = rebond(lewisStructure, eTotal);
+		}
+	}
+	int excess = countElectrons(lewisStructure) - eTotal;
+	if(excess > 0 && lewisStructure[0].base.periodNumber >= 3) {
+		lewisStructure[0].loneElectrons += excess;
+	}
+
+	if ((checkStability(lewisStructure[0]) != 0 && lewisStructure[0].base.periodNumber < 3) || countElectrons(lewisStructure) != eTotal) {
 		return vector<BondedElement>();
 	}
+
+	lewisStructure = positionSimpleAtoms(lewisStructure);
+	lewisStructure = generateCylinders(lewisStructure);
 	return lewisStructure;
 }
 
@@ -507,17 +547,23 @@ Substituent positionAtoms(Substituent structure, bool cyclo) {
 		return Substituent();
 	}
 
+	// Position cyclo group in a circle
 	if(cyclo) {
+		// Generate positions along a unit circle
 		vector<glm::vec3> positions;
 		float angleInterval = (2*PI)/structure.components.size();
 		for(int i = 0; i < structure.components.size(); i++) {
 			float angle = angleInterval * i;
 			positions.push_back(glm::vec3(cos(angle), 0.0f, sin(angle)));
 		}
+
+		// Adjust the circle's radius for number of atoms
 		float adjMagnitude = glm::length(positions[0]-positions[1]);
 		float multiplier = 1/adjMagnitude;
 		int adjBondOrder = findInstances(structure.components[0].neighbours, structure.components[0].neighbours[0]);
 		float multiplier_v = getSphereDistance(structure.components[0], structure.components[1], adjBondOrder)/adjMagnitude;
+
+		// Scale and apply positions
 		for(int i = 0; i < structure.components.size(); i++) {
 			structure.components[i].position = positions[i]*multiplier * getStickDistance();
 			structure.components[i].vanDerWaalsPosition = positions[i]*multiplier_v;
@@ -528,6 +574,7 @@ Substituent positionAtoms(Substituent structure, bool cyclo) {
 		return structure;
 	}
 	
+	// Position atoms in a straight hydrocarbon chain
 	structure.components[0].position = glm::vec3(0.0f);
 	structure.components[0].vanDerWaalsPosition = glm::vec3(0.0f);
 	structure.components[0].rotation = glm::toMat4(glm::angleAxis(PI, glm::vec3(1.0f, 0.0f, 0.0f)));
@@ -565,7 +612,25 @@ vector<BondedElement> generateCylinders(vector<BondedElement> structure) {
 	vector<BondedElement> newStruc;
 	for(BondedElement b : structure) {
 		glm::vec3 start = b.position;
-		for(uint32_t n : b.neighbours) {
+		std::sort(b.neighbours.begin(), b.neighbours.end());
+
+		for(int i = 0; i < b.neighbours.size(); i++) {
+			auto n = b.neighbours[i];
+			int bondOrder = 1;
+
+			try{
+				// Max bond order is 3
+				if(b.neighbours.at(i + 1) == n) {
+					bondOrder++; i++;
+				}
+				if(b.neighbours.at(i + 2) == n) {
+					bondOrder++; i++;
+				}
+			}
+			catch (const std::exception &e) {
+				// Do nothing, just to avoid if statements
+			}
+
 			BondedElement updatedNeighbour = findNeighbour(n, structure);
 			glm::vec3 end = updatedNeighbour.position;
 
@@ -578,14 +643,26 @@ vector<BondedElement> generateCylinders(vector<BondedElement> structure) {
 			glm::vec3 axis = glm::cross(up, dir);
 			glm::mat4 rotation = glm::toMat4(glm::angleAxis(angle, axis));
 
-			//Cylinder one
-			glm::mat4 model = glm::mat4();
-			model = glm::translate(model, start);
-			model = glm::rotate(model, angle, axis);
-			if (updatedNeighbour.base.name == "hydrogen" || b.base.name == "hydrogen") {
-				model = glm::scale(model, glm::vec3(1.0f, 0.7f, 1.0f));
+			//Cylinders
+			for(int i = 0; i < bondOrder; i++) {
+				float lateralOffset = stickSetWidth / 2;
+				if(bondOrder == 2) {
+					lateralOffset = stickSetWidth / 3 * (i + 1);
+				}
+				else if(bondOrder == 3) {
+					lateralOffset = stickSetWidth / 2 * i;
+				}
+				lateralOffset -= stickSetWidth / 2;
+
+				glm::mat4 model = glm::mat4();
+				model = glm::translate(model, start);
+				model = glm::rotate(model, angle, axis);
+				model = glm::translate(model, glm::vec3(lateralOffset, 0, 0));
+				if (updatedNeighbour.base.name == "hydrogen" || b.base.name == "hydrogen") {
+					model = glm::scale(model, glm::vec3(1.0f, 0.7f, 1.0f));
+				}
+				b.cylinderModels.push_back(model);
 			}
-			b.cylinderModels.push_back(model);
 		}
 		newStruc.push_back(b);
 	}
@@ -828,7 +905,7 @@ vector<BondedElement> VSEPRMain() {
 	setUpMap();
 
 	try {
-		parseCSV("periodicTableData.csv");
+		parseCSV(DATA_TABLE_PATH);
 	}
 	catch(const std::exception& err) {
 		std::cerr << err.what() << '\n';
@@ -881,10 +958,27 @@ vector<BondedElement> VSEPRMain() {
 				int rAN = e.atomicNumber < 10 ? 3 : e.atomicNumber < 100 ? 2 : 1;
 				char sign = formalCharge < 0 ? '-' : '+';
 				if(formalCharge != 0) {
-					printf("%s%s|%d%s|%d   |%d   |%d   |%c%d  |\n", structure[i].base.name.c_str(), string(rName, ' ').c_str(), e.atomicNumber, string(rAN, ' ').c_str(), e.valenceNumber, structure[i].bondedElectrons/2, structure[i].loneElectrons/2, sign, abs(formalCharge));
+					printf("%s%s|%d%s|%d   |%d   |%d   |%c%d  |\n",
+						structure[i].base.name.c_str(),
+						string(rName, ' ').c_str(),
+						e.atomicNumber,
+						string(rAN, ' ').c_str(),
+						e.valenceNumber,
+						structure[i].bondedElectrons/2,
+						structure[i].loneElectrons/2,
+						sign,
+						abs(formalCharge));
 				}
 				else {
-					printf("%s%s|%d%s|%d   |%d   |%d   |%d   |\n", structure[i].base.name.c_str(), string(rName, ' ').c_str(), e.atomicNumber, string(rAN, ' ').c_str(), e.valenceNumber, structure[i].bondedElectrons/2, structure[i].loneElectrons/2, abs(formalCharge));
+					printf("%s%s|%d%s|%d   |%d   |%d   |%d   |\n",
+						structure[i].base.name.c_str(),
+						string(rName, ' ').c_str(),
+						e.atomicNumber,
+						string(rAN, ' ').c_str(),
+						e.valenceNumber,
+						structure[i].bondedElectrons/2,
+						structure[i].loneElectrons/2,
+						abs(formalCharge));
 				}
 			}
 			VSEPRModel = structure;
@@ -899,7 +993,14 @@ vector<BondedElement> VSEPRMain() {
 		if(comp.size() < 1) {
 			continue;
 		}
-		structure = constructLewisStructure(comp);
+
+		try {
+			structure = constructLewisStructure(comp);
+		}
+		catch(const char *errMsg) {
+			cout << errMsg << endl;
+			continue;
+		}
 
 		if (structure.size() < 1) {
 			cout << "Lewis structure not possible" << endl;

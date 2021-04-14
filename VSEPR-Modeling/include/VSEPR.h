@@ -28,8 +28,14 @@ struct BondingOrbital;
 struct FunctionalGroup;
 struct RGroupConnection;
 
-struct Element
-{
+/**
+ * Data structure to hold information about elements.
+ * These should be constant after startup as the data
+ * comes from recorded research and are not subject to change.
+ * Element data is loaded in in DataParsing.cpp at startup
+ * and kept in an extern map for later access
+ */
+struct Element {
 	int atomicNumber;
 	int valenceNumber;
 	int periodNumber;
@@ -77,6 +83,11 @@ struct Element
 	}
 };
 
+/**
+ * Data structure used to represent an atom in a compound
+ * Includes information about the element, how its bonded
+ * to other atoms, position, and rendering data 
+ */
 struct BondedElement {
 public:
 	Element base;
@@ -145,6 +156,17 @@ private:
 	}
 };
 
+/**
+ * Structure representing substituent chains of an
+ * organic molecule
+ * E.g. 1,2-dimethylcyclopropane has 3 substituents:
+ *   1: cyclopropane base
+ *   2: methyl group bonded to first cyclopropane atom
+ *   3: methyl group bonded to second cyclopropane atom
+ * 
+ * Contains data about the component atoms, parent substituent
+ * if it exists, and where it connects to its parent 
+ */
 struct Substituent {
 	std::vector<BondedElement> components;
 	Substituent *parent;
@@ -185,6 +207,9 @@ struct Substituent {
 	}
 };
 
+/**
+ * WIP for organic compound functional groups
+ */
 struct FunctionalGroup {
 	std::vector<BondedElement> components;
 	std::vector<RGroupConnection> rPorts;
@@ -198,6 +223,7 @@ struct FunctionalGroup {
 };
 
 extern std::vector<BondedElement> VSEPRModel;
+extern std::vector<std::vector<glm::vec3>> configurations;
 std::vector<BondedElement> VSEPRMain();
 bool containsUID(uint32_t id, std::vector<uint32_t> list);
 BondedElement findNeighbour(uint32_t key, std::vector<BondedElement> group);
