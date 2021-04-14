@@ -8,7 +8,7 @@
 #include "glm/gtx/norm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_transform.hpp"
-#include "OpenGLHeaders/ShaderClass.h"
+#include "OpenGLHeaders/shader.h"
 
 // Centrally define file paths
 #define POINT_LIGHT_VERT_PATH "shaders/VeShColors.vs"

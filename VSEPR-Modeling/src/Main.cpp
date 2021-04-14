@@ -10,9 +10,9 @@
 
 // Custom headers
 #define STB_IMAGE_IMPLEMENTATION // Needed for headers to compile
-#include "OpenGLHeaders/Camera.h"
-#include "OpenGLHeaders/Texture.h"
-#include "OpenGLHeaders/ShaderClass.h"
+#include "OpenGLHeaders/camera.h"
+#include "OpenGLHeaders/texture.h"
+#include "OpenGLHeaders/shader.h"
 #include "VSEPR.h"
 #include "Sphere.h"
 #include "cylinder.h"
