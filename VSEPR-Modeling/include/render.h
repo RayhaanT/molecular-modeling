@@ -60,9 +60,17 @@ extern const float electronSpeed;
 extern const float lineColor[];
 extern const float stickSetWidth;
 
+// General utilities
+glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest);
+
 // Cylinder rendering
 glm::mat4 getCylinderOffset(std::pair<int, int> bondOrder, glm::mat4 rotationModel, glm::vec3 direction, glm::mat4 cylinderModel);
 glm::mat4 getCylinderRotation(int configIndex, int modelIndex, std::pair<int, int> bondOrder, glm::mat4 rotationModel);
+
+    // Electron rendering
+glm::vec3 calculateOrbitPosition(BondedElement central, BondedElement bonded, int configIndex, int modelIndex, int offset, int offsetTotal, bool pair);
+void setUpPointLights(int num, Shader &program);
+void setPointLightPosition(int index, Shader &program, glm::vec3 pos);
 
 // Get atom distances
 float getSphereDistance(std::vector<BondedElement> model, int index, int order);
@@ -72,3 +80,4 @@ float getStickDistance();
 // Master render functions
 void renderOrganic(std::vector<BondedElement> structure, Shader shader, glm::mat4 rotationModel, int rep);
 void renderSimpleCompound(std::vector<BondedElement> structure, glm::mat4 rotationModel, Shader shader, int representation);
+void renderElectrons(Shader program, Shader &atomProgram, std::vector<BondedElement> structure, glm::mat4 rotationModel);

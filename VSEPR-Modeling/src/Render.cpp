@@ -28,38 +28,6 @@ const Cylinder cylinder_fast(0.125f, getStickDistance(), 32);
 const Cylinder hydrogenCylinder(0.125f, getStickDistance() / 4, 64);
 
 /**
- * Check for a unique id in a list
- * 
- * @param id the id to search for
- * @param list the list to parse
- * @return whether a match was found
- */
-bool containsUID(uint32_t id, std::vector<uint32_t> list) {
-    for(uint32_t i : list) {
-        if(i == id) {
-            return true;
-        }
-    }
-    return false;
-}
-
-/**
- * Find an element by id in a group of neigbours
- * 
- * @param key the id of the neighbour element to find
- * @param group the group of neighbours to parse
- * @return the found element or a blank one if no match 
- */
-BondedElement findNeighbour(uint32_t key, std::vector<BondedElement> group) {
-    for(BondedElement b : group) {
-        if(key == b.getUID()) {
-            return b;
-        }
-    }
-    return BondedElement();
-}
-
-/**
  * Render a cylinder to the screen for ball-and-stick models
  * Obsoleted by fastRenderCylinder()
  * Cylinder transformations are now calculated before-hand
@@ -301,4 +269,86 @@ void renderOrganic(std::vector<BondedElement> structure, Shader shader, glm::mat
             }
         }
     }
+}
+
+/**
+ * Render all the electron point lights in the electron orbit model
+ * 
+ * @param program the electron shader program
+ * @param atomProgram a reference to the atom shader program
+ *                    needed to update point light positions
+ * @param model the compound structure
+ * @param rotationModel the camera rotation
+ */
+void renderElectrons(Shader program, Shader &atomProgram, std::vector<BondedElement> model, glm::mat4 rotationModel) {
+	program.use();
+	//glBindVertexArray(lightVAO);
+
+	glm::mat4 lightModel;
+
+	program.setMat4(MODEL, lightModel);	
+	//glDrawArrays(GL_TRIANGLES, 0, ARRAY_SIZE(vertices));
+
+	glm::vec3 lightVec3;
+	glm::vec3 light2Vec3;
+	if (VSEPRModel.size() > 0)
+	{
+		int numberOfBonds = VSEPRModel[0].bondedElectrons/2;
+		int configIndex;
+		if (VSEPRModel.size() > 2)
+		{
+			configIndex = VSEPRModel.size() - 2 + (VSEPRModel[0].loneElectrons/2);
+		}
+		else
+		{
+			configIndex = 0;
+		}
+		int lightIndex = 0;
+		for (int i = 1; i < VSEPRModel.size(); i++)
+		{
+			for (int x = 0; x < VSEPRModel[i].bondedElectrons/2; x++)
+			{
+				lightModel = glm::mat4();
+				glm::vec3 newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedElectrons/2, false);
+				setPointLightPosition(lightIndex, atomProgram, newLightPos);
+				program.use();
+				lightModel *= rotationModel;
+				lightModel = glm::translate(lightModel, newLightPos);
+				lightModel = glm::scale(lightModel, glm::vec3(0.1f));
+				program.setMat4(MODEL, lightModel);
+				sphere.drawLines(lineColor);
+				lightIndex++;
+
+				//Draw complimentary
+				lightModel = glm::mat4();
+				newLightPos = calculateOrbitPosition(VSEPRModel[0], VSEPRModel[i], configIndex, i, x, VSEPRModel[i].bondedElectrons/2, true);
+				setPointLightPosition(lightIndex, atomProgram, newLightPos);
+				program.use();
+				lightModel *= rotationModel;
+				lightModel = glm::translate(lightModel, newLightPos);
+				lightModel = glm::scale(lightModel, glm::vec3(0.1f));
+				program.setMat4(MODEL, lightModel);
+				sphere.drawLines(lineColor);
+				lightIndex++;
+			}
+		}
+		setUpPointLights(lightIndex, atomProgram);
+	}
+	else
+	{
+		lightVec3 = glm::vec3(1.2 * sin((float)(glfwGetTime())), 1.2 * cos((float)(glfwGetTime())), 0.0f);
+		light2Vec3 = glm::vec3(1.5 * sin((float)(glfwGetTime())), 1.5 * cos((float)(glfwGetTime())), 0.0f);
+		setPointLightPosition(0, atomProgram, lightVec3);
+		setPointLightPosition(1, atomProgram, light2Vec3);
+		program.use();
+		lightModel = glm::translate(lightModel, lightVec3);
+		lightModel = glm::scale(lightModel, glm::vec3(0.1f));
+		program.setMat4(MODEL, lightModel);
+		sphere.draw();
+		lightModel = glm::mat4();
+		lightModel = glm::translate(lightModel, light2Vec3);
+		lightModel = glm::scale(lightModel, glm::vec3(0.1f));
+		program.setMat4(MODEL, lightModel);
+		sphere.draw();
+	}
 }

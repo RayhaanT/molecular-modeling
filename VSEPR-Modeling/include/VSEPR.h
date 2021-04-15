@@ -229,6 +229,37 @@ bool containsUID(uint32_t id, std::vector<uint32_t> list);
 BondedElement findNeighbour(uint32_t key, std::vector<BondedElement> group);
 void setUpMap();
 
+// ------------------------------ Chemistry utilities ------------------------------ //
+
+// Atom state
+int getFormalCharge(BondedElement b);
+int checkStability(BondedElement b);
+bool checkBondedElementValidity(BondedElement e);
+bool bond(BondedElement &a, BondedElement &b);
+void bondSafe(BondedElement &a, BondedElement &b);
+
+// Structure state
+int countElectrons(std::vector<BondedElement> structure);
+int getTotalFormalCharge(std::vector<BondedElement> structure);
+
+// General
+Element searchElements(std::string symbol);
+int findInstances(std::vector<uint32_t> v, uint32_t key);
+bool checkStringComponent(std::string main, std::string check);
+bool checkForDigits(std::string main);
+int findLastComponent(std::string main, std::string check);
+int findNumberTerm(std::string name);
+
+// Positioning
+std::vector<BondedElement> generateCylinders(std::vector<BondedElement> structure);
+std::vector<BondedElement> averageCenterPositions(std::vector<BondedElement> structure);
+std::vector<BondedElement> centerPositions(std::vector<BondedElement> structure);
+
+// ------------------------------ Main structure predicting functions ------------------------------ //
+std::vector<Element> readFormula(std::string formulaFull);
+std::vector<BondedElement> constructLewisStructure(std::vector<Element> formula);
+std::vector<BondedElement> interpretOrganic(std::string in);
+
 static std::map<std::string, Substituent> functionalGroups;
 
 #endif
