@@ -3,8 +3,16 @@
 This project builds 3-D models of chemicals based on their IUPAC name or chemical formula.
 Formulae or chemical names can be typed into the console window, and a breakdown of the bond structure will be printed. 
 Click and drag on the screen to rotate the model, and use the W/S keys or the scrollwheel to zoom. Holding E/Q will cause the model to start rotating automatically.
-There are 3 available representations of the chemical: ball-and-stick, van der Waals spheres, and a custom electron orbit model. Representations are cycled with the R key.
+There are 3 available representations of the chemical: ball-and-stick, van der Waals spheres, and a custom electron orbit model. Representations are cycled with the R key.  
+Simple molecular compounds as well as many saturated hydrocarbons are currently supported.  
+  
+A couple of functionality demos:
 
+![Inorganic demo gif missing](Media/InorganicDemo.gif)
+Rendering two different molecules: water (H2O) and carbon dioxide (CO2).  
+
+![Organic demo gif missing](Media/OrganicDemo.gif)
+Models of two organic compounds: hexane and 1,2-dimethylcyclopropane.
 ## Tech
 - [OpenGL](https://www.opengl.org/) - Graphics pipeline to render models
 - [GLFW](https://www.glfw.org/) - OpenGL function library
