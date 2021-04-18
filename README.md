@@ -6,13 +6,14 @@ Click and drag on the screen to rotate the model, and use the W/S keys or the sc
 There are 3 available representations of the chemical: ball-and-stick, van der Waals spheres, and a custom electron orbit model. Representations are cycled with the R key.  
 Simple molecular compounds as well as many saturated hydrocarbons are currently supported.  
   
-A couple of functionality demos:
+## Demos
 
-![Inorganic demo gif missing](Media/InorganicDemo.gif)
+<img src="Media/InorganicDemo.gif" width="600" height="450" alt="Inorganic demo gif missing" />
 Rendering two different molecules: water (H2O) and carbon dioxide (CO2).  
 
-![Organic demo gif missing](Media/OrganicDemo.gif)
+<img src="Media/OrganicDemo.gif" width="600" height="450" alt="Organic demo gif missing" />
 Models of two organic compounds: hexane and 1,2-dimethylcyclopropane.
+
 ## Tech
 - [OpenGL](https://www.opengl.org/) - Graphics pipeline to render models
 - [GLFW](https://www.glfw.org/) - OpenGL function library
