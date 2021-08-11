@@ -237,10 +237,12 @@ int checkStability(BondedElement b);
 bool checkBondedElementValidity(BondedElement e);
 bool bond(BondedElement &a, BondedElement &b);
 void bondSafe(BondedElement &a, BondedElement &b);
+bool shiftBond(BondedElement &receiver, BondedElement &donor);
 
 // Structure state
 int countElectrons(std::vector<BondedElement> structure);
 int getTotalFormalCharge(std::vector<BondedElement> structure);
+std::vector<BondedElement> optimizeFormalCharge(std::vector<BondedElement> structure);
 
 // General
 Element searchElements(std::string symbol);

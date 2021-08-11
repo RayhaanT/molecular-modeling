@@ -204,6 +204,13 @@ vector<BondedElement> constructLewisStructure(vector<Element> formula) {
 		return vector<BondedElement>();
 	}
 
+	for(int i = 0; i < lewisStructure.size(); i++) {
+		if(getFormalCharge(lewisStructure[i]) != 0) {
+			lewisStructure = optimizeFormalCharge(lewisStructure);
+			break;
+		} 
+	}
+
 	lewisStructure = positionSimpleAtoms(lewisStructure);
 	lewisStructure = generateCylinders(lewisStructure);
 	return lewisStructure;
@@ -219,16 +226,21 @@ vector<BondedElement> constructLewisStructure(vector<Element> formula) {
 vector<BondedElement> optimizeFormalCharge(vector<BondedElement> structure) {
 	vector<BondedElement> returnVector = structure;
 	int totalCharge = getTotalFormalCharge(structure);
-	for(int x = 0; x < 1; x++) {
+	for(int x = 0; x < 2; x++) {
 		for(int i = structure.size() - 1; i > 1; i--) {
 			if(structure[0].base.periodNumber >= 3 && structure[i].loneElectrons > 0) {
-				structure[0].bondedElectrons+=2;
-				structure[i].bondedElectrons+=2;
-				structure[i].loneElectrons-=2;
+				if(!shiftBond(structure[0], structure[i])) {
+					structure = returnVector;
+					continue;
+				}
+
 				int newTotal = getTotalFormalCharge(structure);
 				if(newTotal < totalCharge) {
 					totalCharge = newTotal;
 					returnVector = structure;
+				}
+				else {
+					structure = returnVector;
 				}
 			}
 		}
@@ -641,12 +653,6 @@ vector<BondedElement> VSEPRMain() {
 			continue;
 		}
 
-		for(int i = 0; i < structure.size(); i++) {
-			if(getFormalCharge(structure[i]) != 0) {
-				structure = optimizeFormalCharge(structure);
-				break;
-			} 
-		}
 		VSEPRModel = structure;
 		int longestName = 0;
 		for(int i = 0; i < structure.size(); i++) {

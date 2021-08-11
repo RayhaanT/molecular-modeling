@@ -196,6 +196,24 @@ bool bond(BondedElement &a, BondedElement &b) {
 }
 
 /**
+ * Move a lone pair on one atom (donor) into a bond between it a
+ * receiver atom.
+ * 
+ * @param receiver the atom being bonded to the donor
+ * @param donor the atom losing the lone pair to create the bond
+ * @return whether the two atoms still have a valid # of electrons
+*/
+bool shiftBond(BondedElement &receiver, BondedElement &donor) {
+	receiver.neighbours.push_back(donor.getUID());
+	receiver.bondedElectrons+=2;
+	donor.neighbours.push_back(receiver.getUID());
+	donor.bondedElectrons+=2;
+	donor.loneElectrons-=2;
+
+	return checkBondedElementValidity(receiver) && checkBondedElementValidity(donor);
+}
+
+/**
  * Bond two atoms and throw an exception if it fails
  * 
  * @param a the first element
