@@ -8,10 +8,10 @@ Simple molecular compounds as well as many saturated hydrocarbons are currently 
   
 ## Demos
 
-Rendering molecules of water (H2O) and carbon dioxide (CO2):
+Rendering molecules of water (H2O) and carbon dioxide (CO2):  
 <img src="Media/InorganicDemo.gif" width="600" height="450" alt="Inorganic demo gif missing" />
 
-Models of organic compounds hexane and 1,2-dimethylcyclopropane:
+Models of organic compounds hexane and 1,2-dimethylcyclopropane:  
 <img src="Media/OrganicDemo.gif" width="600" height="450" alt="Organic demo gif missing" />
 
 ## Tech
