@@ -25,8 +25,8 @@ struct BondedElement;
 struct Element;
 struct Substituent;
 struct BondingOrbital;
-struct FunctionalGroup;
-struct RGroupConnection;
+// struct FunctionalGroup;
+// struct RGroupConnection;
 
 /**
  * Data structure to hold information about elements.
@@ -207,20 +207,20 @@ struct Substituent {
 	}
 };
 
-/**
- * WIP for organic compound functional groups
- */
-struct FunctionalGroup {
-	std::vector<BondedElement> components;
-	std::vector<RGroupConnection> rPorts;
+// /**
+//  * WIP for organic compound functional groups
+//  */
+// struct FunctionalGroup {
+// 	std::vector<BondedElement> components;
+// 	std::vector<RGroupConnection> rPorts;
 
-	struct RGroupConnection {
-		bool primary;
-		std::vector<uint32_t> bondingAtoms;
-	};
+// 	struct RGroupConnection {
+// 		bool primary;
+// 		std::vector<uint32_t> bondingAtoms;
+// 	};
 
 	
-};
+// };
 
 extern std::vector<BondedElement> VSEPRModel;
 extern std::vector<std::vector<glm::vec3>> configurations;

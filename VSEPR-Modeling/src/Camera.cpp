@@ -1,4 +1,4 @@
-#include "OpenGLHeaders/Camera.h"
+#include "OpenGLHeaders/camera.h"
 
 bool clicked;
 

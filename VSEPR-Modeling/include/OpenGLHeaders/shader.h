@@ -1,6 +1,6 @@
 #pragma once
 
-#include "glad/glad.h"
+#include <glad/glad.h>
 
 #include <string>
 #include <fstream>
@@ -15,14 +15,14 @@ public:
 	Shader() {}
 
 	// Constructor
-	Shader(const GLchar* vertexPath, const GLchar* fragmentPath);
+	Shader(const GLchar *vertexPath, const GLchar *fragmentPath);
 
 	// Uniform interfaces
-	void setVec3(const GLchar* name, glm::vec3 value);
-	void setMat4(const GLchar* name, glm::mat4 value);
-	void setFloat(const GLchar* name, float value);
-	void setInt(const GLchar* name, int value);
-	
+	void setVec3(const GLchar *name, glm::vec3 value);
+	void setMat4(const GLchar *name, glm::mat4 value);
+	void setFloat(const GLchar *name, float value);
+	void setInt(const GLchar *name, int value);
+
 	void use();
 
 private:

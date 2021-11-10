@@ -3,17 +3,19 @@
 #endif
 
 // If we're compiling for mac for some reason
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#else
-#include <GL/gl.h>
-#endif
+// #ifdef __APPLE__
+// #include <OpenGL/gl.h>
+// #else
+// #include <GL/gl.h>
+// #endif
+
+#define GL_GLEXT_PROTOTYPES
 
 // Headers
-#include "OpenGLHeaders/shader.h"
-#include "GLFW/glfw3.h"
-#include "glad/glad.h"
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <iostream>
+#include "OpenGLHeaders/shader.h"
 #include <iomanip>
 #include <cmath>
 #include "render.h"
