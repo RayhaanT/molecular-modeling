@@ -4,6 +4,7 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 bin/
+model
 *.o
 */.vscode/*
 !*/.vscode/settings.json
