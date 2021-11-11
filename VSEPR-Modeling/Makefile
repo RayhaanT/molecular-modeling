@@ -31,5 +31,5 @@ $(TARGET): $(OBJS)
 
 .PHONY : clean
 clean :
-	rm $(SRC_OBJS)
-	rm $(TARGET)
+	$(RM) $(OBJS)
+	$(RM) $(TARGET)
