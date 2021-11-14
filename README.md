@@ -21,10 +21,8 @@ Models of organic compounds hexane and 1,2-dimethylcyclopropane:
 - [GLM](https://glm.g-truc.net/0.9.8/index.html) - Math library
 
 ## Building
-Using the GNU's C++ compiler (g++), the following command can be used to compile the source:  
-```g++ -g src/*.cpp src/*.c -static -iquote include -Llib -lopengl32 -lglfw3 -lgdi32 -o VSEPR```  
-Or, run buildAndRun.bat to compile and launch the executable  
-```VSEPR-Modeling/buildAndRun.bat```
+A makefile is provided at `VSEPR-Modeling/Makefile` to compile the project using GCC and GNU make.
+Installation of OpenGL dependencies may be required for compilation.
 
 ## Acknowledgements
 - `VSEPR-Modeling/periodTableData.csv` is a derivative of Jeff Bigler's [Periodic Table spreadsheet](http://www.mrbigler.com/documents/Periodic-Table.xls) used under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). It was reformatted and extra data was added.
