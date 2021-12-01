@@ -12,8 +12,8 @@
 #define GL_GLEXT_PROTOTYPES
 
 // Headers
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include "glad/glad.h"
+#include "GLFW/glfw3.h"
 #include <iostream>
 #include "OpenGLHeaders/shader.h"
 #include <iomanip>

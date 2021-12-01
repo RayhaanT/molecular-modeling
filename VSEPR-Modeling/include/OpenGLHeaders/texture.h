@@ -2,8 +2,8 @@
 
 #define GL_GLEXT_PROTOTYPES
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include "glad/glad.h"
+#include "GLFW/glfw3.h"
 #include "GLFW/stb_image.h"
 
 #include <string>

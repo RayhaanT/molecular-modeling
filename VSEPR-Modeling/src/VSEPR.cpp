@@ -583,7 +583,7 @@ vector<BondedElement> VSEPRMain() {
 					longestName = structure[i].base.name.length();
 				}
 			}
-			printf(string(longestName + 2, ' ').c_str());
+			printf("%s", string(longestName + 2, ' ').c_str());
 			printf("| AN | VN | BP | LP | FC |\n");
 			for (int i = 0; i < structure.size(); i++) {
 				Element e = structure[i].base;
@@ -654,7 +654,7 @@ vector<BondedElement> VSEPRMain() {
 				longestName = structure[i].base.name.length();
 			}
 		}
-		printf(string(longestName + 2, ' ').c_str());
+		printf("%s", string(longestName + 2, ' ').c_str());
 		printf("| AN | VN | BP | LP | FC |\n");
 		for (int i = 0; i < structure.size(); i++) {
 			Element e = structure[i].base;
