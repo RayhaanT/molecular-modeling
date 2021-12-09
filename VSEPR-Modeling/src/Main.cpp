@@ -389,6 +389,9 @@ int main()
 			lightingShader.setMat4(MODEL, model);
 			sphere.draw();
 		}
+        
+        // Done drawing for this frame so tell the model it's safe to update
+        readyFrameUpdate();
 
 		//Swap buffer and poll IO events
 		glfwSwapBuffers(window);

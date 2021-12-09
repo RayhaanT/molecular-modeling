@@ -229,6 +229,7 @@ bool containsUID(uint32_t id, std::vector<uint32_t> list);
 BondedElement findNeighbour(uint32_t key, std::vector<BondedElement> group);
 void setUpMap();
 std::vector<BondedElement> mutateModel(std::vector<BondedElement> model = std::vector<BondedElement>());
+void readyFrameUpdate();
 
 // ------------------------------ Chemistry utilities ------------------------------ //
 
