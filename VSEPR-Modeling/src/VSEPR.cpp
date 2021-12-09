@@ -15,7 +15,6 @@ uint32_t BondedElement::maxUID = 0;
 
 using namespace std;
 map<string, Element> elements;
-vector<BondedElement> VSEPRModel;
 std::vector<glm::vec3> tetrahedron;
 std::map<std::string, int> numberTerms;
 
@@ -615,7 +614,7 @@ vector<BondedElement> VSEPRMain() {
 						abs(formalCharge));
 				}
 			}
-			VSEPRModel = structure;
+			mutateModel(structure);
 			continue;
 		}
 
@@ -647,7 +646,7 @@ vector<BondedElement> VSEPRMain() {
 				break;
 			} 
 		}
-		VSEPRModel = structure;
+		mutateModel(structure);
 		int longestName = 0;
 		for(int i = 0; i < structure.size(); i++) {
 			if(structure[i].base.name.length() > longestName) {

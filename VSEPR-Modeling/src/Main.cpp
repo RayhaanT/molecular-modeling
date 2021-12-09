@@ -32,6 +32,9 @@
 
 int representation = 1; // 0 = electron, 1 = sphere, 2 = ball and stick
 
+// Local VSEPRModel for the rendering thread
+std::vector<BondedElement> VSEPRModel;
+
 // State variables
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -315,6 +318,8 @@ int main()
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
+
+        VSEPRModel = mutateModel();
 
 		camera.ProcessKeyboard(window, deltaTime, false);
 
