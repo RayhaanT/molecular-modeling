@@ -21,9 +21,11 @@ OBJS = $(patsubst $(SRC_DIR)/%,$(BIN)/%,$(SRC_OBJS))
 all: $(TARGET)
 
 $(BIN)/%.o: $(SRC_DIR)/%.cpp 
+	@mkdir -p $(@D)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
 $(BIN)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(@D)
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 $(TARGET): $(OBJS)
